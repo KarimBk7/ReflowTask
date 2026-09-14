@@ -35,12 +35,9 @@ export function Strip({
   const minutes = (end.getTime() - start.getTime()) / 60_000
   const done = block.status === 'DONE'
 
-  // Below roughly half an hour there is no room for a second line; the strip keeps its
-  // title and drops the times rather than clipping both.
-  const compact = minutes < 35
-  // The move note needs a third line. Clipping it half-off the strip edge would be worse
-  // than leaving it to the arrow and the record, so it waits for a strip that can hold it.
-  const roomForMoveNote = minutes >= 60
+  // Below this there is no room for the times as well as the title and the move note.
+  // The move note wins: position on the ruler already says when the strip is.
+  const compact = minutes < 55
 
   return (
     <article
@@ -57,22 +54,33 @@ export function Strip({
     >
       <div className="strip-body">
         <h3 className="strip-title">{block.taskTitle}</h3>
-        {!compact && (
-          <p className="strip-meta">
-            <time dateTime={block.startAt}>{formatTime(start)}</time>
-            <span aria-hidden="true">–</span>
-            <time dateTime={block.endAt}>{formatTime(end)}</time>
-            <span className="strip-dot" aria-hidden="true" />
-            {formatDuration(minutes)}
-          </p>
-        )}
+
+        <p className="strip-meta">
+          <time dateTime={block.startAt}>{formatTime(start)}</time>
+          {!compact && (
+            <>
+              <span aria-hidden="true">–</span>
+              <time dateTime={block.endAt}>{formatTime(end)}</time>
+            </>
+          )}
+          <span className="strip-dot" aria-hidden="true" />
+          {formatDuration(minutes)}
+        </p>
 
         {/* Stated in words, not only drawn: the arrow can be missed, and a 480ms
-            animation is gone by the time anyone looks up. */}
-        {movedFrom && roomForMoveNote && (
-          <p className="strip-moved">{t('state.movedFrom')} {formatTime(movedFrom)}</p>
+            animation is gone by the time anyone looks up. A compacted schedule produces
+            short strips, so this may never be suppressed for want of room - it shortens
+            to the origin time instead. */}
+        {movedFrom && (
+          <p className="strip-moved">
+            {compact ? formatTime(movedFrom) : `${t('state.movedFrom')} ${formatTime(movedFrom)}`}
+          </p>
         )}
       </div>
+
+      {/* The mark the THESIS promises: a chinagraph bracket scored down the strip's
+          leading edge where it was re-seated. Permanent, and carries no colour. */}
+      {movedFrom && <span className="strip-rescored" aria-hidden="true" />}
 
       <div className="strip-marks" aria-hidden="true">
         {block.pinned && <PinIcon className="mark mark-pin" />}

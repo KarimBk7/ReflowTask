@@ -70,6 +70,12 @@ export default function App() {
       <header className="trim">
         <h1 className="mark">{t('app.name')}</h1>
 
+        {/* The week's dates are fired into the extrusion itself; only the movement
+            controls are fittings on it. */}
+        <p className="week-range" aria-live="polite">
+          {range}
+        </p>
+
         <nav className="week-nav" aria-label={t('week.thisWeek')}>
           <button
             type="button"
@@ -79,9 +85,13 @@ export default function App() {
             <ChevronIcon direction="left" />
             <span className="sr-only">{t('week.previous')}</span>
           </button>
-          <p className="week-range" aria-live="polite">
-            {range}
-          </p>
+          <button
+            type="button"
+            className="trim-button trim-button-text"
+            onClick={() => setWeekStart(startOfWeek(new Date()))}
+          >
+            {t('week.today')}
+          </button>
           <button
             type="button"
             className="trim-button"
@@ -90,24 +100,22 @@ export default function App() {
             <ChevronIcon direction="right" />
             <span className="sr-only">{t('week.next')}</span>
           </button>
-          <button
-            type="button"
-            className="trim-button trim-button-text"
-            onClick={() => setWeekStart(startOfWeek(new Date()))}
-          >
-            {t('week.today')}
-          </button>
         </nav>
 
-        <button
-          type="button"
-          className="lever"
-          onClick={() => replan.mutate(undefined)}
-          disabled={busy}
-        >
-          <ReflowIcon />
-          {t('action.replan')}
-        </button>
+        {/* Bolted to the right end of the extrusion, through its two fixings. */}
+        <div className="lever-plate">
+          <span className="fixing" aria-hidden="true" />
+          <button
+            type="button"
+            className="lever"
+            onClick={() => replan.mutate(undefined)}
+            disabled={busy}
+          >
+            <ReflowIcon />
+            {t('action.replan')}
+          </button>
+          <span className="fixing" aria-hidden="true" />
+        </div>
       </header>
 
       {unreachable && (
@@ -117,6 +125,13 @@ export default function App() {
       )}
 
       <div className="frame-body">
+        {/* The rail runs down the left of the board: unracked strips sit beside the board
+            they have not been seated into. */}
+        <div className="frame-rail">
+          <StripRail entries={rail} onDelete={(id) => deleteTask.mutate(id)} busy={busy} />
+          <NewStripForm onCreate={(input) => createTask.mutateAsync(input)} busy={busy} />
+        </div>
+
         <div className="frame-board">
           <WeekBoard
             weekStart={weekStart}
@@ -131,11 +146,6 @@ export default function App() {
             busy={busy}
           />
           <MarginRecord events={events.data} />
-        </div>
-
-        <div className="frame-rail">
-          <StripRail entries={rail} onDelete={(id) => deleteTask.mutate(id)} busy={busy} />
-          <NewStripForm onCreate={(input) => createTask.mutateAsync(input)} busy={busy} />
         </div>
       </div>
     </div>

@@ -42,7 +42,9 @@
 
   /* Aluminium extrusion: the frame and its labelled controls. */
   --trim: #7f8a86;
-  --trim-lit: #a4afaa;
+  --trim-lit: #b6c0bb;
+  --trim-face: #6d7874;
+  --trim-shadow: #48514e;
 
   --focus: #ffd166;
 
@@ -91,8 +93,10 @@
     --signal: #a32d12;
     --signal-ink: #fff3ef;
 
-    --trim: #46615a;
-    --trim-lit: #2f4640;
+    --trim: #8c9a95;
+    --trim-lit: #cdd6d2;
+    --trim-face: #7c8a85;
+    --trim-shadow: #4a5652;
 
     --focus: #7a4a00;
   }

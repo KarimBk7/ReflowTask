@@ -87,29 +87,28 @@ export function GhostLayer({
             if (!from) return null
 
             const columnWidth = size.width / days.length
-            const boxWidth = columnWidth * 0.82
-            // Replanning compacts the schedule, so a vacated slot is usually taken again
-            // straight away. Outlining an occupied slot would just scribble over the strip
-            // that now lives there; the arrow alone carries the move in that case.
-            const slotFree = !occupied.some(
+            // The vacated position is always marked. Replanning compacts the schedule, so
+            // the slot is usually taken again straight away - if an occupied slot went
+            // unmarked, the signature mark would be absent in the normal case and the
+            // arrows would appear to come from nowhere. Wax pencil goes over the strip.
+            const occupiedNow = occupied.some(
               (block) => block.start <= ghost.from && block.end > ghost.from,
             )
+            // Scored against the column's leading edge rather than blanketing it, so an
+            // outline over an occupied slot annotates the strip instead of hiding it.
+            const left = from.x - columnWidth / 2 + 3
+            const height = Math.max(16, size.height * 0.028)
 
             return (
               <g key={ghost.key} className="ghost">
-                {slotFree && (
-                  <rect
-                    x={from.x - boxWidth / 2}
-                    y={from.y}
-                    width={boxWidth}
-                    height={Math.max(18, size.height * 0.03)}
-                    rx="1"
-                    className="ghost-box"
-                  />
-                )}
+                <path
+                  d={`M ${left + 10} ${from.y} H ${left} V ${from.y + height} H ${left + 10}`}
+                  className="ghost-box"
+                  data-over-strip={occupiedNow || undefined}
+                />
                 {to && (
                   <path
-                    d={curve(from, to)}
+                    d={curve(from, to, left, columnWidth)}
                     className="ghost-arrow"
                     markerEnd="url(#ghost-arrow)"
                   />
@@ -124,17 +123,31 @@ export function GhostLayer({
 }
 
 /**
- * A hand-drawn arc rather than a straight line: the mark reads as pencil on enamel, and a
- * bow keeps the path clear of the strips between its ends.
+ * A hand-drawn arc rather than a straight line.
+ *
+ * Both ends sit on the column's leading edge beside the strips, never across them: routed
+ * through the middle, the stroke draws itself straight through the strip's own times and
+ * reads as crossed-out numerals.
  */
-function curve(from: { x: number; y: number }, to: { x: number; y: number }): string {
-  const midX = (from.x + to.x) / 2
+function curve(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  edgeX: number,
+  columnWidth: number,
+): string {
+  const sameColumn = Math.abs(to.x - from.x) < columnWidth / 2
+  if (sameColumn) {
+    // A move within one day: bow out into the column's own margin rather than down
+    // through every strip between the two ends.
+    const gutter = edgeX - 7
+    const midY = (from.y + to.y) / 2
+    return `M ${edgeX} ${from.y + 4} Q ${gutter} ${midY} ${edgeX} ${to.y}`
+  }
+
+  // Across days: land on the destination column's leading edge, for the same reason.
+  const endX = to.x - columnWidth / 2 + 3
+  const midX = (edgeX + endX) / 2
   const midY = (from.y + to.y) / 2
-  const bow = Math.min(60, Math.hypot(to.x - from.x, to.y - from.y) * 0.22)
-  const normalX = -(to.y - from.y)
-  const normalY = to.x - from.x
-  const length = Math.hypot(normalX, normalY) || 1
-  const controlX = midX + (normalX / length) * bow
-  const controlY = midY + (normalY / length) * bow
-  return `M ${from.x} ${from.y + 8} Q ${controlX} ${controlY} ${to.x} ${to.y}`
+  const bow = Math.min(50, Math.hypot(endX - edgeX, to.y - from.y) * 0.2)
+  return `M ${edgeX} ${from.y + 4} Q ${midX} ${midY - bow} ${endX} ${to.y}`
 }

@@ -66,14 +66,44 @@ body {
   background: var(--enamel-frame);
 }
 
+/*
+ * The aluminium extrusion the board is bolted into: a real profile, not a hairline. A lit
+ * top edge, a brushed face, a machined shadow line where it meets the enamel.
+ */
 .trim {
   display: flex;
   align-items: center;
   gap: var(--gap-wide);
   min-height: var(--trim-height);
   padding: 0 var(--gap-wide);
-  background: linear-gradient(var(--trim-lit) 0 1px, var(--enamel-frame) 1px);
-  border-bottom: 1px solid var(--enamel-sunk);
+  background:
+    linear-gradient(
+      180deg,
+      var(--trim-lit) 0 1px,
+      var(--trim) 1px 34%,
+      var(--trim-face) 34% 88%,
+      var(--trim-shadow) 88% 100%
+    );
+  border-bottom: 1px solid var(--enamel-frame);
+}
+
+/* Fixings: the extrusion is bolted, and the lever plate is bolted through it. */
+.lever-plate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: var(--trim-face);
+  border: 1px solid var(--trim-shadow);
+  box-shadow: inset 0 1px 0 var(--trim-lit);
+}
+
+.fixing {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--trim-shadow);
+  box-shadow: inset 0 1px 0 var(--trim-lit);
 }
 
 .mark {
@@ -172,7 +202,7 @@ body {
 .frame-body {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--rail-width);
+  grid-template-columns: var(--rail-width) minmax(0, 1fr);
   gap: 1px;
   background: var(--enamel-sunk);
   min-height: 0;
@@ -375,7 +405,9 @@ body {
 
 .strip[data-compact] {
   padding: 2px 8px;
-  justify-content: center;
+  /* Never centred: with more content than height, centring clips the title away and
+     leaves the strip anonymous. The title is what must survive. */
+  justify-content: flex-start;
 }
 
 .strip[data-compact] .strip-title {
@@ -448,16 +480,12 @@ body {
   gap: 4px;
   margin-top: auto;
   padding-top: 4px;
-  opacity: 0;
 }
 
-.strip:hover .strip-actions,
-.strip:focus-within .strip-actions {
-  opacity: 1;
-}
-
+/* Never display:none - that removes short work from the tab order entirely. The strip
+   clips them instead and lifts when reached for, so they never float over a neighbour. */
 .strip[data-compact] .strip-actions {
-  display: none;
+  margin-top: 4px;
 }
 
 .strip-action {
@@ -864,11 +892,7 @@ body {
   z-index: 4;
 }
 
-.strip[data-compact]:hover .strip-actions,
-.strip[data-compact]:focus-within .strip-actions {
-  display: flex;
-  opacity: 1;
-}
+
 
 @media (prefers-reduced-motion: reduce) {
   .strip[data-moved] {
@@ -904,4 +928,118 @@ body {
   background-size: 2px 100%;
   background-repeat: no-repeat;
   background-position: 0 0;
+}
+
+/* ── Fixes from the finish review ──────────────────────────────────────────── */
+
+/*
+ * The mark the THESIS promises. A strip that was re-seated keeps a wax bracket scored down
+ * its leading edge - permanent, carrying no colour, and present whatever the strip's height.
+ */
+.strip-rescored {
+  position: absolute;
+  top: 3px;
+  height: 20px;
+  inset-inline-start: 0;
+  width: 3px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--chinagraph) 0 5px,
+    transparent 5px 9px
+  );
+  opacity: 0.75;
+}
+
+.strip[data-moved] {
+  /* The entrance is the flourish; the bracket above is the record. */
+  padding-inline-start: 12px;
+}
+
+/* Over an occupied slot the outline is an annotation on the strip, so it lightens rather
+   than competing with the strip's own ink. */
+.ghost-box[data-over-strip] {
+  stroke: var(--chinagraph);
+  opacity: 0.5;
+}
+
+/* The record, re-set as running marginalia in the wax hand. */
+.record {
+  padding: var(--gap) var(--gap-wide) var(--gap-wide);
+  border-top: 1px solid var(--trim-shadow);
+  background:
+    linear-gradient(
+      180deg,
+      var(--trim-lit) 0 1px,
+      var(--trim-face) 1px 6px,
+      var(--enamel) 6px
+    );
+}
+
+.record-list {
+  display: block;
+}
+
+.record-entry {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--chinagraph-soft);
+}
+
+.record-task {
+  color: var(--chinagraph);
+}
+
+.record-kind {
+  font-family: var(--face-legend);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.record-trigger {
+  font-family: var(--face-legend);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--legend-quiet);
+}
+
+/*
+ * Native date and time controls carry a browser palette that belongs to no design system.
+ * The mask's language follows the browser's own locale and cannot be set from the page, so
+ * only the surface is themed here.
+ */
+.field input[type='date'],
+.field input[type='time'] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  .field input[type='date'],
+  .field input[type='time'] {
+    color-scheme: light;
+  }
+}
+
+.field input::-webkit-calendar-picker-indicator {
+  filter: grayscale(1) contrast(0.7);
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.field input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+@media (max-width: 900px) {
+  /* The board leads on a phone; the rail follows it. */
+  .frame-rail {
+    order: 2;
+  }
+
+  .frame-board {
+    order: 1;
+  }
 }
