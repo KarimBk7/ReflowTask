@@ -89,7 +89,12 @@ desktop.ini
 .grok/
 !skills-lock.json
 
-# Impeccable design artifacts (PRODUCT.md, DESIGN.md) are project truth and
-# committed; only machine-local state and live-mode scratch are ignored.
+# Impeccable design artifacts (PRODUCT.md, DESIGN.md, design.json, surface briefs and
+# config.json) are project truth and committed. Everything below is per-session working
+# state: decision-page servers, screenshots, build gates and generated mocks.
 .impeccable/config.local.json
 .impeccable/live/
+.impeccable/questions/
+.impeccable/review/
+.impeccable/build/
+.impeccable/mocks/
