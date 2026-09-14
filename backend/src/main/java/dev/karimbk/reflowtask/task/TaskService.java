@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import dev.karimbk.reflowtask.common.NotFoundException;
+import dev.karimbk.reflowtask.schedule.RescheduleTrigger;
+import dev.karimbk.reflowtask.schedule.SchedulerService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +16,13 @@ public class TaskService {
 
 	private final TaskRepository tasks;
 
+	private final SchedulerService scheduler;
+
 	private final Clock clock;
 
-	TaskService(TaskRepository tasks, Clock clock) {
+	TaskService(TaskRepository tasks, SchedulerService scheduler, Clock clock) {
 		this.tasks = tasks;
+		this.scheduler = scheduler;
 		this.clock = clock;
 	}
 
@@ -31,12 +36,18 @@ public class TaskService {
 		return TaskResponse.of(require(id));
 	}
 
+	/**
+	 * Anything that changes what needs scheduling triggers a replan, so the calendar is
+	 * correct the moment the user looks at it rather than at the next job tick.
+	 */
 	@Transactional
 	public TaskResponse create(TaskRequest request) {
 		Task task = new Task(request.title(), request.description(), request.estimatedMinutes(),
 				Task.toDeadline(request.deadlineDate(), request.deadlineTime()),
 				request.deadlineTime() != null, request.priority(), LocalDateTime.now(this.clock));
-		return TaskResponse.of(this.tasks.save(task));
+		TaskResponse created = TaskResponse.of(this.tasks.save(task));
+		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		return created;
 	}
 
 	@Transactional
@@ -48,19 +59,29 @@ public class TaskService {
 		task.setDeadline(Task.toDeadline(request.deadlineDate(), request.deadlineTime()),
 				request.deadlineTime() != null);
 		task.setPriority(request.priority());
-		return TaskResponse.of(task);
+		TaskResponse updated = TaskResponse.of(task);
+		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		return updated;
 	}
 
 	@Transactional
 	public TaskResponse changeStatus(long id, TaskStatus status) {
 		Task task = require(id);
 		task.setStatus(status);
-		return TaskResponse.of(task);
+		TaskResponse changed = TaskResponse.of(task);
+		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		return changed;
 	}
 
 	@Transactional
 	public void delete(long id) {
-		this.tasks.delete(require(id));
+		Task task = require(id);
+		// The task's blocks must go before the task does: the database would cascade them,
+		// but Hibernate cannot see that and the replan below would trip over the leftovers.
+		this.scheduler.releaseBlocksOf(id);
+		this.tasks.delete(task);
+		this.tasks.flush();
+		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
 	}
 
 	private Task require(long id) {
