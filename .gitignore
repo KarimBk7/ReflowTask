@@ -53,12 +53,13 @@ application-local.yml
 application-secrets.properties
 
 # ─── Data / runtime ──────────────────────────────────────────────────────────
-# H2 dev database files and Docker volume mounts
+# H2 dev database files and Docker volume mounts.
+# Unanchored so they match at any depth — H2 writes to backend/data/, not ./data/.
 *.db
 *.mv.db
 *.trace.db
-/data/
-/pgdata/
+data/
+pgdata/
 
 # ─── IDE ─────────────────────────────────────────────────────────────────────
 .idea/

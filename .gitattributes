@@ -1,0 +1,29 @@
+# Normalize line endings: LF in the repo, native in the working copy.
+# Without this, a Java+Node repo on Windows churns CRLF into every diff.
+* text=auto
+
+# Always LF — these break or behave oddly with CRLF
+*.sh        text eol=lf
+mvnw        text eol=lf
+gradlew     text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+
+# Always CRLF — Windows-only scripts
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# Binary — never touch, never diff
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.jar       binary
+*.pdf       binary
