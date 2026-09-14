@@ -47,6 +47,7 @@ export const en = {
   'status.DONE': 'Done',
 
   'state.atRisk': 'At risk',
+  'state.movedFrom': 'Moved from',
   'state.pinned': 'Pinned',
   'state.partiallyScheduled': 'Partly scheduled',
 

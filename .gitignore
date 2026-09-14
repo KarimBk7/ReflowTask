@@ -98,3 +98,6 @@ desktop.ini
 .impeccable/review/
 .impeccable/build/
 .impeccable/mocks/
+
+# Playwright MCP session snapshots and console logs.
+.playwright-mcp/

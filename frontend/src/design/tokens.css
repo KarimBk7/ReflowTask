@@ -1,0 +1,99 @@
+/*
+ * The board's material vocabulary.
+ *
+ * Vitreous enamel on steel, screen-printed rules, laminated magnet strips, chinagraph wax
+ * pencil, aluminium trim. Flat, hard and matte throughout: gloss or drop shadows would turn
+ * the world into skeuomorphic pastiche.
+ *
+ * Light and dark are both real boards, not a tint of each other - the app sits open all day,
+ * so it follows the OS. Dark is deep enamel under room light; light is the pale hospital
+ * enamel of the same object in daylight.
+ */
+
+:root {
+  /* Enamel: the ground, and the darker steel the board is bolted into. */
+  --enamel: #223f3c;
+  --enamel-sunk: #1a312f;
+  --enamel-frame: #142927;
+
+  /* Screen-printed rules on the enamel. Hour rules read; half-hours only orient. */
+  --rule-hour: rgb(229 238 234 / 24%);
+  --rule-half: rgb(229 238 234 / 10%);
+  --rule-edge: rgb(229 238 234 / 40%);
+
+  /* Printed legend ink: the permanent lettering fired onto the board. */
+  --legend: #dbe6e1;
+  --legend-quiet: #9fb3ad;
+
+  /* Laminated magnet strip and the ink printed on it. */
+  --strip: #e7e1d3;
+  --strip-edge: #c3bdaf;
+  --strip-ink: #1b2422;
+  --strip-ink-quiet: #55605c;
+  --strip-done: #b9bdb2;
+
+  /* Chinagraph wax pencil: the annotation hand. Ghosts, arrows, margin notes. */
+  --chinagraph: #f1eee4;
+  --chinagraph-soft: rgb(241 238 228 / 55%);
+
+  /* The one saturated colour, reserved for at risk. Never decorative. */
+  --signal: #e2583a;
+  --signal-ink: #2a0d06;
+
+  /* Aluminium extrusion: the frame and its labelled controls. */
+  --trim: #7f8a86;
+  --trim-lit: #a4afaa;
+
+  --focus: #ffd166;
+
+  /* Type. Archivo Narrow is the screen-printed legend voice; Archivo sets strip text.
+     Both are bundled, never fetched: this runs on a Pi that may have no internet. */
+  --face-legend: 'Archivo Narrow', ui-sans-serif, system-ui, sans-serif;
+  --face-strip: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* One spacing rhythm. */
+  --gap-hair: 2px;
+  --gap-tight: 6px;
+  --gap: 12px;
+  --gap-wide: 24px;
+  --gap-room: 40px;
+
+  --trim-height: 64px;
+  --rail-width: 264px;
+  --gutter-width: 56px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* The same object in daylight. The enamel still has to be a saturated, mid-value
+       green so the bone strips read as objects sitting on it - a pale ground would make
+       strip and board the same value and the board would vanish into grey. */
+    --enamel: #8fa79f;
+    --enamel-sunk: #7b958c;
+    --enamel-frame: #5f7a71;
+
+    --rule-hour: rgb(250 252 250 / 52%);
+    --rule-half: rgb(250 252 250 / 24%);
+    --rule-edge: rgb(250 252 250 / 72%);
+
+    --legend: #0f1f1c;
+    --legend-quiet: #2e4842;
+
+    --strip: #f7f3e8;
+    --strip-edge: #cdc5b2;
+    --strip-ink: #141c1a;
+    --strip-ink-quiet: #4e5955;
+    --strip-done: #c8cbc0;
+
+    --chinagraph: #12201d;
+    --chinagraph-soft: rgb(18 32 29 / 62%);
+
+    --signal: #a32d12;
+    --signal-ink: #fff3ef;
+
+    --trim: #46615a;
+    --trim-lit: #2f4640;
+
+    --focus: #7a4a00;
+  }
+}

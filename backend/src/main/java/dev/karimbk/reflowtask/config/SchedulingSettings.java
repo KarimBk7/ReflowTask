@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 @Table(name = "scheduling_settings")
 public class SchedulingSettings {
 
-	static final short SINGLETON_ID = 1;
+	public static final short SINGLETON_ID = 1;
 
 	@Id
 	private short id = SINGLETON_ID;
