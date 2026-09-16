@@ -1,0 +1,529 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-16T13:02:56.383Z",
+  "title": "Design System: ReflowTask",
+  "extensions": {
+    "colorMeta": {
+      "enamel": {
+        "role": "primary",
+        "displayName": "Theatre Enamel",
+        "canonical": "oklch(34.4% 0.035 187.2)",
+        "tonalRamp": [
+          "#00100e",
+          "#0c2a27",
+          "#294643",
+          "#466461",
+          "#688784",
+          "#89a9a5",
+          "#aecfcb",
+          "#d5f7f2"
+        ]
+      },
+      "enamel-sunk": {
+        "role": "primary",
+        "displayName": "Sunk Enamel",
+        "canonical": "oklch(29.3% 0.029 188.6)",
+        "tonalRamp": [
+          "#000f0e",
+          "#122927",
+          "#2d4543",
+          "#4b6361",
+          "#6d8684",
+          "#8ea8a5",
+          "#b3cecb",
+          "#d9f5f2"
+        ]
+      },
+      "enamel-frame": {
+        "role": "primary",
+        "displayName": "Steel Frame",
+        "canonical": "oklch(26.3% 0.027 187.8)",
+        "tonalRamp": [
+          "#000f0d",
+          "#132826",
+          "#2f4542",
+          "#4c6360",
+          "#6e8683",
+          "#8fa7a4",
+          "#b4cdca",
+          "#dbf5f2"
+        ]
+      },
+      "signal-vermilion": {
+        "role": "secondary",
+        "displayName": "Signal Vermilion",
+        "canonical": "oklch(63.7% 0.178 33.9)",
+        "tonalRamp": [
+          "#2d0000",
+          "#4f0000",
+          "#721e0c",
+          "#953f2d",
+          "#bd634f",
+          "#e2846f",
+          "#ffaa93",
+          "#ffd1b9"
+        ]
+      },
+      "signal-ink": {
+        "role": "secondary",
+        "displayName": "Signal Ink",
+        "canonical": "oklch(20.5% 0.051 35.7)",
+        "tonalRamp": [
+          "#1c0300",
+          "#391a12",
+          "#57362d",
+          "#77544a",
+          "#9c766b",
+          "#bf978c",
+          "#e6bcb1",
+          "#ffe3d8"
+        ]
+      },
+      "strip-bone": {
+        "role": "neutral",
+        "displayName": "Strip Bone",
+        "canonical": "oklch(91.1% 0.020 87.5)",
+        "tonalRamp": [
+          "#0f0b03",
+          "#282419",
+          "#443f34",
+          "#625d51",
+          "#858073",
+          "#a7a194",
+          "#cdc7b9",
+          "#f4eee0"
+        ]
+      },
+      "strip-edge": {
+        "role": "neutral",
+        "displayName": "Strip Edge",
+        "canonical": "oklch(79.9% 0.020 87.5)",
+        "tonalRamp": [
+          "#0f0b03",
+          "#282419",
+          "#443f34",
+          "#625d51",
+          "#858073",
+          "#a7a193",
+          "#cdc7b9",
+          "#f4eedf"
+        ]
+      },
+      "strip-ink": {
+        "role": "neutral",
+        "displayName": "Strip Ink",
+        "canonical": "oklch(25.1% 0.013 180.1)",
+        "tonalRamp": [
+          "#060d0b",
+          "#1d2624",
+          "#384240",
+          "#56605e",
+          "#788380",
+          "#99a4a2",
+          "#bfcac7",
+          "#e5f2ef"
+        ]
+      },
+      "strip-ink-quiet": {
+        "role": "neutral",
+        "displayName": "Strip Ink Quiet",
+        "canonical": "oklch(47.8% 0.015 171.8)",
+        "tonalRamp": [
+          "#050d0a",
+          "#1d2623",
+          "#38423f",
+          "#55605c",
+          "#78837f",
+          "#99a5a0",
+          "#becbc6",
+          "#e5f2ed"
+        ]
+      },
+      "strip-done": {
+        "role": "neutral",
+        "displayName": "Spent Laminate",
+        "canonical": "oklch(79.2% 0.016 123.1)",
+        "tonalRamp": [
+          "#0a0c06",
+          "#22251d",
+          "#3e4138",
+          "#5c5f55",
+          "#7e8278",
+          "#9fa399",
+          "#c5c9be",
+          "#ecf0e5"
+        ]
+      },
+      "legend": {
+        "role": "neutral",
+        "displayName": "Legend Ink",
+        "canonical": "oklch(91.5% 0.014 167.2)",
+        "tonalRamp": [
+          "#060d0a",
+          "#1e2623",
+          "#39423e",
+          "#57605c",
+          "#79837e",
+          "#9aa4a0",
+          "#bfcac5",
+          "#e6f2ec"
+        ]
+      },
+      "legend-quiet": {
+        "role": "neutral",
+        "displayName": "Legend Quiet",
+        "canonical": "oklch(75.0% 0.024 175.7)",
+        "tonalRamp": [
+          "#020e0b",
+          "#172823",
+          "#33443f",
+          "#50625d",
+          "#72857f",
+          "#93a7a1",
+          "#b8cdc6",
+          "#dff4ee"
+        ]
+      },
+      "chinagraph": {
+        "role": "neutral",
+        "displayName": "Chinagraph",
+        "canonical": "oklch(94.9% 0.014 93.0)",
+        "tonalRamp": [
+          "#0d0b05",
+          "#26241d",
+          "#424038",
+          "#605e55",
+          "#838077",
+          "#a4a198",
+          "#cac7be",
+          "#f1eee4"
+        ]
+      },
+      "trim-aluminium": {
+        "role": "neutral",
+        "displayName": "Aluminium",
+        "canonical": "oklch(62.3% 0.014 172.1)",
+        "tonalRamp": [
+          "#060d0a",
+          "#1d2623",
+          "#38423f",
+          "#56605d",
+          "#78837f",
+          "#99a4a0",
+          "#bfcac6",
+          "#e6f2ed"
+        ]
+      },
+      "trim-lit": {
+        "role": "neutral",
+        "displayName": "Lit Edge",
+        "canonical": "oklch(79.9% 0.013 164.7)",
+        "tonalRamp": [
+          "#060d0a",
+          "#1e2622",
+          "#3a423e",
+          "#57605c",
+          "#79837e",
+          "#9aa49f",
+          "#c0cac5",
+          "#e7f1ec"
+        ]
+      },
+      "trim-face": {
+        "role": "neutral",
+        "displayName": "Brushed Face",
+        "canonical": "oklch(56.2% 0.014 172.0)",
+        "tonalRamp": [
+          "#050d0a",
+          "#1d2623",
+          "#38423f",
+          "#56605d",
+          "#78837f",
+          "#99a5a0",
+          "#becac6",
+          "#e5f2ed"
+        ]
+      },
+      "trim-shadow": {
+        "role": "neutral",
+        "displayName": "Machined Shadow",
+        "canonical": "oklch(42.6% 0.013 173.7)",
+        "tonalRamp": [
+          "#060d0b",
+          "#1e2623",
+          "#39423f",
+          "#57605d",
+          "#79837f",
+          "#9aa4a1",
+          "#c0cac6",
+          "#e6f1ee"
+        ]
+      },
+      "focus-amber": {
+        "role": "neutral",
+        "displayName": "Focus Amber",
+        "canonical": "oklch(88.0% 0.135 86.1)",
+        "tonalRamp": [
+          "#1f0000",
+          "#3d1a00",
+          "#5b3800",
+          "#7b5700",
+          "#a07a0c",
+          "#c39c3d",
+          "#eac266",
+          "#ffe98d"
+        ]
+      },
+      "enamel-daylight": {
+        "role": "primary",
+        "displayName": "Daylight Enamel",
+        "canonical": "oklch(70.8% 0.029 173.3)",
+        "tonalRamp": [
+          "#000f0a",
+          "#142923",
+          "#30453e",
+          "#4d635c",
+          "#6f867f",
+          "#90a8a0",
+          "#b5cec5",
+          "#dcf5ed"
+        ]
+      },
+      "strip-bone-daylight": {
+        "role": "neutral",
+        "displayName": "Daylight Strip Bone",
+        "canonical": "oklch(96.4% 0.015 90.2)",
+        "tonalRamp": [
+          "#0e0b05",
+          "#27241c",
+          "#434037",
+          "#615d54",
+          "#848076",
+          "#a5a197",
+          "#cbc7bc",
+          "#f2eee3"
+        ]
+      },
+      "legend-daylight": {
+        "role": "neutral",
+        "displayName": "Daylight Legend Ink",
+        "canonical": "oklch(22.4% 0.023 180.9)",
+        "tonalRamp": [
+          "#020e0c",
+          "#172825",
+          "#334440",
+          "#50625e",
+          "#728581",
+          "#93a6a2",
+          "#b8ccc8",
+          "#dff4ef"
+        ]
+      },
+      "chinagraph-daylight": {
+        "role": "neutral",
+        "displayName": "Daylight Chinagraph",
+        "canonical": "oklch(23.0% 0.020 179.5)",
+        "tonalRamp": [
+          "#030e0b",
+          "#192724",
+          "#344340",
+          "#52625e",
+          "#748480",
+          "#95a6a2",
+          "#baccc7",
+          "#e1f3ef"
+        ]
+      },
+      "signal-vermilion-daylight": {
+        "role": "secondary",
+        "displayName": "Daylight Vermilion",
+        "canonical": "oklch(47.8% 0.159 33.8)",
+        "tonalRamp": [
+          "#2d0000",
+          "#4f0000",
+          "#721e0c",
+          "#953f2d",
+          "#bd634f",
+          "#e2846f",
+          "#ffaa93",
+          "#ffd1b9"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "The product name at the left end of the aluminium trim."
+      },
+      "legend": {
+        "displayName": "Legend",
+        "purpose": "Lettering fired onto the enamel: day names, the week range, the replan lever."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Rail section headings, field labels, strip controls and move notes."
+      },
+      "title": {
+        "displayName": "Strip Title",
+        "purpose": "Task titles on strips, truncated with an ellipsis rather than wrapped."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default text, form input text and the record."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Hour gutter, times and durations. Always tabular."
+      }
+    },
+    "shadows": [
+      {
+        "name": "seated-edge",
+        "value": "inset 0 1px 0 rgb(255 255 255 / 45%)",
+        "purpose": "The lit top edge of a laminate strip seated in the board. The only depth a strip ever gets."
+      },
+      {
+        "name": "plate-edge",
+        "value": "inset 0 1px 0 var(--trim-lit)",
+        "purpose": "The lit edge of the bolted lever plate and its screw heads."
+      },
+      {
+        "name": "today-underscore",
+        "value": "inset 0 -3px 0 var(--legend)",
+        "purpose": "Marks today with a printed underscore on the day header instead of a colour wash."
+      }
+    ],
+    "motion": [
+      {
+        "name": "reseat",
+        "value": "480ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "A moved strip settling into its new slot, from translateY(-6px) and 35% opacity. Plays once; turned off under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "900px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Replan Lever",
+      "kind": "button",
+      "refersTo": "lever",
+      "description": "The one control that rebuilds the whole schedule, bolted to the trim as hardware.",
+      "html": "<button class=\"ds-lever\" type=\"button\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 4.5h7.5\"/><path d=\"M7.5 2.25 9.75 4.5 7.5 6.75\"/><path d=\"M14 11.5H6.5\"/><path d=\"M8.5 9.25 6.25 11.5l2.25 2.25\"/></svg>Replan now</button>",
+      "css": ".ds-lever{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border:1px solid var(--trim-lit);background:var(--trim);color:var(--strip);font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:12px;font-weight:600;letter-spacing:0.14em;border-radius:0;cursor:pointer}.ds-lever:hover{background:var(--trim-lit)}.ds-lever:active{transform:translateY(1px)}.ds-lever:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Trim Button",
+      "kind": "button",
+      "refersTo": "trim-button",
+      "description": "Secondary fittings on the trim, such as week navigation.",
+      "html": "<button class=\"ds-trim-button\" type=\"button\">Today</button>",
+      "css": ".ds-trim-button{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--trim);background:transparent;color:var(--legend);font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:12px;letter-spacing:0.06em;border-radius:0;cursor:pointer}.ds-trim-button:hover{border-color:var(--trim-lit)}.ds-trim-button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Strip",
+      "kind": "custom",
+      "refersTo": "strip",
+      "description": "A laminated magnet strip seated in the time grid, with its controls labelled and visible.",
+      "html": "<article class=\"ds-strip\"><h3 class=\"ds-strip-title\">Write deployment notes</h3><p class=\"ds-strip-meta\">13:20 – 14:50 · 1h 30m</p><div class=\"ds-strip-actions\"><button class=\"ds-strip-action\" type=\"button\">Mark done</button><button class=\"ds-strip-action\" type=\"button\">Pin</button></div></article>",
+      "css": ".ds-strip{display:flex;flex-direction:column;gap:2px;width:220px;min-height:96px;padding:5px 8px;background:var(--strip);color:var(--strip-ink);border:1px solid var(--strip-edge);border-radius:0;box-shadow:inset 0 1px 0 rgb(255 255 255 / 45%)}.ds-strip-title{margin:0;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-strip-meta{margin:0;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--strip-ink-quiet)}.ds-strip-actions{display:flex;gap:4px;margin-top:auto;padding-top:4px}.ds-strip-action{padding:2px 6px;border:1px solid var(--strip-edge);background:transparent;color:var(--strip-ink);font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.1em;border-radius:0;cursor:pointer}.ds-strip-action:hover{background:var(--strip-edge)}.ds-strip-action:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "At-Risk Strip",
+      "kind": "custom",
+      "refersTo": "strip",
+      "description": "A strip scheduled past its deadline: vermilion edge, hatch and glyph, so it reads without colour.",
+      "html": "<article class=\"ds-strip-risk\"><h3 class=\"ds-strip-risk-title\">Review pull requests</h3><p class=\"ds-strip-risk-meta\">16:00 – 17:00 · 1h</p></article>",
+      "css": ".ds-strip-risk{width:220px;min-height:64px;padding:5px 8px;background-color:var(--strip);background-image:repeating-linear-gradient(-45deg,transparent 0 6px,rgb(0 0 0 / 7%) 6px 8px);color:var(--strip-ink);border:1px solid var(--signal);border-radius:0}.ds-strip-risk-title{margin:0;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:600;line-height:1.25}.ds-strip-risk-meta{margin:2px 0 0;font-size:11px;font-variant-numeric:tabular-nums;color:var(--strip-ink-quiet)}"
+    },
+    {
+      "name": "Pinned Strip",
+      "kind": "custom",
+      "refersTo": "strip",
+      "description": "A strip the replan must not move. Pinning shows as a double border plus a pin glyph.",
+      "html": "<article class=\"ds-strip-pinned\"><span class=\"ds-strip-pinned-mark\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 1.75h4l-.6 3.4 2.1 2.1H4.5l2.1-2.1z\"/><path d=\"M8 7.25v7\"/></svg></span><h3 class=\"ds-strip-pinned-title\">Dentist</h3><p class=\"ds-strip-pinned-meta\">09:00 – 10:00 · 1h</p></article>",
+      "css": ".ds-strip-pinned{position:relative;width:220px;min-height:64px;padding:5px 8px;background:var(--strip);color:var(--strip-ink);border:3px double var(--strip-edge);border-radius:0}.ds-strip-pinned-mark{position:absolute;top:4px;right:6px;color:var(--strip-ink-quiet)}.ds-strip-pinned-title{margin:0;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:600;line-height:1.25}.ds-strip-pinned-meta{margin:2px 0 0;font-size:11px;font-variant-numeric:tabular-nums;color:var(--strip-ink-quiet)}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field-input",
+      "description": "A board-ground input with its label printed above in label capitals.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Estimated duration</span><input class=\"ds-field-input\" type=\"number\" value=\"60\"></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:4px;width:200px}.ds-field-label{font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.14em;color:var(--legend-quiet)}.ds-field-input{padding:6px 8px;border:1px solid var(--trim);background:var(--enamel);color:var(--legend);font-size:13px;font-variant-numeric:tabular-nums;border-radius:0}.ds-field-input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Priority Segments",
+      "kind": "chip",
+      "refersTo": "segment-selected",
+      "description": "Joined square cells for choosing priority; the selected cell fills with aluminium.",
+      "html": "<div class=\"ds-segments\" role=\"radiogroup\"><span class=\"ds-segment\">Low</span><span class=\"ds-segment ds-segment-on\" aria-checked=\"true\">Medium</span><span class=\"ds-segment\">High</span></div>",
+      "css": ".ds-segments{display:flex;width:240px}.ds-segment{flex:1;text-align:center;padding:6px 4px;border:1px solid var(--trim);margin-inline-start:-1px;font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.1em;color:var(--legend-quiet);cursor:pointer}.ds-segment:first-child{margin-inline-start:0}.ds-segment:hover{color:var(--legend)}.ds-segment-on{background:var(--trim);color:var(--strip);font-weight:600}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Theatre Board",
+    "overview": "ReflowTask is drawn as the vitreous-enamel planning board that still hangs in operating suites and dispatch offices: a steel sheet fired with a coloured enamel, ruled with permanent screen-printed lines, framed in aluminium extrusion, and carrying work as laminated magnet strips that people move by hand when the day goes wrong. That object was chosen because its defining ritual is the product's mechanism. The schedule is re-laid when something slips, and the board keeps a mark of where a strip used to be.\n\nThe material is flat, hard and matte from edge to edge. Nothing is glossy, nothing floats, and no corner is rounded. Depth comes from value steps between the enamel, the sunk enamel and the steel frame, plus single inset hairlines where a strip or plate is seated, never from cast shadows. Annotation is a separate hand, chinagraph wax pencil, used only for things the system wrote about itself: where a strip moved from, and the running record of replans.\n\nThe board is dense by design. It stays open all day in peripheral vision, so it has two complete material states that follow the OS: deep enamel under room light and the same enamel in daylight. The light theme is not a tint of the dark one.",
+    "keyCharacteristics": [
+      "Enamel ground, screen-printed rules, bone laminate strips, aluminium trim",
+      "Square corners everywhere; circles only for screw heads and bullet dots",
+      "One saturated colour, vermilion, and it means \"at risk\" and nothing else",
+      "Every state carries a mark that survives without colour",
+      "Two type voices: a condensed grotesque \"printed\" on the enamel, and a workhorse sans on the strips",
+      "Tabular numerals wherever time appears"
+    ],
+    "rules": [
+      {
+        "name": "The One Signal Rule",
+        "body": "Vermilion marks work that cannot meet its deadline, plus errors. A vermilion element that isn't reporting a risk or an error is a bug.",
+        "section": "colors"
+      },
+      {
+        "name": "The Value-Separation Rule",
+        "body": "The enamel and the bone strips must sit far apart in value in both themes. The strip is an object on the board, never a tint of it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Printed-On Rule",
+        "body": "Anything that is a permanent part of the board (day names, hours, section headings, the wordmark) is set in Archivo Narrow capitals. Anything a person wrote (task titles, descriptions) is set in Archivo. Don't mix the two voices within one element.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Time Rule",
+        "body": "Every time, duration and count uses tabular numerals, so the board's columns of times line up and never jitter when values change.",
+        "section": "typography"
+      },
+      {
+        "name": "The Bundled Type Rule",
+        "body": "Faces are self-hosted and bundled into the build, never fetched from a CDN. The board runs on a home server that may have no internet connection.",
+        "section": "typography"
+      },
+      {
+        "name": "The Seated-Not-Floating Rule",
+        "body": "A strip or plate sits on the board. It gets an inset edge, never a drop shadow, glow or blur beneath it.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep every corner square (0px). Round forms are only for screw heads and bullet dots.",
+      "Do give every state a mark that survives without colour: a hatch, a double border, a glyph or words.",
+      "Do set every time, duration and count in tabular numerals.",
+      "Do derive the board's height from the drawn time window, at 1.05px per minute.",
+      "Do write annotation the system produces about itself in the chinagraph hand, not in legend ink.",
+      "Do keep both themes as full material states, with enamel and bone far apart in value in each.",
+      "Do bundle all faces into the build."
+    ],
+    "donts": [
+      "Don't use vermilion for anything except at-risk work and errors.",
+      "Don't give strips, plates or panels a drop shadow, glow or blur. Seat them with an inset hairline.",
+      "Don't set board lettering in a system display face. Legends are Archivo Narrow.",
+      "Don't show a time without a label where it could be mistaken for another time on the same strip.",
+      "Don't hide a strip control behind a hover-only icon.",
+      "Don't fetch fonts or other assets from a CDN at runtime."
+    ]
+  }
+}
