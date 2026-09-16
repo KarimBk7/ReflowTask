@@ -398,6 +398,8 @@ body {
   align-items: center;
   gap: 5px;
   margin: 2px 0 0;
+  /* A duration split across lines ("1h" / "30m") reads as two values. */
+  white-space: nowrap;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   color: var(--strip-ink-quiet);

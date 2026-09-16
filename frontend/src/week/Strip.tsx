@@ -69,11 +69,12 @@ export function Strip({
 
         {/* Stated in words, not only drawn: the arrow can be missed, and a 480ms
             animation is gone by the time anyone looks up. A compacted schedule produces
-            short strips, so this may never be suppressed for want of room - it shortens
-            to the origin time instead. */}
+            short strips, so this is never suppressed for want of room - it shortens its
+            label instead. It is never a bare time: unlabelled under the strip's own times
+            it reads as an end time, and a wrong one. */}
         {movedFrom && (
           <p className="strip-moved">
-            {compact ? formatTime(movedFrom) : `${t('state.movedFrom')} ${formatTime(movedFrom)}`}
+            {compact ? t('state.movedFromShort') : t('state.movedFrom')} {formatTime(movedFrom)}
           </p>
         )}
       </div>

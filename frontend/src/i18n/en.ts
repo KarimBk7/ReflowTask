@@ -48,6 +48,7 @@ export const en = {
 
   'state.atRisk': 'At risk',
   'state.movedFrom': 'Moved from',
+  'state.movedFromShort': 'from',
   'state.pinned': 'Pinned',
   'state.partiallyScheduled': 'Partly scheduled',
 
