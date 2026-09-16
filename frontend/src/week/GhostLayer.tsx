@@ -82,6 +82,10 @@ export function GhostLayer({
           </defs>
 
           {ghosts.map((ghost) => {
+            // A task reshaped without its first piece leaving that slot has no vacated position
+            // to mark and nowhere to point: an outline and a zero-length arrow would claim a move
+            // that did not happen there.
+            if (ghost.to && ghost.to.getTime() === ghost.from.getTime()) return null
             const from = locate(ghost.from)
             const to = ghost.to ? locate(ghost.to) : null
             if (!from) return null

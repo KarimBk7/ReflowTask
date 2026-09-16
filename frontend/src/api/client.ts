@@ -1,5 +1,6 @@
 import type {
   Block,
+  BoardConfig,
   LocalDateTime,
   ProblemDetail,
   RescheduleEvent,
@@ -90,4 +91,10 @@ export const api = {
   unpinBlock: (id: number) => request<Block>(`/schedule/blocks/${id}/unpin`, { method: 'POST' }),
 
   rescheduleEvents: () => request<RescheduleEvent[]>('/reschedule-events'),
+
+  config: () => request<BoardConfig>('/config'),
+
+  /** Replaces the whole configuration and replans the schedule against it. */
+  updateConfig: (config: BoardConfig) =>
+    request<BoardConfig>('/config', { method: 'PUT', body: JSON.stringify(config) }),
 }

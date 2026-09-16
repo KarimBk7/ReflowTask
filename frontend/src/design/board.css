@@ -1091,3 +1091,188 @@ body {
 .rail-edit {
   align-self: flex-start;
 }
+
+/* ── Working hours ─────────────────────────────────────────────────────────── */
+
+.hours {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-wide);
+  padding: var(--gap);
+  border: 1px solid var(--strip-edge);
+  box-shadow: inset 0 1px 0 var(--trim-lit);
+}
+
+.hours h2:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.hours-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.hours-legend {
+  margin-bottom: 2px;
+  padding: 0;
+  font-family: var(--face-legend);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--legend-quiet);
+}
+
+.hours-hint {
+  margin: 0 0 2px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--legend-quiet);
+}
+
+.hours-day {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: 2px var(--gap-tight);
+}
+
+.hours-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.hours-toggle input {
+  margin: 0;
+  accent-color: var(--trim);
+}
+
+.hours-day-name {
+  font-family: var(--face-legend);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--legend);
+}
+
+/* A day switched off reads as bare enamel, the same way the board draws it. */
+.hours-day[data-off] .hours-day-name {
+  color: var(--legend-quiet);
+}
+
+.hours-off {
+  font-family: var(--face-legend);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--legend-quiet);
+}
+
+.hours-range,
+.hours-blocked-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--legend-quiet);
+}
+
+.hours input[type='time'],
+.hours select,
+.hours-label {
+  min-width: 0;
+  padding: 4px 5px;
+  border: 1px solid var(--trim);
+  background: var(--enamel);
+  color: var(--legend);
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  border-radius: 0;
+  color-scheme: dark;
+}
+
+.hours input[type='time'] {
+  flex: 1;
+}
+
+.hours select {
+  flex: 0 0 auto;
+  font-family: var(--face-legend);
+  text-transform: uppercase;
+}
+
+.hours input[aria-invalid] {
+  border-color: var(--signal);
+}
+
+.hours input:focus-visible,
+.hours select:focus-visible,
+.hours-label:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.hours-row-error {
+  grid-column: 2;
+}
+
+.hours-blocked {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: var(--gap-tight);
+  border-bottom: 1px solid var(--rule-half);
+}
+
+.hours-label {
+  width: 100%;
+}
+
+.hours-label::placeholder {
+  color: var(--legend-quiet);
+}
+
+.hours-add {
+  align-self: flex-start;
+}
+
+.trim-button[aria-pressed='true'] {
+  background: var(--trim-face);
+  border-color: var(--trim-lit);
+}
+
+@media (prefers-color-scheme: light) {
+  .hours input[type='time'],
+  .hours select,
+  .hours-label {
+    color-scheme: light;
+  }
+}
+
+/*
+ * The hours editor needs a wider rail. At the rail's usual 264px each native time input
+ * keeps about 40px for its value once the picker glyph has taken its share, which clipped
+ * "09:00" to "09:0" and "12:00" to "12:" - times you cannot read are times you cannot edit.
+ * The board gives up a little width only while hours are being edited. Scoped to wide
+ * screens: on a phone the rail already spans the page.
+ */
+@media (min-width: 901px) {
+  .frame-body:has(.hours) {
+    grid-template-columns: 348px minmax(0, 1fr);
+  }
+}
+
+/* Never let a value collapse below what it takes to show HH:MM beside the picker glyph. */
+.hours input[type='time'] {
+  min-width: 6.25em;
+}

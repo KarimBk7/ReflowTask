@@ -17,9 +17,11 @@ import {
   useSetPinned,
   useSetStatus,
   useTasks,
+  useUpdateConfig,
   useUpdateTask,
 } from './lib/board'
 import { DAY_NAMES, addDays, isoDay, startOfWeek } from './lib/time'
+import { HoursForm } from './week/HoursForm'
 import { MarginRecord } from './week/MarginRecord'
 import { StripForm } from './week/StripForm'
 import { StripRail } from './week/StripRail'
@@ -31,6 +33,8 @@ export default function App() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
   // The task open in the rail form, or null while the form writes a new one.
   const [editing, setEditing] = useState<Task | null>(null)
+  // The rail shows either the strips and their form, or the working-hours editor in their place.
+  const [hoursOpen, setHoursOpen] = useState(false)
 
   const config = useConfig()
   const schedule = useSchedule(weekStart)
@@ -43,6 +47,7 @@ export default function App() {
   const deleteTask = useDeleteTask()
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
+  const updateConfig = useUpdateConfig()
 
   // Every mutation counts, including create and update: without them a quick second click
   // on Save sends the task twice and the board ends up with a duplicate.
@@ -52,7 +57,8 @@ export default function App() {
     setPinned.isPending ||
     deleteTask.isPending ||
     createTask.isPending ||
-    updateTask.isPending
+    updateTask.isPending ||
+    updateConfig.isPending
 
   const days = boardDays(config.data)
   const window = boardWindow(config.data)
@@ -76,7 +82,11 @@ export default function App() {
    */
   function editBlock(block: Block) {
     const task = tasks.data?.find((candidate) => candidate.id === block.taskId)
-    if (task) setEditing(task)
+    if (!task) return
+    // The task form lives in the same rail as the hours editor; without closing it, the edit
+    // would open behind the editor where nobody can see it.
+    setHoursOpen(false)
+    setEditing(task)
   }
 
   async function saveTask(input: Parameters<typeof createTask.mutateAsync>[0]) {
@@ -131,6 +141,19 @@ export default function App() {
           </button>
         </nav>
 
+        <button
+          type="button"
+          className="trim-button trim-button-text"
+          aria-pressed={hoursOpen}
+          onClick={() => {
+            // Opening the hours editor abandons any task edit in progress in the same rail.
+            setEditing(null)
+            setHoursOpen((open) => !open)
+          }}
+        >
+          {t('hours.open')}
+        </button>
+
         {/* Bolted to the right end of the extrusion, through its two fixings. */}
         <div className="lever-plate">
           <span className="fixing" aria-hidden="true" />
@@ -157,24 +180,35 @@ export default function App() {
         {/* The rail runs down the left of the board: unracked strips sit beside the board
             they have not been seated into. */}
         <div className="frame-rail">
-          <StripRail
-            entries={rail}
-            onDelete={(id) => {
-              // Deleting the task being edited would leave the form saving into nothing.
-              if (editing?.id === id) setEditing(null)
-              deleteTask.mutate(id)
-            }}
-            onEdit={setEditing}
-            busy={busy}
-          />
-          {/* Keyed by task so switching which task is edited remounts the fields from it. */}
-          <StripForm
-            key={editing?.id ?? 'new'}
-            editing={editing}
-            onSave={saveTask}
-            onCancel={() => setEditing(null)}
-            busy={busy}
-          />
+          {hoursOpen && config.data ? (
+            <HoursForm
+              config={config.data}
+              onSave={(next) => updateConfig.mutateAsync(next)}
+              onClose={() => setHoursOpen(false)}
+              busy={busy}
+            />
+          ) : (
+            <>
+              <StripRail
+                entries={rail}
+                onDelete={(id) => {
+                  // Deleting the task being edited would leave the form saving into nothing.
+                  if (editing?.id === id) setEditing(null)
+                  deleteTask.mutate(id)
+                }}
+                onEdit={setEditing}
+                busy={busy}
+              />
+              {/* Keyed by task so switching which task is edited remounts the fields from it. */}
+              <StripForm
+                key={editing?.id ?? 'new'}
+                editing={editing}
+                onSave={saveTask}
+                onCancel={() => setEditing(null)}
+                busy={busy}
+              />
+            </>
+          )}
         </div>
 
         <div className="frame-board">

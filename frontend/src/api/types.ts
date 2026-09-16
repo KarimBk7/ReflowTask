@@ -46,7 +46,7 @@ export interface Block {
   status: TaskStatus
 }
 
-export type RescheduleTrigger = 'TASK_CHANGED' | 'SCHEDULED_JOB' | 'MANUAL'
+export type RescheduleTrigger = 'TASK_CHANGED' | 'SCHEDULED_JOB' | 'MANUAL' | 'CONFIG_CHANGED'
 
 export type RescheduleItemKind = 'MISSED' | 'MOVED' | 'PLACED' | 'UNPLACED'
 
@@ -72,4 +72,23 @@ export interface ProblemDetail {
   title?: string
   detail?: string
   errors?: Record<string, string>
+}
+
+export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
+
+/** A recurring weekly window. The label is only meaningful on a blocked period. */
+export interface ConfigWindow {
+  day: DayOfWeek
+  /** 'HH:mm:ss' as the API sends it; the API also accepts 'HH:mm'. */
+  startTime: string
+  endTime: string
+  label: string | null
+}
+
+/** The scheduling configuration. Read and written in the same shape. */
+export interface BoardConfig {
+  workingHours: ConfigWindow[]
+  blockedPeriods: ConfigWindow[]
+  horizonDays: number
+  minChunkMinutes: number
 }

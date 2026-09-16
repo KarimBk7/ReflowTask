@@ -1,22 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '../api/client'
-import type { Block, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
+import type { Block, BoardConfig, ConfigWindow, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
 import { addDays, isoDay, parseClock, toLocalDateTime } from './time'
 
-export interface ConfigWindow {
-  day: string
-  startTime: string
-  endTime: string
-  label: string | null
-}
-
-export interface BoardConfig {
-  workingHours: ConfigWindow[]
-  blockedPeriods: ConfigWindow[]
-  horizonDays: number
-  minChunkMinutes: number
-}
+export type { BoardConfig, ConfigWindow }
 
 const DAY_NUMBER: Record<string, number> = {
   MONDAY: 1,
@@ -53,7 +41,7 @@ export function boardDays(config: BoardConfig | undefined): number[] {
 export function useConfig() {
   return useQuery({
     queryKey: ['config'],
-    queryFn: () => fetch('/api/v1/config').then((r) => r.json() as Promise<BoardConfig>),
+    queryFn: api.config,
     staleTime: 5 * 60_000,
   })
 }
@@ -112,6 +100,23 @@ export function useDeleteTask() {
 
 export function useCreateTask() {
   return useBoardMutation(api.createTask)
+}
+
+/**
+ * Saving new hours replans on the server, so the configuration, the schedule, the task list
+ * and the record all change together - and the board redraws its window from the new hours.
+ */
+export function useUpdateConfig() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: api.updateConfig,
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['config'] })
+      client.invalidateQueries({ queryKey: ['schedule'] })
+      client.invalidateQueries({ queryKey: ['tasks'] })
+      client.invalidateQueries({ queryKey: ['events'] })
+    },
+  })
 }
 
 export function useUpdateTask() {

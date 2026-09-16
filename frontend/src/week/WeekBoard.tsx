@@ -188,7 +188,7 @@ function DayColumn({
             key={block.id}
             block={block}
             windowStart={windowStart}
-            movedFrom={movedFrom.get(block.taskId) ?? null}
+            movedFrom={originUnlessSeatedThere(movedFrom.get(block.taskId), block)}
             onTogglePin={onTogglePin}
             onToggleDone={onToggleDone}
             onEdit={onEdit}
@@ -200,6 +200,16 @@ function DayColumn({
       </div>
     </section>
   )
+}
+
+/**
+ * A move is recorded per task, but read per strip. When a task is split, the piece still sitting
+ * where the task began did not move - labelling it "moved from 15:30" while it sits at 15:30
+ * would be a false statement. Only a strip that is actually somewhere else carries the origin.
+ */
+function originUnlessSeatedThere(origin: Date | undefined, block: Block): Date | null {
+  if (!origin) return null
+  return origin.getTime() === new Date(block.startAt).getTime() ? null : origin
 }
 
 /** The present, drawn in the same hand as the ghosts and registered to the same ruler. */
