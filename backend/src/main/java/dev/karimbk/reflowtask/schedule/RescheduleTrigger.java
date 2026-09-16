@@ -10,6 +10,12 @@ public enum RescheduleTrigger {
 	SCHEDULED_JOB,
 
 	/** The user asked for a replan explicitly. */
-	MANUAL
+	MANUAL,
+
+	/**
+	 * Working hours, blocked time or planning settings changed. A schedule laid out against
+	 * the old hours is wrong the moment they change, so it is rebuilt immediately.
+	 */
+	CONFIG_CHANGED
 
 }
