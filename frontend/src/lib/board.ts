@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '../api/client'
-import type { Block, BoardConfig, ConfigWindow, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
+import type { BoardConfig, ConfigWindow, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
 import { addDays, isoDay, parseClock, toLocalDateTime } from './time'
 
 export type { BoardConfig, ConfigWindow }
@@ -124,8 +124,9 @@ export function useUpdateTask() {
 }
 
 /**
- * Work the board cannot show: never placed, or placed beyond its deadline. The shortfall is
- * derived here rather than stored, so it cannot disagree with the schedule.
+ * Work the board cannot show: never placed, or placed beyond its deadline. Both come from the
+ * server, which derives them from every block on each read rather than storing them, so they
+ * cannot disagree with the schedule or with which week happens to be on screen.
  */
 export interface RailEntry {
   task: Task
@@ -133,21 +134,16 @@ export interface RailEntry {
   atRisk: boolean
 }
 
-export function unrackedWork(tasks: Task[], blocks: Block[]): RailEntry[] {
-  const scheduled = new Map<number, number>()
-  const risky = new Set<number>()
-  for (const block of blocks) {
-    const minutes = (new Date(block.endAt).getTime() - new Date(block.startAt).getTime()) / 60_000
-    scheduled.set(block.taskId, (scheduled.get(block.taskId) ?? 0) + minutes)
-    if (block.atRisk) risky.add(block.taskId)
-  }
-
+export function unrackedWork(tasks: Task[]): RailEntry[] {
+  // Placement comes from the server, which sees every block. This was once derived from the
+  // blocks of the displayed week, so viewing any other week reported every task placed
+  // outside it as having no slot at all.
   return tasks
     .filter((task) => task.status !== 'DONE')
     .map((task) => ({
       task,
-      scheduledMinutes: scheduled.get(task.id) ?? 0,
-      atRisk: risky.has(task.id),
+      scheduledMinutes: task.scheduledMinutes,
+      atRisk: task.atRisk,
     }))
     .filter((entry) => entry.atRisk || entry.scheduledMinutes < entry.task.estimatedMinutes)
     .sort((a, b) => Number(b.atRisk) - Number(a.atRisk) || a.task.id - b.task.id)

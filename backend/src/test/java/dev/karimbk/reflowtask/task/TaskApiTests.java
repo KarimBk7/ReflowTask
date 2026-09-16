@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -150,6 +151,52 @@ class TaskApiTests {
 		this.mvc.perform(get("/api/v1/tasks/999999"))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.detail").value("Task 999999 not found"));
+	}
+
+	/**
+	 * Regression: the week view used to work out whether a task was scheduled from the blocks
+	 * of the week on screen, so looking at any other week reported every task placed elsewhere
+	 * as having "no slot in the horizon". Placement is derived here from all of a task's
+	 * blocks, independent of which dates a client happens to be looking at.
+	 */
+	@Test
+	void everyTaskReportsItsScheduledMinutesWhereverItsBlocksAre() throws Exception {
+		create(json("First", "60", null, null, "MEDIUM"));
+		create(json("Second", "90", null, null, "MEDIUM"));
+
+		this.mvc.perform(get("/api/v1/tasks"))
+			.andExpect(jsonPath("$[?(@.title == 'First')].scheduledMinutes").value(60))
+			.andExpect(jsonPath("$[?(@.title == 'Second')].scheduledMinutes").value(90));
+	}
+
+	@Test
+	void aTaskThatCannotMeetItsDeadlineIsReportedAtRisk() throws Exception {
+		// A deadline already in the past cannot be met by any placement, whatever the clock says.
+		create(json("Overdue", "60", "2020-01-01", null, "HIGH"));
+
+		this.mvc.perform(get("/api/v1/tasks"))
+			.andExpect(jsonPath("$[?(@.title == 'Overdue')].atRisk").value(true));
+	}
+
+	@Test
+	void workBeyondTheHorizonReportsTheShortfall() throws Exception {
+		// Thirty days of effort cannot fit a fourteen-day horizon of working hours.
+		long id = create(json("Enormous", "43200", null, null, "LOW"));
+
+		String body = this.mvc.perform(get("/api/v1/tasks/" + id)).andReturn().getResponse().getContentAsString();
+		int scheduled = JsonPath.read(body, "$.scheduledMinutes");
+		assertThat(scheduled).isPositive().isLessThan(43200);
+	}
+
+	@Test
+	void theCreateResponseAlreadyReflectsTheReplan() throws Exception {
+		// The response is built after the replan, so a client does not have to re-fetch to learn
+		// where the task it just created was placed.
+		this.mvc
+			.perform(post("/api/v1/tasks").contentType(MediaType.APPLICATION_JSON)
+					.content(json("Placed at once", "60", null, null, "MEDIUM")))
+			.andExpect(jsonPath("$.scheduledMinutes").value(60))
+			.andExpect(jsonPath("$.atRisk").value(false));
 	}
 
 	@Test

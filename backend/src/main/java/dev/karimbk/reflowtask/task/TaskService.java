@@ -2,11 +2,16 @@ package dev.karimbk.reflowtask.task;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import dev.karimbk.reflowtask.common.NotFoundException;
 import dev.karimbk.reflowtask.schedule.RescheduleTrigger;
 import dev.karimbk.reflowtask.schedule.SchedulerService;
+import dev.karimbk.reflowtask.schedule.TimeBlock;
+import dev.karimbk.reflowtask.schedule.TimeBlockRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,38 +21,52 @@ public class TaskService {
 
 	private final TaskRepository tasks;
 
+	private final TimeBlockRepository blocks;
+
 	private final SchedulerService scheduler;
 
 	private final Clock clock;
 
-	TaskService(TaskRepository tasks, SchedulerService scheduler, Clock clock) {
+	TaskService(TaskRepository tasks, TimeBlockRepository blocks, SchedulerService scheduler, Clock clock) {
 		this.tasks = tasks;
+		this.blocks = blocks;
 		this.scheduler = scheduler;
 		this.clock = clock;
 	}
 
 	@Transactional(readOnly = true)
 	public List<TaskResponse> findAll() {
-		return this.tasks.findAllByOrderByCreatedAtDesc().stream().map(TaskResponse::of).toList();
+		// One query for every block, not one per task.
+		Map<Long, List<TimeBlock>> byTask = new HashMap<>();
+		for (TimeBlock block : this.blocks.findAll()) {
+			byTask.computeIfAbsent(block.getTask().getId(), (id) -> new ArrayList<>()).add(block);
+		}
+		return this.tasks.findAllByOrderByCreatedAtDesc()
+			.stream()
+			.map((task) -> respond(task, byTask.getOrDefault(task.getId(), List.of())))
+			.toList();
 	}
 
 	@Transactional(readOnly = true)
 	public TaskResponse findById(long id) {
-		return TaskResponse.of(require(id));
+		return respond(require(id));
 	}
 
 	/**
 	 * Anything that changes what needs scheduling triggers a replan, so the calendar is
 	 * correct the moment the user looks at it rather than at the next job tick.
+	 *
+	 * Responses are built after the replan, so they report where the task now sits rather than
+	 * where it sat before this change.
 	 */
 	@Transactional
 	public TaskResponse create(TaskRequest request) {
 		Task task = new Task(request.title(), request.description(), request.estimatedMinutes(),
 				Task.toDeadline(request.deadlineDate(), request.deadlineTime()),
 				request.deadlineTime() != null, request.priority(), LocalDateTime.now(this.clock));
-		TaskResponse created = TaskResponse.of(this.tasks.save(task));
+		Task saved = this.tasks.save(task);
 		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
-		return created;
+		return respond(saved);
 	}
 
 	@Transactional
@@ -59,18 +78,16 @@ public class TaskService {
 		task.setDeadline(Task.toDeadline(request.deadlineDate(), request.deadlineTime()),
 				request.deadlineTime() != null);
 		task.setPriority(request.priority());
-		TaskResponse updated = TaskResponse.of(task);
 		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
-		return updated;
+		return respond(task);
 	}
 
 	@Transactional
 	public TaskResponse changeStatus(long id, TaskStatus status) {
 		Task task = require(id);
 		task.setStatus(status);
-		TaskResponse changed = TaskResponse.of(task);
 		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
-		return changed;
+		return respond(task);
 	}
 
 	@Transactional
@@ -82,6 +99,27 @@ public class TaskService {
 		this.tasks.delete(task);
 		this.tasks.flush();
 		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+	}
+
+	private TaskResponse respond(Task task) {
+		return respond(task, this.blocks.findByTaskId(task.getId()));
+	}
+
+	/**
+	 * Placement is worked out from every block the task has, never from a date range. A client
+	 * that derived it from the blocks it happened to be displaying would report any task placed
+	 * outside that range as unscheduled.
+	 */
+	private static TaskResponse respond(Task task, List<TimeBlock> placed) {
+		long minutes = 0;
+		boolean atRisk = false;
+		for (TimeBlock block : placed) {
+			minutes += block.toSlot().minutes();
+			if (task.getDeadline() != null && block.getEndAt().isAfter(task.getDeadline())) {
+				atRisk = true;
+			}
+		}
+		return TaskResponse.of(task, (int) minutes, atRisk);
 	}
 
 	private Task require(long id) {

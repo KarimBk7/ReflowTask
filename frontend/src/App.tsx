@@ -64,7 +64,7 @@ export default function App() {
   const window = boardWindow(config.data)
   const blocks = schedule.data ?? []
 
-  const rail = useMemo(() => unrackedWork(tasks.data ?? [], blocks), [tasks.data, blocks])
+  const rail = useMemo(() => unrackedWork(tasks.data ?? []), [tasks.data])
   const ghosts = useMemo(() => ghostsFrom(events.data, weekStart), [events.data, weekStart])
 
   const lastDay = addDays(weekStart, days[days.length - 1] - 1)

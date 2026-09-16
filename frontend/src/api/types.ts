@@ -20,6 +20,14 @@ export interface Task {
   priority: Priority
   status: TaskStatus
   createdAt: LocalDateTime
+  /**
+   * Minutes of the estimate that currently have a place, across all of the task's blocks.
+   * Derived by the server from every block - never work this out from the blocks of one
+   * displayed week, which reports anything placed outside that week as unscheduled.
+   */
+  scheduledMinutes: number
+  /** Some of the task's work is placed after its deadline. */
+  atRisk: boolean
 }
 
 export interface TaskInput {
