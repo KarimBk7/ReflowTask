@@ -22,6 +22,7 @@ export const en = {
   'action.edit': 'Edit',
   'action.delete': 'Delete',
   'action.newTask': 'New task',
+  'action.editTask': 'Edit task',
   'action.save': 'Save',
   'action.cancel': 'Cancel',
 

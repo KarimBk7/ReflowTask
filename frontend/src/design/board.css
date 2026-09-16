@@ -1045,3 +1045,49 @@ body {
     order: 1;
   }
 }
+
+/* ── Editing ───────────────────────────────────────────────────────────────── */
+
+/* Three labelled controls must still fit a narrow column; they wrap rather than clip. */
+.strip-actions {
+  flex-wrap: wrap;
+}
+
+.field textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--trim);
+  background: var(--enamel);
+  color: var(--legend);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.field textarea:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: var(--gap-tight);
+}
+
+.form-actions .lever {
+  flex: 1;
+  justify-content: center;
+}
+
+/* A task open for editing is written on a strip taken off the board: the form picks up
+   the laminate edge so it is clear this is not a blank new strip. */
+.new-strip[data-editing] {
+  border-color: var(--strip-edge);
+  box-shadow: inset 0 1px 0 var(--trim-lit);
+}
+
+.rail-edit {
+  align-self: flex-start;
+}

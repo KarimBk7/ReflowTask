@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '../api/client'
-import type { Block, RescheduleEvent, Task, TaskStatus } from '../api/types'
+import type { Block, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
 import { addDays, isoDay, parseClock, toLocalDateTime } from './time'
 
 export interface ConfigWindow {
@@ -112,6 +112,10 @@ export function useDeleteTask() {
 
 export function useCreateTask() {
   return useBoardMutation(api.createTask)
+}
+
+export function useUpdateTask() {
+  return useBoardMutation(({ id, input }: { id: number; input: TaskInput }) => api.updateTask(id, input))
 }
 
 /**

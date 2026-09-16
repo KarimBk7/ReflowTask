@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import type { Block } from './api/types'
+import type { Block, Task } from './api/types'
 import { ChevronIcon, ReflowIcon } from './design/Icon'
 import { t } from './i18n/en'
 import {
@@ -17,10 +17,11 @@ import {
   useSetPinned,
   useSetStatus,
   useTasks,
+  useUpdateTask,
 } from './lib/board'
 import { DAY_NAMES, addDays, isoDay, startOfWeek } from './lib/time'
 import { MarginRecord } from './week/MarginRecord'
-import { NewStripForm } from './week/NewStripForm'
+import { StripForm } from './week/StripForm'
 import { StripRail } from './week/StripRail'
 import { WeekBoard } from './week/WeekBoard'
 import './design/tokens.css'
@@ -28,6 +29,8 @@ import './design/board.css'
 
 export default function App() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
+  // The task open in the rail form, or null while the form writes a new one.
+  const [editing, setEditing] = useState<Task | null>(null)
 
   const config = useConfig()
   const schedule = useSchedule(weekStart)
@@ -39,9 +42,17 @@ export default function App() {
   const setPinned = useSetPinned()
   const deleteTask = useDeleteTask()
   const createTask = useCreateTask()
+  const updateTask = useUpdateTask()
 
+  // Every mutation counts, including create and update: without them a quick second click
+  // on Save sends the task twice and the board ends up with a duplicate.
   const busy =
-    replan.isPending || setStatus.isPending || setPinned.isPending || deleteTask.isPending
+    replan.isPending ||
+    setStatus.isPending ||
+    setPinned.isPending ||
+    deleteTask.isPending ||
+    createTask.isPending ||
+    updateTask.isPending
 
   const days = boardDays(config.data)
   const window = boardWindow(config.data)
@@ -57,6 +68,24 @@ export default function App() {
 
   function togglePin(block: Block) {
     setPinned.mutate({ id: block.id, pinned: !block.pinned })
+  }
+
+  /**
+   * A block only carries its task id and title, so the full task is looked up before the
+   * form opens. Editing always starts from the server's copy, never from what a strip shows.
+   */
+  function editBlock(block: Block) {
+    const task = tasks.data?.find((candidate) => candidate.id === block.taskId)
+    if (task) setEditing(task)
+  }
+
+  async function saveTask(input: Parameters<typeof createTask.mutateAsync>[0]) {
+    if (editing) {
+      await updateTask.mutateAsync({ id: editing.id, input })
+      setEditing(null)
+    } else {
+      await createTask.mutateAsync(input)
+    }
   }
 
   function toggleDone(block: Block) {
@@ -128,8 +157,24 @@ export default function App() {
         {/* The rail runs down the left of the board: unracked strips sit beside the board
             they have not been seated into. */}
         <div className="frame-rail">
-          <StripRail entries={rail} onDelete={(id) => deleteTask.mutate(id)} busy={busy} />
-          <NewStripForm onCreate={(input) => createTask.mutateAsync(input)} busy={busy} />
+          <StripRail
+            entries={rail}
+            onDelete={(id) => {
+              // Deleting the task being edited would leave the form saving into nothing.
+              if (editing?.id === id) setEditing(null)
+              deleteTask.mutate(id)
+            }}
+            onEdit={setEditing}
+            busy={busy}
+          />
+          {/* Keyed by task so switching which task is edited remounts the fields from it. */}
+          <StripForm
+            key={editing?.id ?? 'new'}
+            editing={editing}
+            onSave={saveTask}
+            onCancel={() => setEditing(null)}
+            busy={busy}
+          />
         </div>
 
         <div className="frame-board">
@@ -143,6 +188,7 @@ export default function App() {
             ghosts={ghosts}
             onTogglePin={togglePin}
             onToggleDone={toggleDone}
+            onEdit={editBlock}
             busy={busy}
           />
           <MarginRecord events={events.data} />

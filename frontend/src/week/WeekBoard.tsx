@@ -18,6 +18,7 @@ interface WeekBoardProps {
   ghosts: Ghost[]
   onTogglePin: (block: Block) => void
   onToggleDone: (block: Block) => void
+  onEdit: (block: Block) => void
   busy: boolean
 }
 
@@ -33,6 +34,7 @@ export function WeekBoard({
   ghosts,
   onTogglePin,
   onToggleDone,
+  onEdit,
   busy,
 }: WeekBoardProps) {
   const hours: number[] = []
@@ -84,6 +86,7 @@ export function WeekBoard({
               movedFrom={movedFrom}
               onTogglePin={onTogglePin}
               onToggleDone={onToggleDone}
+              onEdit={onEdit}
               busy={busy}
             />
           )
@@ -116,6 +119,7 @@ interface DayColumnProps {
   movedFrom: Map<number, Date>
   onTogglePin: (block: Block) => void
   onToggleDone: (block: Block) => void
+  onEdit: (block: Block) => void
   busy: boolean
 }
 
@@ -130,6 +134,7 @@ function DayColumn({
   movedFrom,
   onTogglePin,
   onToggleDone,
+  onEdit,
   busy,
 }: DayColumnProps) {
   const today = isToday(date)
@@ -186,6 +191,7 @@ function DayColumn({
             movedFrom={movedFrom.get(block.taskId) ?? null}
             onTogglePin={onTogglePin}
             onToggleDone={onToggleDone}
+            onEdit={onEdit}
             busy={busy}
           />
         ))}

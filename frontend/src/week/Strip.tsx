@@ -10,6 +10,7 @@ interface StripProps {
   movedFrom: Date | null
   onTogglePin: (block: Block) => void
   onToggleDone: (block: Block) => void
+  onEdit: (block: Block) => void
   busy: boolean
 }
 
@@ -27,6 +28,7 @@ export function Strip({
   movedFrom,
   onTogglePin,
   onToggleDone,
+  onEdit,
   busy,
 }: StripProps) {
   const start = new Date(block.startAt)
@@ -105,6 +107,9 @@ export function Strip({
           disabled={busy}
         >
           {block.pinned ? t('action.unpin') : t('action.pin')}
+        </button>
+        <button type="button" className="strip-action" onClick={() => onEdit(block)} disabled={busy}>
+          {t('action.edit')}
         </button>
       </div>
 

@@ -1,3 +1,4 @@
+import type { Task } from '../api/types'
 import { RiskIcon, TrashIcon } from '../design/Icon'
 import { t } from '../i18n/en'
 import type { RailEntry } from '../lib/board'
@@ -6,6 +7,7 @@ import { formatDeadline, formatDuration } from '../lib/time'
 interface StripRailProps {
   entries: RailEntry[]
   onDelete: (id: number) => void
+  onEdit: (task: Task) => void
   busy: boolean
 }
 
@@ -14,7 +16,7 @@ interface StripRailProps {
  * deadline. Nothing here is hidden behind a filter - if the scheduler could not seat it, the
  * user sees it next to the board it failed to fit into.
  */
-export function StripRail({ entries, onDelete, busy }: StripRailProps) {
+export function StripRail({ entries, onDelete, onEdit, busy }: StripRailProps) {
   return (
     <aside className="rail" aria-labelledby="rail-heading">
       <h2 className="rail-heading" id="rail-heading">
@@ -52,6 +54,14 @@ export function StripRail({ entries, onDelete, busy }: StripRailProps) {
                     )}
                   </p>
                 </div>
+                <button
+                  type="button"
+                  className="strip-action rail-edit"
+                  onClick={() => onEdit(task)}
+                  disabled={busy}
+                >
+                  {t('action.edit')}
+                </button>
                 <button
                   type="button"
                   className="rail-delete"
