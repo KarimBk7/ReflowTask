@@ -1,267 +1,311 @@
 ---
 name: ReflowTask
-description: A self-repairing week schedule, rendered as an enamel planning board.
+description: A calm week calendar that is honest about its own changes.
 colors:
-  enamel: "#223f3c"
-  enamel-sunk: "#1a312f"
-  enamel-frame: "#142927"
-  strip-bone: "#e7e1d3"
-  strip-edge: "#c3bdaf"
-  strip-ink: "#1b2422"
-  strip-ink-quiet: "#55605c"
-  strip-done: "#b9bdb2"
-  legend: "#dbe6e1"
-  legend-quiet: "#9fb3ad"
-  chinagraph: "#f1eee4"
-  signal-vermilion: "#e2583a"
-  signal-ink: "#2a0d06"
-  trim-aluminium: "#7f8a86"
-  trim-lit: "#b6c0bb"
-  trim-face: "#6d7874"
-  trim-shadow: "#48514e"
-  focus-amber: "#ffd166"
-  enamel-daylight: "#8fa79f"
-  strip-bone-daylight: "#f7f3e8"
-  legend-daylight: "#0f1f1c"
-  chinagraph-daylight: "#12201d"
-  signal-vermilion-daylight: "#a32d12"
+  accent: "#4253d4"
+  accent-hover: "#3544bd"
+  accent-soft: "#eceffd"
+  accent-ink: "#ffffff"
+  risk: "#c2332d"
+  risk-soft: "#fdeeed"
+  risk-edge: "#f0bdb9"
+  risk-ink: "#8c1d18"
+  changed: "#e3a019"
+  changed-soft: "#fff4dc"
+  changed-ink: "#74490a"
+  low-fill: "#eff1f4"
+  low-edge: "#d9dde4"
+  low-ink: "#2a2f38"
+  medium-fill: "#e7effd"
+  medium-edge: "#c2d5f6"
+  medium-ink: "#173a73"
+  high-fill: "#efe9fc"
+  high-edge: "#d6c7f5"
+  high-ink: "#42267b"
+  page: "#f3f4f7"
+  surface: "#ffffff"
+  surface-sunk: "#f7f8fa"
+  surface-hover: "#f1f3f6"
+  line: "#e6e8ed"
+  line-strong: "#d4d8e0"
+  line-faint: "#f0f1f4"
+  ink: "#171a20"
+  ink-2: "#4a505c"
+  ink-3: "#626977"
 typography:
-  wordmark:
-    fontFamily: "Archivo Narrow, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "15px"
+  headline:
+    fontFamily: "Archivo Variable, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "19px"
     fontWeight: 600
-    letterSpacing: "0.22em"
-  legend:
-    fontFamily: "Archivo Narrow, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "12px"
-    fontWeight: 600
-    letterSpacing: "0.16em"
-  label:
-    fontFamily: "Archivo Narrow, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "10px"
-    fontWeight: 400
-    letterSpacing: "0.14em"
+    lineHeight: 1
+    letterSpacing: "-0.02em"
   title:
     fontFamily: "Archivo Variable, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "13px"
+    fontSize: "17px"
     fontWeight: 600
-    lineHeight: 1.25
+    lineHeight: 1.3
+    letterSpacing: "-0.01em"
   body:
     fontFamily: "Archivo Variable, ui-sans-serif, system-ui, sans-serif"
     fontSize: "14px"
     fontWeight: 400
     lineHeight: 1.45
-  numeral:
-    fontFamily: "Archivo Narrow, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "11px"
+  block-title:
+    fontFamily: "Archivo Variable, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 580
+    lineHeight: 1.3
+  label:
+    fontFamily: "Archivo Variable, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "12px"
+    fontWeight: 600
+    lineHeight: 1.45
+  meta:
+    fontFamily: "Archivo Variable, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "11.5px"
     fontWeight: 400
-    letterSpacing: "0.08em"
+    lineHeight: 1
     fontFeature: "tnum"
 rounded:
-  none: "0px"
+  radius-s: "6px"
+  radius: "8px"
+  radius-l: "12px"
+  pill: "15px"
 spacing:
-  hair: "2px"
-  tight: "6px"
-  base: "12px"
-  wide: "24px"
-  room: "40px"
+  space-1: "4px"
+  space-2: "8px"
+  space-3: "12px"
+  space-4: "16px"
+  space-5: "24px"
+  space-6: "32px"
 components:
-  lever:
-    backgroundColor: "{colors.trim-aluminium}"
-    textColor: "{colors.strip-bone}"
-    typography: "{typography.legend}"
-    rounded: "{rounded.none}"
-    padding: "9px 16px"
-  lever-hover:
-    backgroundColor: "{colors.trim-lit}"
-  trim-button:
+  button-primary:
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.accent-ink}"
+    rounded: "{rounded.radius}"
+    padding: "0 14px"
+    height: "34px"
+  button-primary-hover:
+    backgroundColor: "{colors.accent-hover}"
+  button-secondary:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.radius}"
+    padding: "0 14px"
+    height: "34px"
+  button-secondary-hover:
+    backgroundColor: "{colors.surface-hover}"
+  button-ghost:
     backgroundColor: "transparent"
-    textColor: "{colors.legend}"
-    rounded: "{rounded.none}"
-    padding: "6px 10px"
-  strip:
-    backgroundColor: "{colors.strip-bone}"
-    textColor: "{colors.strip-ink}"
-    typography: "{typography.title}"
-    rounded: "{rounded.none}"
-    padding: "5px 8px"
-  strip-done:
-    backgroundColor: "{colors.strip-done}"
-    textColor: "{colors.strip-ink-quiet}"
-  strip-action:
-    backgroundColor: "transparent"
-    textColor: "{colors.strip-ink}"
-    typography: "{typography.label}"
-    rounded: "{rounded.none}"
-    padding: "2px 6px"
-  field-input:
-    backgroundColor: "{colors.enamel}"
-    textColor: "{colors.legend}"
-    typography: "{typography.body}"
-    rounded: "{rounded.none}"
+    textColor: "{colors.ink-2}"
+    rounded: "{rounded.radius}"
+    padding: "0 14px"
+    height: "34px"
+  button-ghost-hover:
+    backgroundColor: "{colors.surface-hover}"
+    textColor: "{colors.ink}"
+  chip:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink-2}"
+    rounded: "{rounded.pill}"
+    padding: "0 11px"
+    height: "30px"
+  chip-selected:
+    backgroundColor: "{colors.accent-soft}"
+    textColor: "{colors.accent}"
+  input:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.radius-s}"
+    padding: "0 9px"
+    height: "34px"
+  block-medium:
+    backgroundColor: "{colors.medium-fill}"
+    textColor: "{colors.medium-ink}"
+    typography: "{typography.block-title}"
+    rounded: "{rounded.radius-s}"
     padding: "6px 8px"
-  segment-selected:
-    backgroundColor: "{colors.trim-aluminium}"
-    textColor: "{colors.strip-bone}"
-    typography: "{typography.label}"
-    rounded: "{rounded.none}"
-    padding: "6px 4px"
+  block-low:
+    backgroundColor: "{colors.low-fill}"
+    textColor: "{colors.low-ink}"
+  block-high:
+    backgroundColor: "{colors.high-fill}"
+    textColor: "{colors.high-ink}"
+  block-at-risk:
+    backgroundColor: "{colors.risk-soft}"
+    textColor: "{colors.risk-ink}"
+  changed-chip:
+    backgroundColor: "{colors.changed-soft}"
+    textColor: "{colors.changed-ink}"
+    rounded: "10px"
+    padding: "2px 7px"
+  popover:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.radius-l}"
+    padding: "16px"
+    width: "364px"
 ---
 
 # Design System: ReflowTask
 
 ## Overview
 
-**Creative North Star: "The Theatre Board"**
+**Creative North Star: "The Honest Calendar"**
 
-ReflowTask is drawn as the vitreous-enamel planning board that still hangs in operating suites and dispatch offices: a steel sheet fired with a coloured enamel, ruled with permanent screen-printed lines, framed in aluminium extrusion, and carrying work as laminated magnet strips that people move by hand when the day goes wrong. That object was chosen because its defining ritual is the product's mechanism. The schedule is re-laid when something slips, and the board keeps a mark of where a strip used to be.
+A clean, calm week calendar in the category of Notion Calendar and Amie: a cool light-grey page, one white calendar board, hairline hour rules and soft tinted blocks. It stays open all day beside other work, so it is quiet by default and follows the operating system between light and dark (every token has a dark override; dark is soft charcoal, never pure black).
 
-The material is flat, hard and matte from edge to edge. Nothing is glossy, nothing floats, and no corner is rounded. Depth comes from value steps between the enamel, the sunk enamel and the steel frame, plus single inset hairlines where a strip or plate is seated, never from cast shadows. Annotation is a separate hand, chinagraph wax pencil, used only for things the system wrote about itself: where a strip moved from, and the running record of replans.
+Calm here does not mean silent. The world's one distinctive move is that the schedule is honest about its own changes: whatever the last replan moved carries an amber ring and a "from" chip, its old slot keeps a dashed amber outline, and blocks glide to their new places instead of jumping. Colour carries meaning and nothing else: indigo for action and the present, red for risk, amber for change, three soft tints for priority.
 
-The board is dense by design. It stays open all day in peripheral vision, so it has two complete material states that follow the OS: deep enamel under room light and the same enamel in daylight. The light theme is not a tint of the dark one.
+Density is desktop-calendar density: 14px body, 13px block titles, generous whitespace around a grid that fills the viewport. On phones the calendar moves above the sidebar and popovers become bottom sheets.
 
 **Key Characteristics:**
-- Enamel ground, screen-printed rules, bone laminate strips, aluminium trim
-- Square corners everywhere; circles only for screw heads and bullet dots
-- One saturated colour, vermilion, and it means "at risk" and nothing else
-- Every state carries a mark that survives without colour
-- Two type voices: a condensed grotesque "printed" on the enamel, and a workhorse sans on the strips
-- Tabular numerals wherever time appears
+- Cool neutral page, one white bordered board, hairline rules.
+- One bundled variable grotesque with tabular numerals for every time.
+- Soft tinted blocks with a 1px tinted edge; priority also drawn as a bar glyph.
+- Three reserved signal colours: indigo (action, today, now), red (at risk, errors), amber (last replan's changes).
+- Flat at rest; shadows only for things that float or are being dragged.
+- Light and dark from the same token names via `prefers-color-scheme`.
 
 ## Colors
 
-A restrained, mid-saturated green-grey world with bone laminate on top, in which a single vermilion is the only colour allowed to shout.
+A cool, low-chroma neutral scale with three reserved signal hues and three soft priority tints.
 
 ### Primary
-- **Theatre Enamel** (#223f3c): The board itself. It covers the whole working field under the strips and sets the identity. Its daylight counterpart **Daylight Enamel** (#8fa79f) is deliberately mid-value rather than pale, because a pale ground would sit at the same value as the bone strips and the board would disappear.
-- **Sunk Enamel** (#1a312f): Bare, unruled enamel. Blocked periods such as lunch, hours outside the working window, and the rail's ground.
-- **Steel Frame** (#142927): The darkest value, the steel the board is bolted into. Used for the page ground and the frame around the enamel.
+- **Calm Indigo** (accent): primary buttons (New task), today's date pill and day-name, today's column wash (accent-soft at 35%), the now-line, its dot and the gutter time pill, selected chips and choices, switches, focus rings, caret and workload fill. Indigo Hover deepens it on hover; Indigo Wash (accent-soft) is its tinted background.
 
 ### Secondary
-- **Signal Vermilion** (#e2583a): Reserved for work scheduled past its deadline, in borders, the risk glyph, and validation errors. Daylight: **Daylight Vermilion** (#a32d12). Also the text-selection highlight. It is never decoration.
+- **Alarm Red** (risk, risk-soft, risk-edge, risk-ink): at-risk blocks (fill, edge and ink swap to the risk set), the risk glyph, over-capacity workload meters, the needs-attention count badge, missed ghosts, field errors, form failures and the floating error notice. Nothing else.
+
+### Tertiary
+- **Replan Amber** (changed, changed-soft, changed-ink): the 2px outline ring on a block the last replan moved, the "from" chip and text on that block, the dashed old-slot outlines and the half of the brand mark that reflowed.
 
 ### Neutral
-- **Strip Bone** (#e7e1d3): The laminate of every strip, in the week grid and the rail. Daylight: #f7f3e8.
-- **Strip Edge** (#c3bdaf): The laminate's cut edge, as a strip border and the outline of strip-level controls.
-- **Strip Ink** (#1b2422): Text printed on a strip.
-- **Strip Ink Quiet** (#55605c): Secondary strip text: times, durations, move notes.
-- **Spent Laminate** (#b9bdb2): The strip ground once its task is done.
-- **Legend Ink** (#dbe6e1): Lettering fired onto the enamel: day names, headings, the wordmark. Daylight: #0f1f1c.
-- **Legend Quiet** (#9fb3ad): Printed secondary lettering: hour numerals, dates, field labels.
-- **Chinagraph** (#f1eee4): The wax-pencil annotation hand, for the now-line, move brackets, ghost marks and the record. Softened at 55% opacity for less important marks. Daylight: #12201d.
-- **Aluminium** (#7f8a86), **Lit Edge** (#b6c0bb), **Brushed Face** (#6d7874), **Machined Shadow** (#48514e): The four values of the extrusion profile, top to bottom.
-- **Focus Amber** (#ffd166): Keyboard focus rings only.
+- **Cool Page** (page): app background, top bar, sticky hours action bar.
+- **Board White** (surface): the calendar board, popovers, secondary buttons, chips, inputs, done blocks.
+- **Sunk Grey** (surface-sunk): days off inside the grid.
+- **Hover Grey** (surface-hover): hover wash for ghost buttons, list rows, icon buttons; the segmented-control track.
+- **Hairline / Strong Hairline / Faint Hairline** (line, line-strong, line-faint): hour rules and borders / control borders, done-block edge, scrollbar thumb / half-hour rules, day dividers, empty meter track.
+- **Ink / Ink 2 / Ink 3** (ink, ink-2, ink-3): primary text / secondary text and labels / hints, gutter hours, day names, placeholders.
+- **Priority tints** (low-*, medium-*, high-*): grey, soft blue and soft violet fill + edge + ink sets for LOW, MEDIUM and HIGH blocks.
+- **Off-hours veil** (`rgb(40 50 70 / 3.5%)` light, `rgb(0 0 0 / 24%)` dark): laid over hours outside working time so the rules still show through.
 
 ### Named Rules
-**The One Signal Rule.** Vermilion marks work that cannot meet its deadline, plus errors. A vermilion element that isn't reporting a risk or an error is a bug.
+**The Reserved Signals Rule.** Indigo means act or now, red means at risk or failed, amber means the last replan changed this. No signal hue is ever used as decoration, and no two meanings share a hue.
 
-**The Value-Separation Rule.** The enamel and the bone strips must sit far apart in value in both themes. The strip is an object on the board, never a tint of it.
+**The Never-Colour-Alone Rule.** Every colour signal has a second carrier: priority is also the three-bar glyph, risk is also the triangle icon, change is also the "from" text and the dashed outline.
 
 ## Typography
 
-**Legend Font:** Archivo Narrow (with ui-sans-serif, system-ui)
-**Strip Font:** Archivo, variable (with ui-sans-serif, system-ui)
+**Display Font:** none; the system has no display role.
+**Body Font:** Archivo Variable (with ui-sans-serif, system-ui, sans-serif), bundled via @fontsource-variable/archivo on the wght axis, never fetched.
 
-**Character:** A condensed industrial grotesque set in widely tracked capitals reads as lettering screen-printed permanently into the enamel. A plain, sturdy sans on the strips reads as what someone typed onto a laminate.
+**Character:** One workhorse grotesque doing everything, differentiated by size and fine variable weights (520 to 650) rather than by a second family. Times are always tabular.
 
 ### Hierarchy
-- **Wordmark** (600, 15px, 0.22em, uppercase): The product name at the left end of the trim.
-- **Legend** (600, 12px, 0.16em, uppercase): Day names, the week range, the replan lever.
-- **Title** (600, 13px, line-height 1.25): Strip titles, truncated with an ellipsis rather than wrapped.
-- **Body** (400, 14px, line-height 1.45): Default text, form input text, the record.
-- **Numeral** (400, 11px, 0.08em, tabular): Hour gutter, times, durations.
-- **Label** (400–600, 10–11px, 0.1–0.2em, uppercase): Section headings in the rail, field labels, strip controls, move notes.
+- **Headline** (600, 19px, line-height 1, -0.02em): day-header dates; today's date sits in a 30px indigo pill at 16px.
+- **Title** (600 to 620, 16 to 17px, -0.01em): week range in the top bar, popover titles (task editor, block details, hours).
+- **Body** (400, 14px, 1.45): base text; buttons at 13.5px / 540, list titles at 560.
+- **Block Title** (580, 13px, 1.3): block titles, single-line with ellipsis; two lines on lg blocks; 11px / 14px line on xs blocks.
+- **Label** (600, 12px, ink-2): form and section labels, sentence case, no tracking; panel headings at 13px / 620.
+- **Meta** (400, 11.5 to 12.5px, ink-3): gutter hours, block times, workload text, hints.
 
 ### Named Rules
-**The Printed-On Rule.** Anything that is a permanent part of the board (day names, hours, section headings, the wordmark) is set in Archivo Narrow capitals. Anything a person wrote (task titles, descriptions) is set in Archivo. Don't mix the two voices within one element.
+**The Tabular Time Rule.** Every clock time, date range, duration and count uses `font-variant-numeric: tabular-nums` so columns of times never shimmer.
 
-**The Tabular Time Rule.** Every time, duration and count uses tabular numerals, so the board's columns of times line up and never jitter when values change.
-
-**The Bundled Type Rule.** Faces are self-hosted and bundled into the build, never fetched from a CDN. The board runs on a home server that may have no internet connection.
+**The One Face Rule.** Archivo Variable is the only family. Hierarchy comes from size and variable weight steps, never from a second face, uppercase or letter-spacing.
 
 ## Layout
 
-The page is a fixed stack: the aluminium trim across the top, then a two-column body with the strip rail on the left (264px) and the board filling the rest.
+A fixed application frame at `100dvh`: a 60px top bar (brand, prev/today/next and week range, then Replan, Hours and the indigo New task button at the right), a 292px left sidebar (widens to 372px when the hours panel is open) holding Needs attention then Activity, and the calendar board filling the rest.
 
-The board is a time grid: a 56px hour gutter, then one column per configured working day. Weekdays without working hours are not drawn at all, so a Monday–Friday setup shows five columns. The drawn time window comes from the configured working hours, rounded out to whole hours. Height is derived from that window at 1.05px per minute, never inherited from a flex parent, because every strip is absolutely positioned and the field has no height of its own.
+The board is a scrollable grid: a 56px sticky time gutter plus one column per day (minimum 120px), with a sticky header carrying each day's name, date and a 4px workload meter. Time maps linearly at **1.2px per minute** (72px per hour); hour rules use line, half-hour rules line-faint. Dragging and click-to-create snap to 15 minutes. On load the grid scrolls to 45 minutes before the first working hour.
 
-One time ruler positions everything: strips, blocked periods, the now-line and ghost marks all use the same minutes-from-window-start calculation.
+Blocks are sized by visible minutes: **xs** under 30 (one line, 11px, start time inline), **sm** under 45 (one line, title + start), **md** under 80 (title plus meta line), **lg** otherwise (two-line title plus a change chip). Minimum drawn height is 15 minutes; every block is inset 4px from its column edges and 2px short of its slot.
 
-The spacing rhythm is 2 / 6 / 12 / 24 / 40px. Groups are tight at 6px, sections are separated at 24px, and 40px is used only as run-out below the board.
+Spacing follows a 4px base (4, 8, 12, 16, 24, 32). Sidebar sections sit 32px apart; popover content 16px.
 
-**Responsive (≤900px):** The body becomes one column with the board first and the rail after it. The trim wraps, with the week controls on their own full-width row. Day columns get a 148px minimum and the whole board scrolls sideways as one piece, so strips are never read against the wrong hour. The week is never squeezed into unreadable columns.
+Responsive: at 1100px wide labels drop to icons. At 900px the frame unlocks: the top bar wraps, the calendar moves above the sidebar at 72dvh, day columns widen to 132px minimum, the gutter narrows to 46px, and xs/sm blocks drop their start time. At 640px popovers become bottom sheets.
 
 ## Elevation & Depth
 
-There are no cast shadows. Depth is tonal: the steel frame (darkest), the enamel field, then the sunk enamel for anything unruled. Seated objects show a single 1px inset lit hairline along their top edge: strips (`inset 0 1px 0 rgb(255 255 255 / 45%)`), and the lever plate and screw heads (`inset 0 1px 0` lit edge). The trim gets its profile from a four-stop vertical gradient, not a shadow.
+Flat at rest. Depth comes from tonal layering (page, white board, sunk days off) and hairline borders. Shadows appear only on elements that float above the grid or are in the user's hand.
+
+### Shadow Vocabulary
+- **Pop** (`box-shadow: 0 16px 40px -12px rgb(20 26 40 / 22%), 0 2px 6px rgb(20 26 40 / 6%)`): popovers, bottom sheets and the floating error notice.
+- **Lift** (`box-shadow: 0 12px 28px -8px rgb(20 26 40 / 28%), 0 2px 4px rgb(20 26 40 / 8%)`): a block while it is being dragged.
+
+Both deepen in dark mode (black at 60 to 65%).
 
 ### Named Rules
-**The Seated-Not-Floating Rule.** A strip or plate sits on the board. It gets an inset edge, never a drop shadow, glow or blur beneath it.
+**The Only-What-Floats Rule.** Nothing resting on the page or grid carries a shadow. A shadow means "this is above the calendar right now".
+
+**The Beneath-the-Blocks Rule.** The now-line and old-slot outlines render beneath blocks; drawn over them, a line strikes through a title and reads as done.
 
 ## Shapes
 
-Square corners throughout (0px). The only round forms are screw heads and 2px bullet dots, both at 50%. Borders are 1px: strip edge on strips, aluminium on trim fittings and fields. A pinned strip changes shape language, from a single edge to a double 3px border, so pinning is visible as a shape rather than a colour. An at-risk strip adds a 45° hatch of 2px lines at 6px spacing over its laminate.
+Softly rounded rectangles throughout, in three steps: 6px for blocks, inputs, ghosts and drafts; 8px for buttons, choices and list rows; 12px for the calendar board and popovers (16px top corners on bottom sheets). Chips, count badges and today's date are full pills. Borders are 1px hairlines; the only dashed strokes are 1.5px, reserved for old-slot outlines (amber, or red for missed) and the create draft (indigo), plus the break hatch. Icons are authored SVG on a 16px grid at a single 1.5px round stroke, drawn in currentColor.
 
 ## Components
 
-### Lever (primary action)
-The one control that changes the whole board, fitted as hardware.
-- **Shape:** Square (0px), a 1px lit-edge border.
-- **Default:** Aluminium ground, bone text in Legend capitals, 9px 16px padding. A small reflow glyph sits before the label.
-- **Hover / Active:** The ground lightens to the lit edge; press drops it 1px. Disabled sits at 45% opacity.
-- **Mounting:** Bolted to the right end of the trim through a plate with two screw heads.
+### Buttons
+Quiet and compact; one indigo button per view.
+- **Shape:** gently rounded (8px), 34px tall, 30px in the small variant.
+- **Primary:** indigo fill, white ink, 0 14px padding, 13.5px / 540.
+- **Hover / Focus / Active:** fill shifts to Indigo Hover over 140ms; 2px indigo focus outline offset 2px; press scales to 0.97.
+- **Secondary:** white with a strong hairline border, hover-grey on hover.
+- **Ghost:** transparent, ink-2, hover-grey wash; pressed state (`aria-pressed`) holds the wash.
+- **Quiet danger:** transparent red text with a red-soft hover wash, for destructive actions inside popovers.
+- **Icon button:** 32px square, transparent, ink-2.
 
-### Trim Buttons (secondary)
-- **Shape:** Square, 1px aluminium border, transparent ground, 6px 10px padding.
-- **Content:** Previous and next week are chevron icons with screen-reader labels; "Today" is a text button in Legend capitals.
-- **Hover:** The border lightens to the lit edge.
+### Chips
+- **Style:** 30px pill, white, strong-hairline border, ink-2, 13px / 520, tabular.
+- **State:** selected turns indigo border, Indigo Wash fill, indigo text at 600. Used for duration, priority and deadline choices.
+- **Segmented control:** a hover-grey track with 3px padding; the selected segment is white with a 1px hairline ring and a faint 1px shadow.
 
-### Strip (signature component)
-A laminated magnet strip seated in the time grid.
-- **Shape:** Square, 1px strip-edge border, inset lit top hairline, 3px inset from the column sides.
-- **Content:** Title, then start–end times and duration in tabular numerals, then labelled controls at the foot.
-- **States (each carries a mark that works without colour):**
-  - *At risk:* vermilion border plus the 45° hatch and a risk glyph.
-  - *Pinned:* double 3px border plus a pin glyph.
-  - *Done:* spent-laminate ground, title struck through, check glyph.
-  - *Moved:* a dashed chinagraph bracket at the head of the leading edge, plus a written note ("Moved from 10:00"). Short strips abbreviate it ("from 10:00") but never show a bare time.
-- **Controls:** "Mark done" and "Pin" are always labelled words in Label capitals, never icons alone.
-- **Short strips (under 55 minutes):** drop the end time, keeping title, start, duration and the move note, because position on the ruler already shows when they are.
-- **Motion:** A moved strip settles in once (translateY −6px → 0, opacity 0.35 → 1, 480ms, `cubic-bezier(0.16, 1, 0.3, 1)`). The bracket and note are the lasting record; the motion is a one-time flourish. Turned off under `prefers-reduced-motion`.
-
-### Chinagraph Ghost
-Where a strip used to be, drawn in wax pencil on top of everything. The latest replan's moves draw a bracket at the vacated position against the column's leading edge, plus a dashed arc to the new position. Moves within a day bow out into the column margin, and moves across days arc between column edges, so a stroke never crosses a strip's own text. Only the most recent replan is drawn; older history lives in the record.
-
-### Strip Rail
-Unscheduled and at-risk work, beside the board. The same bone laminate as a strip, 8px 10px padding, with the reason written in words ("No slot in the horizon" plus the shortfall, or "Past its deadline" in vermilion with the risk glyph). Delete is an icon button with a screen-reader label.
-
-### Record
-The board's own history of replans, in the chinagraph hand along a trim band at the bottom of the board. Each entry is running text: the time, then each task named with what happened to it (moved / placed / missed / no slot) in Label capitals, then the trigger. Only the three most recent replans are shown.
+### Cards / Containers
+- **Calendar board:** white, 1px hairline, 12px radius, no shadow.
+- **Popover:** white, 1px hairline, 12px radius, Pop shadow, 364px wide, 16px padding; opens with a 180ms scale-from-0.96. Below 640px it is a bottom sheet with a 240ms rise.
+- **Choice card:** 1px hairline, 8px radius, 9px 11px padding; checked turns indigo border on Indigo Wash.
 
 ### Inputs / Fields
-- **Style:** Square, 1px aluminium border, an enamel ground so fields read as part of the board, 6px 8px padding, tabular numerals.
-- **Label:** Field labels sit above the input in Label capitals.
-- **Error:** Vermilion message below the field, linked with `aria-describedby`, and `aria-invalid` on the input.
-- **Disabled:** 40% opacity. The deadline-time field stays disabled until a date is set.
+- **Style:** 34px tall, white, strong-hairline border, 6px radius, 0 9px padding. The task title is a borderless 17px field with only a bottom hairline.
+- **Focus:** border turns indigo with a 3px Indigo Wash halo (the title field's underline turns indigo instead).
+- **Error / Disabled:** invalid fields take a red border with a 12.5px red message beneath; disabled choices fade to 60%.
 
-### Segmented Control
-Priority picker. Joined square cells with 1px aluminium borders that overlap by 1px. The selected cell fills with aluminium and bone text at weight 600. The native radio inputs are visually hidden but keep keyboard focus, shown as an amber ring on the cell.
+### Navigation
+Top bar on the page tone with a bottom hairline: brand (two offset bars, indigo over amber, beside a 15px / 650 wordmark), prev/next icon buttons with a small secondary Today button, the week range at 17px / 600, and ghost actions ending in the primary New task button.
+
+### Week Grid Block (signature)
+- **Body:** the priority tint set as fill, 1px edge and ink; 6px radius; 6px 8px padding; title plus start time or meta; icons at 13px (risk, pin, done, priority bars).
+- **Hover:** a brightness 0.97 / saturate 1.08 filter; editable blocks show a grab cursor and a faint resize handle on the bottom edge.
+- **Moved:** 2px amber outline offset 1px outside the block, plus a "from" line (md) or amber chip (lg).
+- **At risk:** swaps to the red set with a red triangle.
+- **Done:** white fill, strong-hairline edge, ink-3, struck-through title.
+- **Selected:** 2px indigo ring. **Dragging:** Lift shadow, grabbing cursor.
+- **Glide:** after a replan, moved blocks animate from their old position over 520ms on `cubic-bezier(0.22, 1, 0.36, 1)`; skipped under reduced motion, where the marks remain.
+
+### Old-Slot Outline
+A fixed 30-minute, 1.5px dashed amber (70%) outline with a 6px radius, drawn beneath blocks where a moved block used to start. Labelled "was here" in changed-ink only when no block overlaps it; missed-work outlines use red at 55%.
+
+### Now Marker
+A 2px indigo line across today with a 10px indigo dot at its left, running beneath blocks, and an indigo pill in the gutter with the current time at 11px / 600 tabular.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep every corner square (0px). Round forms are only for screw heads and bullet dots.
-- **Do** give every state a mark that survives without colour: a hatch, a double border, a glyph or words.
-- **Do** set every time, duration and count in tabular numerals.
-- **Do** derive the board's height from the drawn time window, at 1.05px per minute.
-- **Do** write annotation the system produces about itself in the chinagraph hand, not in legend ink.
-- **Do** keep both themes as full material states, with enamel and bone far apart in value in each.
-- **Do** bundle all faces into the build.
+- **Do** keep indigo (accent) for primary actions, today and the present time only.
+- **Do** keep red (risk) for at-risk blocks, over-capacity meters and error notices only.
+- **Do** mark anything the last replan changed with amber: a 2px outline ring, a "from" chip or line, and a dashed 30-minute old-slot outline.
+- **Do** pair every colour signal with a glyph or text (priority bars, risk triangle, "from" text).
+- **Do** place blocks at 1.2px per minute, snap interactions to 15 minutes, and pick xs/sm/md/lg by visible minutes (<30, <45, <80, else).
+- **Do** use tabular numerals for every time, date and count.
+- **Do** define every colour as a token with both light and dark values in tokens.css.
+- **Do** draw icons as 16px-grid SVG at one 1.5px stroke in currentColor.
 
 ### Don't:
-- **Don't** use vermilion for anything except at-risk work and errors.
-- **Don't** give strips, plates or panels a drop shadow, glow or blur. Seat them with an inset hairline.
-- **Don't** set board lettering in a system display face. Legends are Archivo Narrow.
-- **Don't** show a time without a label where it could be mistaken for another time on the same strip.
-- **Don't** hide a strip control behind a hover-only icon.
-- **Don't** fetch fonts or other assets from a CDN at runtime.
+- **Don't** put buttons inside blocks; a block is title and time, and actions live in its popover.
+- **Don't** draw the now-line or old-slot outlines over blocks.
+- **Don't** give resting surfaces a shadow; only popovers, the notice and dragged blocks lift.
+- **Don't** introduce a second typeface, uppercase labels or letter-spaced small caps.
+- **Don't** use amber for warnings or red for emphasis; each hue has exactly one meaning.
+- **Don't** fetch fonts at runtime; the app must work on a home server with no internet.

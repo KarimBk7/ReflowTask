@@ -1,529 +1,746 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-16T13:02:56.383Z",
+  "generatedAt": "2026-09-17T15:32:58.095Z",
   "title": "Design System: ReflowTask",
   "extensions": {
     "colorMeta": {
-      "enamel": {
+      "accent": {
         "role": "primary",
-        "displayName": "Theatre Enamel",
-        "canonical": "oklch(34.4% 0.035 187.2)",
+        "displayName": "Calm Indigo",
+        "canonical": "#4253d4",
+        "oklch": "oklch(50.9% 0.197 271.6)",
+        "dark": "#8292f7",
         "tonalRamp": [
-          "#00100e",
-          "#0c2a27",
-          "#294643",
-          "#466461",
-          "#688784",
-          "#89a9a5",
-          "#aecfcb",
-          "#d5f7f2"
+          "#080045",
+          "#121166",
+          "#2a378b",
+          "#485ab2",
+          "#697fda",
+          "#8ca4ff",
+          "#b0cbff",
+          "#cde9ff"
         ]
       },
-      "enamel-sunk": {
+      "accent-hover": {
         "role": "primary",
-        "displayName": "Sunk Enamel",
-        "canonical": "oklch(29.3% 0.029 188.6)",
+        "displayName": "Indigo Hover",
+        "canonical": "#3544bd",
+        "oklch": "oklch(45.5% 0.189 271.2)",
+        "dark": "#9aa7f9",
         "tonalRamp": [
-          "#000f0e",
-          "#122927",
-          "#2d4543",
-          "#4b6361",
-          "#6d8684",
-          "#8ea8a5",
-          "#b3cecb",
-          "#d9f5f2"
+          "#080045",
+          "#111166",
+          "#2a378b",
+          "#475ab2",
+          "#687fda",
+          "#8ba4ff",
+          "#afcbff",
+          "#cce9ff"
         ]
       },
-      "enamel-frame": {
+      "accent-soft": {
         "role": "primary",
-        "displayName": "Steel Frame",
-        "canonical": "oklch(26.3% 0.027 187.8)",
+        "displayName": "Indigo Wash",
+        "canonical": "#eceffd",
+        "oklch": "oklch(95.4% 0.019 276.3)",
+        "dark": "#262a47",
         "tonalRamp": [
-          "#000f0d",
-          "#132826",
-          "#2f4542",
-          "#4c6360",
-          "#6e8683",
-          "#8fa7a4",
-          "#b4cdca",
-          "#dbf5f2"
+          "#090a13",
+          "#21232d",
+          "#3f424d",
+          "#60636e",
+          "#838592",
+          "#a7aab7",
+          "#cdd0de",
+          "#ebeefc"
         ]
       },
-      "signal-vermilion": {
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "On Indigo",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "dark": "#10142e",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#424242",
+          "#636363",
+          "#868686",
+          "#ababab",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "risk": {
         "role": "secondary",
-        "displayName": "Signal Vermilion",
-        "canonical": "oklch(63.7% 0.178 33.9)",
+        "displayName": "Alarm Red",
+        "canonical": "#c2332d",
+        "oklch": "oklch(54.1% 0.181 27.5)",
+        "dark": "#ff8078",
         "tonalRamp": [
-          "#2d0000",
-          "#4f0000",
-          "#721e0c",
-          "#953f2d",
-          "#bd634f",
-          "#e2846f",
-          "#ffaa93",
-          "#ffd1b9"
+          "#320000",
+          "#550000",
+          "#7c1211",
+          "#a43b34",
+          "#cd6056",
+          "#f68579",
+          "#ffac9e",
+          "#ffc9ba"
         ]
       },
-      "signal-ink": {
+      "risk-soft": {
         "role": "secondary",
-        "displayName": "Signal Ink",
-        "canonical": "oklch(20.5% 0.051 35.7)",
+        "displayName": "Red Wash",
+        "canonical": "#fdeeed",
+        "oklch": "oklch(96.1% 0.016 22.1)",
+        "dark": "#3a2022",
         "tonalRamp": [
-          "#1c0300",
-          "#391a12",
-          "#57362d",
-          "#77544a",
-          "#9c766b",
-          "#bf978c",
-          "#e6bcb1",
-          "#ffe3d8"
+          "#110808",
+          "#2c2120",
+          "#4b3f3e",
+          "#6c605f",
+          "#908382",
+          "#b5a7a6",
+          "#dccdcc",
+          "#f9eae9"
         ]
       },
-      "strip-bone": {
-        "role": "neutral",
-        "displayName": "Strip Bone",
-        "canonical": "oklch(91.1% 0.020 87.5)",
-        "tonalRamp": [
-          "#0f0b03",
-          "#282419",
-          "#443f34",
-          "#625d51",
-          "#858073",
-          "#a7a194",
-          "#cdc7b9",
-          "#f4eee0"
-        ]
-      },
-      "strip-edge": {
-        "role": "neutral",
-        "displayName": "Strip Edge",
-        "canonical": "oklch(79.9% 0.020 87.5)",
-        "tonalRamp": [
-          "#0f0b03",
-          "#282419",
-          "#443f34",
-          "#625d51",
-          "#858073",
-          "#a7a193",
-          "#cdc7b9",
-          "#f4eedf"
-        ]
-      },
-      "strip-ink": {
-        "role": "neutral",
-        "displayName": "Strip Ink",
-        "canonical": "oklch(25.1% 0.013 180.1)",
-        "tonalRamp": [
-          "#060d0b",
-          "#1d2624",
-          "#384240",
-          "#56605e",
-          "#788380",
-          "#99a4a2",
-          "#bfcac7",
-          "#e5f2ef"
-        ]
-      },
-      "strip-ink-quiet": {
-        "role": "neutral",
-        "displayName": "Strip Ink Quiet",
-        "canonical": "oklch(47.8% 0.015 171.8)",
-        "tonalRamp": [
-          "#050d0a",
-          "#1d2623",
-          "#38423f",
-          "#55605c",
-          "#78837f",
-          "#99a5a0",
-          "#becbc6",
-          "#e5f2ed"
-        ]
-      },
-      "strip-done": {
-        "role": "neutral",
-        "displayName": "Spent Laminate",
-        "canonical": "oklch(79.2% 0.016 123.1)",
-        "tonalRamp": [
-          "#0a0c06",
-          "#22251d",
-          "#3e4138",
-          "#5c5f55",
-          "#7e8278",
-          "#9fa399",
-          "#c5c9be",
-          "#ecf0e5"
-        ]
-      },
-      "legend": {
-        "role": "neutral",
-        "displayName": "Legend Ink",
-        "canonical": "oklch(91.5% 0.014 167.2)",
-        "tonalRamp": [
-          "#060d0a",
-          "#1e2623",
-          "#39423e",
-          "#57605c",
-          "#79837e",
-          "#9aa4a0",
-          "#bfcac5",
-          "#e6f2ec"
-        ]
-      },
-      "legend-quiet": {
-        "role": "neutral",
-        "displayName": "Legend Quiet",
-        "canonical": "oklch(75.0% 0.024 175.7)",
-        "tonalRamp": [
-          "#020e0b",
-          "#172823",
-          "#33443f",
-          "#50625d",
-          "#72857f",
-          "#93a7a1",
-          "#b8cdc6",
-          "#dff4ee"
-        ]
-      },
-      "chinagraph": {
-        "role": "neutral",
-        "displayName": "Chinagraph",
-        "canonical": "oklch(94.9% 0.014 93.0)",
-        "tonalRamp": [
-          "#0d0b05",
-          "#26241d",
-          "#424038",
-          "#605e55",
-          "#838077",
-          "#a4a198",
-          "#cac7be",
-          "#f1eee4"
-        ]
-      },
-      "trim-aluminium": {
-        "role": "neutral",
-        "displayName": "Aluminium",
-        "canonical": "oklch(62.3% 0.014 172.1)",
-        "tonalRamp": [
-          "#060d0a",
-          "#1d2623",
-          "#38423f",
-          "#56605d",
-          "#78837f",
-          "#99a4a0",
-          "#bfcac6",
-          "#e6f2ed"
-        ]
-      },
-      "trim-lit": {
-        "role": "neutral",
-        "displayName": "Lit Edge",
-        "canonical": "oklch(79.9% 0.013 164.7)",
-        "tonalRamp": [
-          "#060d0a",
-          "#1e2622",
-          "#3a423e",
-          "#57605c",
-          "#79837e",
-          "#9aa49f",
-          "#c0cac5",
-          "#e7f1ec"
-        ]
-      },
-      "trim-face": {
-        "role": "neutral",
-        "displayName": "Brushed Face",
-        "canonical": "oklch(56.2% 0.014 172.0)",
-        "tonalRamp": [
-          "#050d0a",
-          "#1d2623",
-          "#38423f",
-          "#56605d",
-          "#78837f",
-          "#99a5a0",
-          "#becac6",
-          "#e5f2ed"
-        ]
-      },
-      "trim-shadow": {
-        "role": "neutral",
-        "displayName": "Machined Shadow",
-        "canonical": "oklch(42.6% 0.013 173.7)",
-        "tonalRamp": [
-          "#060d0b",
-          "#1e2623",
-          "#39423f",
-          "#57605d",
-          "#79837f",
-          "#9aa4a1",
-          "#c0cac6",
-          "#e6f1ee"
-        ]
-      },
-      "focus-amber": {
-        "role": "neutral",
-        "displayName": "Focus Amber",
-        "canonical": "oklch(88.0% 0.135 86.1)",
-        "tonalRamp": [
-          "#1f0000",
-          "#3d1a00",
-          "#5b3800",
-          "#7b5700",
-          "#a07a0c",
-          "#c39c3d",
-          "#eac266",
-          "#ffe98d"
-        ]
-      },
-      "enamel-daylight": {
-        "role": "primary",
-        "displayName": "Daylight Enamel",
-        "canonical": "oklch(70.8% 0.029 173.3)",
-        "tonalRamp": [
-          "#000f0a",
-          "#142923",
-          "#30453e",
-          "#4d635c",
-          "#6f867f",
-          "#90a8a0",
-          "#b5cec5",
-          "#dcf5ed"
-        ]
-      },
-      "strip-bone-daylight": {
-        "role": "neutral",
-        "displayName": "Daylight Strip Bone",
-        "canonical": "oklch(96.4% 0.015 90.2)",
-        "tonalRamp": [
-          "#0e0b05",
-          "#27241c",
-          "#434037",
-          "#615d54",
-          "#848076",
-          "#a5a197",
-          "#cbc7bc",
-          "#f2eee3"
-        ]
-      },
-      "legend-daylight": {
-        "role": "neutral",
-        "displayName": "Daylight Legend Ink",
-        "canonical": "oklch(22.4% 0.023 180.9)",
-        "tonalRamp": [
-          "#020e0c",
-          "#172825",
-          "#334440",
-          "#50625e",
-          "#728581",
-          "#93a6a2",
-          "#b8ccc8",
-          "#dff4ef"
-        ]
-      },
-      "chinagraph-daylight": {
-        "role": "neutral",
-        "displayName": "Daylight Chinagraph",
-        "canonical": "oklch(23.0% 0.020 179.5)",
-        "tonalRamp": [
-          "#030e0b",
-          "#192724",
-          "#344340",
-          "#52625e",
-          "#748480",
-          "#95a6a2",
-          "#baccc7",
-          "#e1f3ef"
-        ]
-      },
-      "signal-vermilion-daylight": {
+      "risk-edge": {
         "role": "secondary",
-        "displayName": "Daylight Vermilion",
-        "canonical": "oklch(47.8% 0.159 33.8)",
+        "displayName": "Red Edge",
+        "canonical": "#f0bdb9",
+        "oklch": "oklch(84.3% 0.059 23.6)",
+        "dark": "#6e3236",
         "tonalRamp": [
-          "#2d0000",
-          "#4f0000",
-          "#721e0c",
-          "#953f2d",
-          "#bd634f",
-          "#e2846f",
-          "#ffaa93",
-          "#ffd1b9"
+          "#1e0002",
+          "#3c1716",
+          "#5e3533",
+          "#825653",
+          "#a77875",
+          "#ce9d99",
+          "#f6c3be",
+          "#ffe0dc"
+        ]
+      },
+      "risk-ink": {
+        "role": "secondary",
+        "displayName": "Red Ink",
+        "canonical": "#8c1d18",
+        "oklch": "oklch(42.0% 0.147 28.1)",
+        "dark": "#ffc2bc",
+        "tonalRamp": [
+          "#320000",
+          "#550000",
+          "#7c1310",
+          "#a43c32",
+          "#cd6055",
+          "#f68678",
+          "#ffac9d",
+          "#ffc9b9"
+        ]
+      },
+      "changed": {
+        "role": "tertiary",
+        "displayName": "Replan Amber",
+        "canonical": "#e3a019",
+        "oklch": "oklch(75.2% 0.152 77.5)",
+        "dark": "#f0b545",
+        "tonalRamp": [
+          "#270000",
+          "#460f00",
+          "#693200",
+          "#8e5500",
+          "#b47900",
+          "#db9e2e",
+          "#ffc45c",
+          "#ffe27b"
+        ]
+      },
+      "changed-soft": {
+        "role": "tertiary",
+        "displayName": "Amber Wash",
+        "canonical": "#fff4dc",
+        "oklch": "oklch(96.9% 0.034 86.3)",
+        "dark": "#3a2f16",
+        "tonalRamp": [
+          "#110a00",
+          "#2b2310",
+          "#4a412e",
+          "#6c624e",
+          "#8f856f",
+          "#b4aa93",
+          "#dbd0b9",
+          "#f8eed6"
+        ]
+      },
+      "changed-ink": {
+        "role": "tertiary",
+        "displayName": "Amber Ink",
+        "canonical": "#74490a",
+        "oklch": "oklch(44.5% 0.092 69.3)",
+        "dark": "#f7d690",
+        "tonalRamp": [
+          "#210000",
+          "#3f1700",
+          "#613700",
+          "#855920",
+          "#aa7c45",
+          "#d1a069",
+          "#f9c78e",
+          "#ffe4ab"
+        ]
+      },
+      "low-fill": {
+        "role": "neutral",
+        "displayName": "Low Priority Fill",
+        "canonical": "#eff1f4",
+        "oklch": "oklch(95.7% 0.005 258.3)",
+        "dark": "#25272e",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232426",
+          "#414245",
+          "#626366",
+          "#848689",
+          "#a9abae",
+          "#cfd1d4",
+          "#edeff2"
+        ]
+      },
+      "low-edge": {
+        "role": "neutral",
+        "displayName": "Low Priority Edge",
+        "canonical": "#d9dde4",
+        "oklch": "oklch(89.7% 0.010 261.8)",
+        "dark": "#363943",
+        "tonalRamp": [
+          "#090b10",
+          "#212429",
+          "#3f4248",
+          "#606369",
+          "#83868d",
+          "#a7abb2",
+          "#cdd1d8",
+          "#ebeff6"
+        ]
+      },
+      "low-ink": {
+        "role": "neutral",
+        "displayName": "Low Priority Ink",
+        "canonical": "#2a2f38",
+        "oklch": "oklch(30.4% 0.018 262.2)",
+        "dark": "#dcdfe5",
+        "tonalRamp": [
+          "#070b13",
+          "#1f242d",
+          "#3d434c",
+          "#5e636e",
+          "#808691",
+          "#a5abb6",
+          "#cbd1dd",
+          "#e8effb"
+        ]
+      },
+      "medium-fill": {
+        "role": "neutral",
+        "displayName": "Medium Priority Blue",
+        "canonical": "#e7effd",
+        "oklch": "oklch(95.0% 0.021 261.8)",
+        "dark": "#1c2a40",
+        "tonalRamp": [
+          "#070b14",
+          "#1e242e",
+          "#3c434e",
+          "#5d646f",
+          "#7f8793",
+          "#a4abb8",
+          "#cad1df",
+          "#e7effd"
+        ]
+      },
+      "medium-edge": {
+        "role": "neutral",
+        "displayName": "Medium Priority Edge",
+        "canonical": "#c2d5f6",
+        "oklch": "oklch(86.9% 0.050 261.5)",
+        "dark": "#2d4569",
+        "tonalRamp": [
+          "#020a20",
+          "#16243c",
+          "#33435d",
+          "#536480",
+          "#7587a5",
+          "#99accb",
+          "#bfd2f3",
+          "#dcf0ff"
+        ]
+      },
+      "medium-ink": {
+        "role": "neutral",
+        "displayName": "Medium Priority Ink",
+        "canonical": "#173a73",
+        "oklch": "oklch(35.7% 0.106 259.8)",
+        "dark": "#cbdcfa",
+        "tonalRamp": [
+          "#000136",
+          "#001f56",
+          "#1d407a",
+          "#3d639f",
+          "#5f86c6",
+          "#83acee",
+          "#a8d2ff",
+          "#c5f0ff"
+        ]
+      },
+      "high-fill": {
+        "role": "neutral",
+        "displayName": "High Priority Violet",
+        "canonical": "#efe9fc",
+        "oklch": "oklch(94.4% 0.026 300.3)",
+        "dark": "#29213f",
+        "tonalRamp": [
+          "#0d0914",
+          "#26212f",
+          "#443f4e",
+          "#656070",
+          "#888394",
+          "#ada7b9",
+          "#d3cde0",
+          "#f1ebfe"
+        ]
+      },
+      "high-edge": {
+        "role": "neutral",
+        "displayName": "High Priority Edge",
+        "canonical": "#d6c7f5",
+        "oklch": "oklch(85.7% 0.065 299.9)",
+        "dark": "#45366b",
+        "tonalRamp": [
+          "#100322",
+          "#291b3e",
+          "#483a60",
+          "#695b83",
+          "#8c7ea8",
+          "#b1a2ce",
+          "#d7c8f6",
+          "#f5e5ff"
+        ]
+      },
+      "high-ink": {
+        "role": "neutral",
+        "displayName": "High Priority Ink",
+        "canonical": "#42267b",
+        "oklch": "oklch(35.6% 0.137 293.4)",
+        "dark": "#ddd0fb",
+        "tonalRamp": [
+          "#15003d",
+          "#2b055e",
+          "#482d82",
+          "#6850a9",
+          "#8b74d0",
+          "#af99f9",
+          "#d5bfff",
+          "#f2ddff"
+        ]
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "Cool Page",
+        "canonical": "#f3f4f7",
+        "oklch": "oklch(96.7% 0.004 271.4)",
+        "dark": "#141519",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232426",
+          "#414245",
+          "#626366",
+          "#858689",
+          "#aaabad",
+          "#d0d1d4",
+          "#edeef1"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Board White",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "dark": "#1b1c21",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#424242",
+          "#636363",
+          "#868686",
+          "#ababab",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "surface-sunk": {
+        "role": "neutral",
+        "displayName": "Sunk Grey",
+        "canonical": "#f7f8fa",
+        "oklch": "oklch(97.9% 0.003 264.5)",
+        "dark": "#17181c",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#232425",
+          "#424244",
+          "#626365",
+          "#858688",
+          "#aaabad",
+          "#d0d1d3",
+          "#edeef0"
+        ]
+      },
+      "surface-hover": {
+        "role": "neutral",
+        "displayName": "Hover Grey",
+        "canonical": "#f1f3f6",
+        "oklch": "oklch(96.3% 0.005 258.3)",
+        "dark": "#23252b",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232426",
+          "#414245",
+          "#626366",
+          "#848689",
+          "#a9abae",
+          "#cfd1d4",
+          "#edeff2"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e6e8ed",
+        "oklch": "oklch(93.1% 0.007 268.5)",
+        "dark": "#2a2c33",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#222428",
+          "#414246",
+          "#616367",
+          "#84868b",
+          "#a9abaf",
+          "#cfd1d6",
+          "#eceef3"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "#d4d8e0",
+        "oklch": "oklch(88.2% 0.012 264.5)",
+        "dark": "#383b44",
+        "tonalRamp": [
+          "#090b10",
+          "#21242a",
+          "#3f4249",
+          "#60636a",
+          "#83868e",
+          "#a7abb2",
+          "#cdd1d9",
+          "#eaeff7"
+        ]
+      },
+      "line-faint": {
+        "role": "neutral",
+        "displayName": "Faint Hairline",
+        "canonical": "#f0f1f4",
+        "oklch": "oklch(95.8% 0.004 271.4)",
+        "dark": "#212329",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232426",
+          "#414245",
+          "#626366",
+          "#858689",
+          "#aaabad",
+          "#d0d1d4",
+          "#edeef1"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#171a20",
+        "oklch": "oklch(21.7% 0.013 264.3)",
+        "dark": "#eceef2",
+        "tonalRamp": [
+          "#090b11",
+          "#21242a",
+          "#3f4249",
+          "#60636b",
+          "#82868e",
+          "#a7abb3",
+          "#cdd1da",
+          "#eaeff7"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "#4a505c",
+        "oklch": "oklch(43.0% 0.021 264.3)",
+        "dark": "#b4b9c4",
+        "tonalRamp": [
+          "#070b14",
+          "#1f242f",
+          "#3d424e",
+          "#5d6370",
+          "#808693",
+          "#a4abb9",
+          "#cad1df",
+          "#e7effd"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "#626977",
+        "oklch": "oklch(52.0% 0.024 264.3)",
+        "dark": "#9197a3",
+        "tonalRamp": [
+          "#060b15",
+          "#1e2430",
+          "#3c424f",
+          "#5c6371",
+          "#7f8695",
+          "#a3abba",
+          "#c9d1e1",
+          "#e7efff"
         ]
       }
     },
     "typographyMeta": {
-      "wordmark": {
-        "displayName": "Wordmark",
-        "purpose": "The product name at the left end of the aluminium trim."
-      },
-      "legend": {
-        "displayName": "Legend",
-        "purpose": "Lettering fired onto the enamel: day names, the week range, the replan lever."
-      },
-      "label": {
-        "displayName": "Label",
-        "purpose": "Rail section headings, field labels, strip controls and move notes."
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Day-header dates; today sits in a 30px indigo pill at 16px."
       },
       "title": {
-        "displayName": "Strip Title",
-        "purpose": "Task titles on strips, truncated with an ellipsis rather than wrapped."
+        "displayName": "Title",
+        "purpose": "Week range and popover titles (600 to 620, 16 to 17px)."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Default text, form input text and the record."
+        "purpose": "Base text; buttons at 13.5px / 540."
       },
-      "numeral": {
-        "displayName": "Numeral",
-        "purpose": "Hour gutter, times and durations. Always tabular."
+      "block-title": {
+        "displayName": "Block Title",
+        "purpose": "Block titles; 11px on xs blocks, two lines on lg."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form and section labels, sentence case, ink-2."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Gutter hours, block times, workload text; tabular numerals."
       }
     },
     "shadows": [
       {
-        "name": "seated-edge",
-        "value": "inset 0 1px 0 rgb(255 255 255 / 45%)",
-        "purpose": "The lit top edge of a laminate strip seated in the board. The only depth a strip ever gets."
+        "name": "shadow-pop",
+        "value": "0 16px 40px -12px rgb(20 26 40 / 22%), 0 2px 6px rgb(20 26 40 / 6%)",
+        "dark": "0 18px 44px -12px rgb(0 0 0 / 60%), 0 2px 6px rgb(0 0 0 / 30%)",
+        "purpose": "Popovers, bottom sheets and the floating error notice."
       },
       {
-        "name": "plate-edge",
-        "value": "inset 0 1px 0 var(--trim-lit)",
-        "purpose": "The lit edge of the bolted lever plate and its screw heads."
-      },
-      {
-        "name": "today-underscore",
-        "value": "inset 0 -3px 0 var(--legend)",
-        "purpose": "Marks today with a printed underscore on the day header instead of a colour wash."
+        "name": "shadow-lift",
+        "value": "0 12px 28px -8px rgb(20 26 40 / 28%), 0 2px 4px rgb(20 26 40 / 8%)",
+        "dark": "0 14px 30px -8px rgb(0 0 0 / 65%), 0 2px 4px rgb(0 0 0 / 30%)",
+        "purpose": "A block while it is being dragged."
       }
     ],
     "motion": [
       {
-        "name": "reseat",
-        "value": "480ms cubic-bezier(0.16, 1, 0.3, 1)",
-        "purpose": "A moved strip settling into its new slot, from translateY(-6px) and 35% opacity. Plays once; turned off under prefers-reduced-motion."
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Every entrance, press and glide."
+      },
+      {
+        "name": "state-change",
+        "value": "140ms ease",
+        "purpose": "Hover and selection colour changes."
+      },
+      {
+        "name": "popover-in",
+        "value": "180ms ease-out, scale from 0.96",
+        "purpose": "Popover entrance."
+      },
+      {
+        "name": "sheet-in",
+        "value": "240ms ease-out, rise 24px",
+        "purpose": "Bottom-sheet entrance on phones."
+      },
+      {
+        "name": "replan-glide",
+        "value": "520ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "FLIP glide of moved blocks after a replan; dropped under prefers-reduced-motion."
       }
     ],
     "breakpoints": [
       {
-        "name": "narrow",
-        "value": "900px"
+        "name": "sheet",
+        "value": "640px",
+        "purpose": "Popovers become bottom sheets."
+      },
+      {
+        "name": "stacked",
+        "value": "900px",
+        "purpose": "Calendar above sidebar, top bar wraps, xs/sm blocks drop start time."
+      },
+      {
+        "name": "compact-labels",
+        "value": "1100px",
+        "purpose": "Wide button labels hide."
       }
-    ]
+    ],
+    "grid": {
+      "pxPerMinute": 1.2,
+      "snapMinutes": 15,
+      "ghostMinutes": 30,
+      "blockSizes": {
+        "xs": "<30 min",
+        "sm": "<45 min",
+        "md": "<80 min",
+        "lg": ">=80 min"
+      },
+      "gutterWidth": "56px",
+      "dayMinWidth": "120px",
+      "topbarHeight": "60px",
+      "sidebarWidth": "292px"
+    }
   },
   "components": [
     {
-      "name": "Replan Lever",
+      "name": "Primary Button",
       "kind": "button",
-      "refersTo": "lever",
-      "description": "The one control that rebuilds the whole schedule, bolted to the trim as hardware.",
-      "html": "<button class=\"ds-lever\" type=\"button\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 4.5h7.5\"/><path d=\"M7.5 2.25 9.75 4.5 7.5 6.75\"/><path d=\"M14 11.5H6.5\"/><path d=\"M8.5 9.25 6.25 11.5l2.25 2.25\"/></svg>Replan now</button>",
-      "css": ".ds-lever{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border:1px solid var(--trim-lit);background:var(--trim);color:var(--strip);font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:12px;font-weight:600;letter-spacing:0.14em;border-radius:0;cursor:pointer}.ds-lever:hover{background:var(--trim-lit)}.ds-lever:active{transform:translateY(1px)}.ds-lever:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
+      "refersTo": "button-primary",
+      "description": "The one indigo action per view (New task, Save).",
+      "html": "<button class=\"ds-btn-primary\"><svg viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"><path d=\"M8 3v10M3 8h10\"/></svg>New task</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:1px solid transparent;border-radius:var(--radius, 8px);font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13.5px;font-weight:540;cursor:pointer;transition:background-color 140ms ease,border-color 140ms ease,color 140ms ease,transform 120ms cubic-bezier(0.22,1,0.36,1);background:#4253d4;color:#fff}.ds-btn-primary:hover{background:#3544bd}.ds-btn-primary:focus-visible{outline:2px solid #4253d4;outline-offset:2px;}.ds-btn-primary:active{transform:scale(0.97)}"
     },
     {
-      "name": "Trim Button",
+      "name": "Secondary Button",
       "kind": "button",
-      "refersTo": "trim-button",
-      "description": "Secondary fittings on the trim, such as week navigation.",
-      "html": "<button class=\"ds-trim-button\" type=\"button\">Today</button>",
-      "css": ".ds-trim-button{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--trim);background:transparent;color:var(--legend);font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:12px;letter-spacing:0.06em;border-radius:0;cursor:pointer}.ds-trim-button:hover{border-color:var(--trim-lit)}.ds-trim-button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
+      "refersTo": "button-secondary",
+      "description": "Bordered white button, e.g. Today.",
+      "html": "<button class=\"ds-btn-secondary\">Today</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:1px solid transparent;border-radius:var(--radius, 8px);font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13.5px;font-weight:540;cursor:pointer;transition:background-color 140ms ease,border-color 140ms ease,color 140ms ease,transform 120ms cubic-bezier(0.22,1,0.36,1);background:#fff;border-color:#d4d8e0;color:#171a20}.ds-btn-secondary:hover{background:#f1f3f6}.ds-btn-secondary:focus-visible{outline:2px solid #4253d4;outline-offset:2px;}.ds-btn-secondary:active{transform:scale(0.97)}"
     },
     {
-      "name": "Strip",
-      "kind": "custom",
-      "refersTo": "strip",
-      "description": "A laminated magnet strip seated in the time grid, with its controls labelled and visible.",
-      "html": "<article class=\"ds-strip\"><h3 class=\"ds-strip-title\">Write deployment notes</h3><p class=\"ds-strip-meta\">13:20 – 14:50 · 1h 30m</p><div class=\"ds-strip-actions\"><button class=\"ds-strip-action\" type=\"button\">Mark done</button><button class=\"ds-strip-action\" type=\"button\">Pin</button></div></article>",
-      "css": ".ds-strip{display:flex;flex-direction:column;gap:2px;width:220px;min-height:96px;padding:5px 8px;background:var(--strip);color:var(--strip-ink);border:1px solid var(--strip-edge);border-radius:0;box-shadow:inset 0 1px 0 rgb(255 255 255 / 45%)}.ds-strip-title{margin:0;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-strip-meta{margin:0;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--strip-ink-quiet)}.ds-strip-actions{display:flex;gap:4px;margin-top:auto;padding-top:4px}.ds-strip-action{padding:2px 6px;border:1px solid var(--strip-edge);background:transparent;color:var(--strip-ink);font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.1em;border-radius:0;cursor:pointer}.ds-strip-action:hover{background:var(--strip-edge)}.ds-strip-action:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Top-bar actions such as Replan and Hours.",
+      "html": "<button class=\"ds-btn-ghost\">Replan</button>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:1px solid transparent;border-radius:var(--radius, 8px);font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13.5px;font-weight:540;cursor:pointer;transition:background-color 140ms ease,border-color 140ms ease,color 140ms ease,transform 120ms cubic-bezier(0.22,1,0.36,1);background:transparent;color:#4a505c}.ds-btn-ghost:hover{background:#f1f3f6;color:#171a20}.ds-btn-ghost:focus-visible{outline:2px solid #4253d4;outline-offset:2px;}"
     },
     {
-      "name": "At-Risk Strip",
-      "kind": "custom",
-      "refersTo": "strip",
-      "description": "A strip scheduled past its deadline: vermilion edge, hatch and glyph, so it reads without colour.",
-      "html": "<article class=\"ds-strip-risk\"><h3 class=\"ds-strip-risk-title\">Review pull requests</h3><p class=\"ds-strip-risk-meta\">16:00 – 17:00 · 1h</p></article>",
-      "css": ".ds-strip-risk{width:220px;min-height:64px;padding:5px 8px;background-color:var(--strip);background-image:repeating-linear-gradient(-45deg,transparent 0 6px,rgb(0 0 0 / 7%) 6px 8px);color:var(--strip-ink);border:1px solid var(--signal);border-radius:0}.ds-strip-risk-title{margin:0;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:600;line-height:1.25}.ds-strip-risk-meta{margin:2px 0 0;font-size:11px;font-variant-numeric:tabular-nums;color:var(--strip-ink-quiet)}"
-    },
-    {
-      "name": "Pinned Strip",
-      "kind": "custom",
-      "refersTo": "strip",
-      "description": "A strip the replan must not move. Pinning shows as a double border plus a pin glyph.",
-      "html": "<article class=\"ds-strip-pinned\"><span class=\"ds-strip-pinned-mark\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 1.75h4l-.6 3.4 2.1 2.1H4.5l2.1-2.1z\"/><path d=\"M8 7.25v7\"/></svg></span><h3 class=\"ds-strip-pinned-title\">Dentist</h3><p class=\"ds-strip-pinned-meta\">09:00 – 10:00 · 1h</p></article>",
-      "css": ".ds-strip-pinned{position:relative;width:220px;min-height:64px;padding:5px 8px;background:var(--strip);color:var(--strip-ink);border:3px double var(--strip-edge);border-radius:0}.ds-strip-pinned-mark{position:absolute;top:4px;right:6px;color:var(--strip-ink-quiet)}.ds-strip-pinned-title{margin:0;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:600;line-height:1.25}.ds-strip-pinned-meta{margin:2px 0 0;font-size:11px;font-variant-numeric:tabular-nums;color:var(--strip-ink-quiet)}"
-    },
-    {
-      "name": "Field",
-      "kind": "input",
-      "refersTo": "field-input",
-      "description": "A board-ground input with its label printed above in label capitals.",
-      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Estimated duration</span><input class=\"ds-field-input\" type=\"number\" value=\"60\"></label>",
-      "css": ".ds-field{display:flex;flex-direction:column;gap:4px;width:200px}.ds-field-label{font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:0.14em;color:var(--legend-quiet)}.ds-field-input{padding:6px 8px;border:1px solid var(--trim);background:var(--enamel);color:var(--legend);font-size:13px;font-variant-numeric:tabular-nums;border-radius:0}.ds-field-input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
-    },
-    {
-      "name": "Priority Segments",
+      "name": "Chip",
       "kind": "chip",
-      "refersTo": "segment-selected",
-      "description": "Joined square cells for choosing priority; the selected cell fills with aluminium.",
-      "html": "<div class=\"ds-segments\" role=\"radiogroup\"><span class=\"ds-segment\">Low</span><span class=\"ds-segment ds-segment-on\" aria-checked=\"true\">Medium</span><span class=\"ds-segment\">High</span></div>",
-      "css": ".ds-segments{display:flex;width:240px}.ds-segment{flex:1;text-align:center;padding:6px 4px;border:1px solid var(--trim);margin-inline-start:-1px;font-family:'Archivo Narrow',ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.1em;color:var(--legend-quiet);cursor:pointer}.ds-segment:first-child{margin-inline-start:0}.ds-segment:hover{color:var(--legend)}.ds-segment-on{background:var(--trim);color:var(--strip);font-weight:600}"
+      "refersTo": "chip",
+      "description": "Pill choices for duration, priority and deadline.",
+      "html": "<div style=\"display:flex;gap:6px\"><span class=\"ds-chip\">30 min</span><span class=\"ds-chip\" data-selected>1 h</span><span class=\"ds-chip\">2 h</span></div>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;height:30px;padding:0 11px;border:1px solid #d4d8e0;border-radius:15px;background:#fff;color:#4a505c;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:520;font-variant-numeric:tabular-nums;cursor:pointer;transition:background-color 140ms ease,border-color 140ms ease,color 140ms ease}.ds-chip:hover{border-color:#626977;color:#171a20}.ds-chip[data-selected]{border-color:#4253d4;background:#eceffd;color:#4253d4;font-weight:600}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Time, date and number fields.",
+      "html": "<input class=\"ds-input\" type=\"text\" value=\"09:30\">",
+      "css": ".ds-input{height:34px;padding:0 9px;border:1px solid #d4d8e0;border-radius:6px;background:#fff;color:#171a20;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;font-size:14px;font-variant-numeric:tabular-nums;transition:border-color 140ms ease}.ds-input:focus-visible{outline:none;border-color:#4253d4;box-shadow:0 0 0 3px #eceffd}"
+    },
+    {
+      "name": "Top Bar",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Brand, week navigation and actions.",
+      "html": "<nav class=\"ds-topbar\"><span class=\"ds-brand\"><span class=\"ds-mark\"></span>ReflowTask</span><span class=\"ds-range\">14 – 20 Sep</span><span style=\"margin-left:auto;display:flex;gap:4px\"><button class=\"ds-ghost\">Replan</button><button class=\"ds-primary\">New task</button></span></nav>",
+      "css": ".ds-topbar{display:flex;align-items:center;gap:24px;height:60px;padding:0 16px 0 24px;border-bottom:1px solid #e6e8ed;background:#f3f4f7;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;color:#171a20}.ds-brand{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:650;letter-spacing:-0.01em}.ds-mark{position:relative;width:18px;height:18px}.ds-mark::before,.ds-mark::after{content:'';position:absolute;height:7px;width:12px;border-radius:2.5px}.ds-mark::before{top:1px;left:0;background:#4253d4}.ds-mark::after{bottom:1px;left:6px;background:#e3a019}.ds-range{font-size:17px;font-weight:600;letter-spacing:-0.015em;font-variant-numeric:tabular-nums}.ds-ghost,.ds-primary{height:34px;padding:0 14px;border:0;border-radius:8px;font:inherit;font-size:13.5px;font-weight:540;cursor:pointer}.ds-ghost{background:transparent;color:#4a505c}.ds-ghost:hover{background:#f1f3f6;color:#171a20}.ds-primary{background:#4253d4;color:#fff;margin-left:8px}.ds-primary:hover{background:#3544bd}.ds-ghost:focus-visible,.ds-primary:focus-visible{outline:2px solid #4253d4;outline-offset:2px;}"
+    },
+    {
+      "name": "Week Grid Block",
+      "kind": "custom",
+      "refersTo": "block-medium",
+      "description": "Tinted block by priority; moved blocks get an amber ring and from-chip over a dashed old-slot outline; at risk swaps to red.",
+      "html": "<div class=\"ds-col\"><div class=\"ds-ghost-slot\">was here</div><div class=\"ds-block\" tabindex=\"0\" style=\"top:44px;height:94px\" data-moved><strong>Write proposal</strong><span class=\"ds-meta\">10:00 – 11:15</span><span class=\"ds-from\">from Mon 09:00</span></div><div class=\"ds-block\" tabindex=\"0\" data-priority=\"LOW\" style=\"top:150px;height:34px\"><strong>Email</strong></div><div class=\"ds-block\" tabindex=\"0\" data-risk style=\"top:196px;height:52px\"><strong>Tax form</strong><span class=\"ds-meta\">past deadline</span></div></div>",
+      "css": ".ds-col{position:relative;width:200px;height:260px;background:#fff;background-image:linear-gradient(#e6e8ed 1px,transparent 1px);background-size:100% 72px;font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;}.ds-ghost-slot{position:absolute;inset-inline:4px;top:4px;height:34px;padding:4px 8px;border:1.5px dashed color-mix(in srgb,#e3a019 70%,transparent);border-radius:6px;color:#74490a;font-size:11px;font-weight:560}.ds-block{position:absolute;inset-inline:4px;display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #c2d5f6;border-radius:6px;background:#e7effd;color:#173a73;font-size:13px;line-height:1.3;cursor:grab;transition:filter 140ms ease}.ds-block strong{font-weight:580}.ds-block:hover{filter:brightness(0.97) saturate(1.08)}.ds-block:focus-visible{outline:2px solid #4253d4;outline-offset:2px;}.ds-block[data-moved]{outline:2px solid #e3a019;outline-offset:1px}.ds-block[data-priority=LOW]{background:#eff1f4;border-color:#d9dde4;color:#2a2f38}.ds-block[data-risk]{background:#fdeeed;border-color:#f0bdb9;color:#8c1d18}.ds-meta{font-size:12px;opacity:0.82;font-variant-numeric:tabular-nums}.ds-from{align-self:flex-start;margin-top:3px;padding:2px 7px;border-radius:10px;background:#fff4dc;color:#74490a;font-size:11.5px;font-weight:560}"
+    },
+    {
+      "name": "Popover",
+      "kind": "card",
+      "refersTo": "popover",
+      "description": "Floating editor and block details; bottom sheet below 640px.",
+      "html": "<div class=\"ds-popover\"><div class=\"ds-pop-title\">Write proposal</div><div class=\"ds-pop-when\">Tue 10:00 – 11:15</div><div class=\"ds-pop-facts\">Moved from Mon 09:00</div></div>",
+      "css": ".ds-popover{width:364px;padding:16px;border:1px solid #e6e8ed;border-radius:12px;background:#fff;box-shadow:0 16px 40px -12px rgb(20 26 40 / 22%),0 2px 6px rgb(20 26 40 / 6%);font-family:'Archivo Variable',ui-sans-serif,system-ui,sans-serif;color:#171a20;display:flex;flex-direction:column;gap:12px}.ds-pop-title{font-size:17px;font-weight:620;letter-spacing:-0.01em}.ds-pop-when{color:#4a505c;font-size:13.5px;font-variant-numeric:tabular-nums}.ds-pop-facts{padding:12px 0;border-block:1px solid #e6e8ed;color:#74490a;font-size:13px;font-weight:540}"
     }
   ],
   "narrative": {
-    "northStar": "The Theatre Board",
-    "overview": "ReflowTask is drawn as the vitreous-enamel planning board that still hangs in operating suites and dispatch offices: a steel sheet fired with a coloured enamel, ruled with permanent screen-printed lines, framed in aluminium extrusion, and carrying work as laminated magnet strips that people move by hand when the day goes wrong. That object was chosen because its defining ritual is the product's mechanism. The schedule is re-laid when something slips, and the board keeps a mark of where a strip used to be.\n\nThe material is flat, hard and matte from edge to edge. Nothing is glossy, nothing floats, and no corner is rounded. Depth comes from value steps between the enamel, the sunk enamel and the steel frame, plus single inset hairlines where a strip or plate is seated, never from cast shadows. Annotation is a separate hand, chinagraph wax pencil, used only for things the system wrote about itself: where a strip moved from, and the running record of replans.\n\nThe board is dense by design. It stays open all day in peripheral vision, so it has two complete material states that follow the OS: deep enamel under room light and the same enamel in daylight. The light theme is not a tint of the dark one.",
+    "northStar": "The Honest Calendar",
+    "overview": "A clean, calm week calendar in the category of Notion Calendar and Amie: a cool light-grey page, one white calendar board, hairline hour rules and soft tinted blocks. It stays open all day beside other work, so it is quiet by default and follows the operating system between light and dark (every token has a dark override; dark is soft charcoal, never pure black).\n\nCalm here does not mean silent. The world's one distinctive move is that the schedule is honest about its own changes: whatever the last replan moved carries an amber ring and a \"from\" chip, its old slot keeps a dashed amber outline, and blocks glide to their new places instead of jumping. Colour carries meaning and nothing else: indigo for action and the present, red for risk, amber for change, three soft tints for priority.\n\nDensity is desktop-calendar density: 14px body, 13px block titles, generous whitespace around a grid that fills the viewport. On phones the calendar moves above the sidebar and popovers become bottom sheets.",
     "keyCharacteristics": [
-      "Enamel ground, screen-printed rules, bone laminate strips, aluminium trim",
-      "Square corners everywhere; circles only for screw heads and bullet dots",
-      "One saturated colour, vermilion, and it means \"at risk\" and nothing else",
-      "Every state carries a mark that survives without colour",
-      "Two type voices: a condensed grotesque \"printed\" on the enamel, and a workhorse sans on the strips",
-      "Tabular numerals wherever time appears"
+      "Cool neutral page, one white bordered board, hairline rules.",
+      "One bundled variable grotesque with tabular numerals for every time.",
+      "Soft tinted blocks with a 1px tinted edge; priority also drawn as a bar glyph.",
+      "Three reserved signal colours: indigo (action, today, now), red (at risk, errors), amber (last replan's changes).",
+      "Flat at rest; shadows only for things that float or are being dragged.",
+      "Light and dark from the same token names via `prefers-color-scheme`."
     ],
     "rules": [
       {
-        "name": "The One Signal Rule",
-        "body": "Vermilion marks work that cannot meet its deadline, plus errors. A vermilion element that isn't reporting a risk or an error is a bug.",
+        "name": "The Reserved Signals Rule",
+        "body": "Indigo means act or now, red means at risk or failed, amber means the last replan changed this. No signal hue is ever used as decoration, and no two meanings share a hue.",
         "section": "colors"
       },
       {
-        "name": "The Value-Separation Rule",
-        "body": "The enamel and the bone strips must sit far apart in value in both themes. The strip is an object on the board, never a tint of it.",
+        "name": "The Never-Colour-Alone Rule",
+        "body": "Every colour signal has a second carrier: priority is also the three-bar glyph, risk is also the triangle icon, change is also the \"from\" text and the dashed outline.",
         "section": "colors"
-      },
-      {
-        "name": "The Printed-On Rule",
-        "body": "Anything that is a permanent part of the board (day names, hours, section headings, the wordmark) is set in Archivo Narrow capitals. Anything a person wrote (task titles, descriptions) is set in Archivo. Don't mix the two voices within one element.",
-        "section": "typography"
       },
       {
         "name": "The Tabular Time Rule",
-        "body": "Every time, duration and count uses tabular numerals, so the board's columns of times line up and never jitter when values change.",
+        "body": "Every clock time, date range, duration and count uses `font-variant-numeric: tabular-nums` so columns of times never shimmer.",
         "section": "typography"
       },
       {
-        "name": "The Bundled Type Rule",
-        "body": "Faces are self-hosted and bundled into the build, never fetched from a CDN. The board runs on a home server that may have no internet connection.",
+        "name": "The One Face Rule",
+        "body": "Archivo Variable is the only family. Hierarchy comes from size and variable weight steps, never from a second face, uppercase or letter-spacing.",
         "section": "typography"
       },
       {
-        "name": "The Seated-Not-Floating Rule",
-        "body": "A strip or plate sits on the board. It gets an inset edge, never a drop shadow, glow or blur beneath it.",
+        "name": "The Only-What-Floats Rule",
+        "body": "Nothing resting on the page or grid carries a shadow. A shadow means \"this is above the calendar right now\".",
+        "section": "elevation"
+      },
+      {
+        "name": "The Beneath-the-Blocks Rule",
+        "body": "The now-line and old-slot outlines render beneath blocks; drawn over them, a line strikes through a title and reads as done.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "Do keep every corner square (0px). Round forms are only for screw heads and bullet dots.",
-      "Do give every state a mark that survives without colour: a hatch, a double border, a glyph or words.",
-      "Do set every time, duration and count in tabular numerals.",
-      "Do derive the board's height from the drawn time window, at 1.05px per minute.",
-      "Do write annotation the system produces about itself in the chinagraph hand, not in legend ink.",
-      "Do keep both themes as full material states, with enamel and bone far apart in value in each.",
-      "Do bundle all faces into the build."
+      "Do keep indigo (accent) for primary actions, today and the present time only.",
+      "Do keep red (risk) for at-risk blocks, over-capacity meters and error notices only.",
+      "Do mark anything the last replan changed with amber: a 2px outline ring, a \"from\" chip or line, and a dashed 30-minute old-slot outline.",
+      "Do pair every colour signal with a glyph or text (priority bars, risk triangle, \"from\" text).",
+      "Do place blocks at 1.2px per minute, snap interactions to 15 minutes, and pick xs/sm/md/lg by visible minutes (<30, <45, <80, else).",
+      "Do use tabular numerals for every time, date and count.",
+      "Do define every colour as a token with both light and dark values in tokens.css.",
+      "Do draw icons as 16px-grid SVG at one 1.5px stroke in currentColor."
     ],
     "donts": [
-      "Don't use vermilion for anything except at-risk work and errors.",
-      "Don't give strips, plates or panels a drop shadow, glow or blur. Seat them with an inset hairline.",
-      "Don't set board lettering in a system display face. Legends are Archivo Narrow.",
-      "Don't show a time without a label where it could be mistaken for another time on the same strip.",
-      "Don't hide a strip control behind a hover-only icon.",
-      "Don't fetch fonts or other assets from a CDN at runtime."
+      "Don't put buttons inside blocks; a block is title and time, and actions live in its popover.",
+      "Don't draw the now-line or old-slot outlines over blocks.",
+      "Don't give resting surfaces a shadow; only popovers, the notice and dragged blocks lift.",
+      "Don't introduce a second typeface, uppercase labels or letter-spaced small caps.",
+      "Don't use amber for warnings or red for emphasis; each hue has exactly one meaning.",
+      "Don't fetch fonts at runtime; the app must work on a home server with no internet."
     ]
   }
 }

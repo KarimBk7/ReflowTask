@@ -37,11 +37,13 @@ The differentiator is automatic replanning on miss. Open-source task managers (V
 
 ReflowTask is the self-hosted, open-source intersection: scheduling intelligence that runs on your own hardware. A neighboring open-source list app cannot truthfully claim it, because it has no duration model and no server-side scheduler.
 
+Self-hosted auto-scheduling alone is not unique: FluidCalendar is an open-source, self-hostable alternative to Motion. The defensible edge is **auto-scheduling you can trust**. The most common complaint about Motion-style schedulers is opaque reshuffling and a lost sense of control. ReflowTask answers it directly: every replan is recorded and shown (what moved, from where, and why), blocks the owner places or pins stay where they are, work in progress is never moved, and impossible deadlines are flagged rather than hidden. Direct manipulation (click free time to add a task, drag to move or resize) keeps the owner in charge of the plan the scheduler proposes.
+
 ## Operating Context
 
 - **Deployment scene:** self-hosted on the user's own Raspberry Pi home lab, reached over the local network from any device without installation.
 - **Why a server, not a desktop app:** the rescheduling job must run on a clock that is independent of whether any given device is powered on. This forces client–server architecture.
-- **Working hours are user-defined:** weekdays plus start/end times, configurable — not a fixed 9–18 assumption. Optional blocked periods (a lunch break) that the scheduler must leave empty.
+- **Working hours are user-defined:** weekdays plus start/end times, configurable — not a fixed 9–18 assumption. Breaks are the owner's to define: none exist by default, and a first-run setup asks for hours and breaks. An optional buffer keeps time free between tasks and around fixed ones.
 - **Two rhythms:** the planning session (review and adjust the plan) and the in-day check-in (mark a block done). Both run in the same week view.
 - **Replanning is an event with a history**, not a silent mutation. The user must be able to see that a replan happened and what moved.
 
@@ -75,13 +77,12 @@ Undecided, not to be invented:
 
 - Interface language is **English, kept i18n-ready**: strings live in a translatable structure so German can be added later without refactoring. The existing spec being in German does not make German the UI language.
 - Exact scheduler heuristic beyond the greedy MVP pass.
-- Whether the user can pin or lock a block against replanning.
 
 ## Brand Commitments
 
 The name **ReflowTask** is binding, and it carries the product's central metaphor: the schedule *reflows*. The domain terms the product should use consistently are **task**, **time block**, **missed**, and **reschedule / replan**.
 
-No logo, wordmark, palette, typeface, or visual reference exists yet. Nothing about the look has been committed.
+The look is pinned by the owner: **clean and calm, in the category standard of Notion Calendar and Amie**. It replaced an earlier "enamel planning board" direction after first real use. DESIGN.md records the built system. No logo or wordmark exists beyond the two-bar mark in the top bar.
 
 ## Evidence on Hand
 
@@ -89,7 +90,7 @@ No logo, wordmark, palette, typeface, or visual reference exists yet. Nothing ab
 - `LICENSE` — open source.
 - Referenced context: the [Selfhosted Wish List](https://github.com/tony4212/Selfhosted-Wish-List) issue this idea came from, and [Focuster](https://www.focuster.com) as the commercial comparison.
 
-No code, screenshots, or visual goldens exist yet — this is a greenfield build.
+The MVP is built. `docs/week-board.png` is a screenshot of the web app with synthetic sample data; there are no visual goldens.
 
 Nothing else may be fabricated. There are **no** users, testimonials, install counts, GitHub stars, benchmarks, uptime figures, screenshots, or press. No hosted demo instance exists.
 

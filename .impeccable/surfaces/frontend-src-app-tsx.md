@@ -17,7 +17,7 @@ Chosen direction: Clean & calm, pinned by the user in words ("Notion Calendar / 
 
 THESIS: A calm week calendar that is honest about its own changes. It refuses the auto-scheduler default of silent reshuffling: every block the last replan moved says where it came from, its old slot keeps a faint outline, and blocks glide to their new place instead of jumping.
 
-OWN-WORLD: Cool light neutral page, white board, hairline rules, generous whitespace; soft charcoal in dark. One workhorse grotesque (bundled Archivo) with tabular numerals. Blocks are 8px-radius soft tinted fills with a 1px tinted edge, title and time only, never buttons. Priority is tint plus a bar glyph; at risk is the only red; "changed" is a soft amber ring and chip; indigo is reserved for primary actions and today.
+OWN-WORLD: Cool light neutral page, white board, hairline rules, generous whitespace; soft charcoal in dark. One workhorse grotesque (bundled Archivo) with tabular numerals. Blocks are 6px-radius soft tinted fills with a 1px tinted edge, title and time only, never buttons. Priority is tint plus a bar glyph; at risk is the only red; "changed" is a soft amber ring and chip; indigo is reserved for primary actions and today.
 
 STORY: The owner sees what moved and why, what is full, and what needs attention; they drag a block to fix it, click free time to add work, and trust the plan.
 
