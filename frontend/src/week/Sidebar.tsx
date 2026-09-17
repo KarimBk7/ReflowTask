@@ -97,12 +97,15 @@ export function Activity({ events }: { events: RescheduleEvent[] | undefined }) 
 }
 
 function describe(item: RescheduleItem): string {
-  const from = item.previousStartAt ? formatDayTime(new Date(item.previousStartAt)) : null
-  const to = item.newStartAt ? formatDayTime(new Date(item.newStartAt)) : null
+  const fromDate = item.previousStartAt ? new Date(item.previousStartAt) : null
+  const toDate = item.newStartAt ? new Date(item.newStartAt) : null
+  const from = fromDate ? formatDayTime(fromDate) : null
+  // A move within one day names the day once: "Fri 18, 14:30 → 15:00".
+  const to = toDate ? (fromDate && sameDate(fromDate, toDate) ? formatTime(toDate) : formatDayTime(toDate)) : null
   switch (item.kind) {
     case 'MOVED':
       // Same first start: a split task whose later pieces shifted.
-      if (from && from === to) return t('activity.reshuffled')
+      if (fromDate && toDate && fromDate.getTime() === toDate.getTime()) return t('activity.reshuffled')
       return from && to ? `${t('activity.moved')} ${from} → ${to}` : t('activity.moved')
     case 'MISSED':
       return to ? `${t('activity.missed')} ${from ?? ''}, ${t('activity.nowAt')} ${to}` : `${t('activity.missed')} ${from ?? ''}`

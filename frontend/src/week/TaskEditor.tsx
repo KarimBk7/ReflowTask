@@ -3,7 +3,7 @@ import { useId, useState } from 'react'
 import { ApiError } from '../api/client'
 import type { Priority, Task, TaskInput } from '../api/types'
 import { t } from '../i18n/en'
-import { DAY_NAMES, addDays, formatDuration, formatTime, isoDay, toLocalDateTime } from '../lib/time'
+import { DAY_NAMES, addDays, formatDayTime, formatDuration, isoDay, toLocalDateTime } from '../lib/time'
 
 interface TaskEditorProps {
   /** The task being edited, or null for a new one. */
@@ -166,7 +166,7 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
               />
               <span className="choice-text">
                 <span className="choice-title">
-                  {t('task.fixedAt')} {DAY_NAMES[isoDay(slot) - 1]} {formatTime(slot)}
+                  {t('task.fixedAt')} {formatDayTime(slot)}
                 </span>
                 <span className="choice-hint">{slotPassed ? t('task.slotPassed') : t('task.fixedHint')}</span>
               </span>

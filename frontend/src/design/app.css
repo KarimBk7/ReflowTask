@@ -1657,6 +1657,13 @@ input::-webkit-calendar-picker-indicator {
     padding: var(--space-3) var(--space-4);
   }
 
+  /* A phone column is narrow: a one-line block keeps its title and drops the start time,
+     which its place on the grid already gives. */
+  .block[data-size='xs'] .block-start,
+  .block[data-size='sm'] .block-start {
+    display: none;
+  }
+
   .grid {
     --day-min: 132px;
     --gutter-width: 46px;
