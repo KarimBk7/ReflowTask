@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '../api/client'
-import type { BoardConfig, ConfigWindow, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
-import { addDays, isoDay, parseClock, toLocalDateTime } from './time'
+import type { Block, BoardConfig, ConfigWindow, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
+import { addDays, isoDay, minutesOfDay, parseClock, sameDate, toLocalDateTime } from './time'
 
 export type { BoardConfig, ConfigWindow }
 
@@ -21,21 +21,28 @@ export function dayNumber(day: string): number {
 }
 
 /**
- * The board draws only the hours the scheduler actually plans against, padded to whole
- * hours. Reading this from the server rather than assuming 09:00-18:00 is what stops the
- * board disagreeing with the plan it displays.
+ * Working days in ISO order, so a week with no weekend work shows five columns, not seven.
+ * A day outside them still appears when something is fixed on it: a Saturday appointment must
+ * not vanish because Saturday is not a working day.
  */
-export function boardWindow(config: BoardConfig | undefined): { start: number; end: number } {
-  if (!config || config.workingHours.length === 0) return { start: 8 * 60, end: 18 * 60 }
-  const start = Math.min(...config.workingHours.map((w) => parseClock(w.startTime)))
-  const end = Math.max(...config.workingHours.map((w) => parseClock(w.endTime)))
-  return { start: Math.floor(start / 60) * 60, end: Math.ceil(end / 60) * 60 }
+export function boardDays(config: BoardConfig | undefined, blocks: Block[], weekStart: Date): number[] {
+  const days = new Set(
+    config && config.workingHours.length > 0
+      ? config.workingHours.map((w) => dayNumber(w.day))
+      : [1, 2, 3, 4, 5],
+  )
+  const weekEnd = addDays(weekStart, 7)
+  for (const block of blocks) {
+    const start = new Date(block.startAt)
+    if (start >= weekStart && start < weekEnd) days.add(isoDay(start))
+  }
+  return [...days].sort((a, b) => a - b)
 }
 
-/** Working days, in ISO order, so a week with no weekend work shows five columns not seven. */
-export function boardDays(config: BoardConfig | undefined): number[] {
-  if (!config || config.workingHours.length === 0) return [1, 2, 3, 4, 5]
-  return [...new Set(config.workingHours.map((w) => dayNumber(w.day)))].sort((a, b) => a - b)
+/** The earliest working start, where the grid scrolls to on open. */
+export function firstWorkingMinute(config: BoardConfig | undefined): number {
+  if (!config || config.workingHours.length === 0) return 8 * 60
+  return Math.min(...config.workingHours.map((w) => parseClock(w.startTime)))
 }
 
 export function useConfig() {
@@ -62,19 +69,25 @@ export function useEvents() {
 }
 
 /**
- * Anything that can change the schedule invalidates all three queries together. A replan
- * rewrites blocks, task state and history at once, so refreshing them piecemeal would show
- * the user a board that disagrees with its own record.
+ * Anything that can change the schedule refreshes blocks, tasks and history together: a replan
+ * rewrites all three at once, and refreshing them piecemeal would show a calendar that
+ * disagrees with its own activity feed.
+ *
+ * The refresh is awaited, so `mutateAsync` resolves only once the new plan is on screen. A
+ * dragged block relies on that: it holds its dropped position until the server's copy of that
+ * position has arrived, instead of snapping back for a frame.
  */
-function useBoardMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>) {
+function useBoardMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>, alsoConfig = false) {
   const client = useQueryClient()
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ['schedule'] })
-      client.invalidateQueries({ queryKey: ['tasks'] })
-      client.invalidateQueries({ queryKey: ['events'] })
-    },
+    onSuccess: () =>
+      Promise.all([
+        alsoConfig && client.invalidateQueries({ queryKey: ['config'] }),
+        client.invalidateQueries({ queryKey: ['schedule'] }),
+        client.invalidateQueries({ queryKey: ['tasks'] }),
+        client.invalidateQueries({ queryKey: ['events'] }),
+      ]),
   })
 }
 
@@ -94,6 +107,12 @@ export function useSetPinned() {
   )
 }
 
+export function useMoveBlock() {
+  return useBoardMutation(({ id, start, end }: { id: number; start: Date; end: Date }) =>
+    api.moveBlock(id, toLocalDateTime(start), toLocalDateTime(end)),
+  )
+}
+
 export function useDeleteTask() {
   return useBoardMutation((id: number) => api.deleteTask(id))
 }
@@ -102,84 +121,66 @@ export function useCreateTask() {
   return useBoardMutation(api.createTask)
 }
 
-/**
- * Saving new hours replans on the server, so the configuration, the schedule, the task list
- * and the record all change together - and the board redraws its window from the new hours.
- */
-export function useUpdateConfig() {
-  const client = useQueryClient()
-  return useMutation({
-    mutationFn: api.updateConfig,
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ['config'] })
-      client.invalidateQueries({ queryKey: ['schedule'] })
-      client.invalidateQueries({ queryKey: ['tasks'] })
-      client.invalidateQueries({ queryKey: ['events'] })
-    },
-  })
-}
-
 export function useUpdateTask() {
   return useBoardMutation(({ id, input }: { id: number; input: TaskInput }) => api.updateTask(id, input))
 }
 
-/**
- * Work the board cannot show: never placed, or placed beyond its deadline. Both come from the
- * server, which derives them from every block on each read rather than storing them, so they
- * cannot disagree with the schedule or with which week happens to be on screen.
- */
-export interface RailEntry {
-  task: Task
-  scheduledMinutes: number
-  atRisk: boolean
+/** Saving hours replans on the server, and the grid redraws its working hours from the result. */
+export function useUpdateConfig() {
+  return useBoardMutation(api.updateConfig, true)
 }
 
-export function unrackedWork(tasks: Task[]): RailEntry[] {
-  // Placement comes from the server, which sees every block. This was once derived from the
-  // blocks of the displayed week, so viewing any other week reported every task placed
-  // outside it as having no slot at all.
+/**
+ * Work the calendar cannot show well: never placed, or placed past its deadline. Both come from
+ * the server, which derives them from every block rather than the week on screen.
+ */
+export function needsAttention(tasks: Task[]): Task[] {
   return tasks
     .filter((task) => task.status !== 'DONE')
-    .map((task) => ({
-      task,
-      scheduledMinutes: task.scheduledMinutes,
-      atRisk: task.atRisk,
-    }))
-    .filter((entry) => entry.atRisk || entry.scheduledMinutes < entry.task.estimatedMinutes)
-    .sort((a, b) => Number(b.atRisk) - Number(a.atRisk) || a.task.id - b.task.id)
+    .filter((task) => task.atRisk || task.scheduledMinutes < task.estimatedMinutes)
+    .sort((a, b) => Number(b.atRisk) - Number(a.atRisk) || a.id - b.id)
 }
 
-/** Where a strip used to be, and where it went. Drawn as a chinagraph ghost on the enamel. */
+/** Where a block used to be before the last replan. */
 export interface Ghost {
   key: string
   taskId: number | null
-  taskTitle: string
   kind: 'MISSED' | 'MOVED'
   from: Date
   to: Date | null
 }
 
 /**
- * Ghosts come from the most recent event only. Older history stays in the margin record:
- * a board carrying every ghost it ever drew would be unreadable, and "what changed since I
- * last looked" means the last change.
+ * Ghosts come from the most recent replan only. Older history stays in the activity feed: "what
+ * changed since I last looked" means the last change, and a week carrying every outline it
+ * ever drew would be unreadable.
  */
-export function ghostsFrom(events: RescheduleEvent[] | undefined, weekStart: Date): Ghost[] {
+export function ghostsFrom(events: RescheduleEvent[] | undefined): Ghost[] {
   const latest = events?.[0]
   if (!latest) return []
-  const weekEnd = addDays(weekStart, 7)
-
   return latest.items
     .filter((item) => (item.kind === 'MOVED' || item.kind === 'MISSED') && item.previousStartAt)
     .map((item, index) => ({
       key: `${latest.id}-${index}`,
       taskId: item.taskId,
-      taskTitle: item.taskTitle,
       kind: item.kind as 'MISSED' | 'MOVED',
       from: new Date(item.previousStartAt as string),
       to: item.newStartAt ? new Date(item.newStartAt) : null,
     }))
-    .filter((ghost) => ghost.from >= weekStart && ghost.from < weekEnd)
+    // A split task can be reported as moved while its first piece stayed put and only later pieces
+    // shifted. Its start did not change, so there is no old position to outline.
+    .filter((ghost) => ghost.to === null || ghost.to.getTime() !== ghost.from.getTime())
+}
+
+/**
+ * Where a block was before the last replan. A move is recorded per task, as the first piece's old
+ * and new start, so only the block now sitting at that new start carries it. Marking every piece of
+ * a split task would label pieces that never moved, and with a time they never had.
+ */
+export function movedFromFor(block: Block, ghosts: Ghost[]): Date | null {
+  const start = new Date(block.startAt).getTime()
+  const ghost = ghosts.find((g) => g.taskId === block.taskId && g.to?.getTime() === start)
+  return ghost ? ghost.from : null
 }
 
 export function blockedOn(config: BoardConfig | undefined, day: number): ConfigWindow[] {
@@ -190,13 +191,33 @@ export function workingOn(config: BoardConfig | undefined, day: number): ConfigW
   return (config?.workingHours ?? []).find((window) => dayNumber(window.day) === day)
 }
 
-export function isToday(date: Date): boolean {
-  const now = new Date()
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-  )
+/**
+ * Planned against available time for one day. Available is the working window minus the breaks
+ * inside it; planned is the part of each block on that date that falls inside the working window,
+ * so an evening appointment does not read as a fuller working day. The scheduler never overfills
+ * a day by itself, so "over" only happens when fixed or dragged work exceeds the day.
+ */
+export function workload(config: BoardConfig | undefined, day: number, date: Date, blocks: Block[]) {
+  const working = workingOn(config, day)
+  if (!working) return { planned: 0, available: 0 }
+  const start = parseClock(working.startTime)
+  const end = parseClock(working.endTime)
+  const overlap = (from: number, to: number) => Math.max(0, Math.min(end, to) - Math.max(start, from))
+
+  let available = end - start
+  for (const period of blockedOn(config, day)) {
+    available -= overlap(parseClock(period.startTime), parseClock(period.endTime))
+  }
+  let planned = 0
+  for (const block of blocks) {
+    const blockStart = new Date(block.startAt)
+    if (!sameDate(blockStart, date)) continue
+    const from = minutesOfDay(blockStart)
+    planned += overlap(from, from + (new Date(block.endAt).getTime() - blockStart.getTime()) / 60_000)
+  }
+  return { planned, available: Math.max(available, 0) }
 }
 
-export { isoDay }
+export function isToday(date: Date): boolean {
+  return sameDate(date, new Date())
+}

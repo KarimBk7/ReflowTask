@@ -1,103 +1,124 @@
 /*
- * The board's material vocabulary.
+ * Clean and calm: a cool neutral page, a white calendar, hairline rules and soft tinted blocks.
  *
- * Vitreous enamel on steel, screen-printed rules, laminated magnet strips, chinagraph wax
- * pencil, aluminium trim. Flat, hard and matte throughout: gloss or drop shadows would turn
- * the world into skeuomorphic pastiche.
+ * Colour carries meaning, never decoration. Indigo is for primary actions and today. Red is
+ * only for at risk and the present moment. Amber only marks what the last replan changed.
+ * Block tints encode priority, which is also drawn as a bar glyph so nothing depends on colour.
  *
- * Light and dark are both real boards, not a tint of each other - the app sits open all day,
- * so it follows the OS. Dark is deep enamel under room light; light is the pale hospital
- * enamel of the same object in daylight.
+ * The app stays open all day beside other work, so it follows the OS between light and dark.
  */
 
+/* Bundled, never fetched: this runs on a home server that may have no internet. */
+@import '@fontsource-variable/archivo/wght.css';
+
 :root {
-  /* Enamel: the ground, and the darker steel the board is bolted into. */
-  --enamel: #223f3c;
-  --enamel-sunk: #1a312f;
-  --enamel-frame: #142927;
+  color-scheme: light dark;
 
-  /* Screen-printed rules on the enamel. Hour rules read; half-hours only orient. */
-  --rule-hour: rgb(229 238 234 / 24%);
-  --rule-half: rgb(229 238 234 / 10%);
-  --rule-edge: rgb(229 238 234 / 40%);
+  --page: #f3f4f7;
+  --surface: #ffffff;
+  --surface-sunk: #f7f8fa;
+  --surface-hover: #f1f3f6;
+  --line: #e6e8ed;
+  --line-strong: #d4d8e0;
+  --line-faint: #f0f1f4;
+  /* Laid over the hour rules outside working hours, so the rules still show through. */
+  --off-hours: rgb(40 50 70 / 3.5%);
 
-  /* Printed legend ink: the permanent lettering fired onto the board. */
-  --legend: #dbe6e1;
-  --legend-quiet: #9fb3ad;
+  --ink: #171a20;
+  --ink-2: #4a505c;
+  --ink-3: #626977;
 
-  /* Laminated magnet strip and the ink printed on it. */
-  --strip: #e7e1d3;
-  --strip-edge: #c3bdaf;
-  --strip-ink: #1b2422;
-  --strip-ink-quiet: #55605c;
-  --strip-done: #b9bdb2;
+  --accent: #4253d4;
+  --accent-hover: #3544bd;
+  --accent-soft: #eceffd;
+  --accent-ink: #ffffff;
 
-  /* Chinagraph wax pencil: the annotation hand. Ghosts, arrows, margin notes. */
-  --chinagraph: #f1eee4;
-  --chinagraph-soft: rgb(241 238 228 / 55%);
+  --now: #e0443e;
 
-  /* The one saturated colour, reserved for at risk. Never decorative. */
-  --signal: #e2583a;
-  --signal-ink: #2a0d06;
+  --risk: #c2332d;
+  --risk-soft: #fdeeed;
+  --risk-edge: #f0bdb9;
+  --risk-ink: #8c1d18;
 
-  /* Aluminium extrusion: the frame and its labelled controls. */
-  --trim: #7f8a86;
-  --trim-lit: #b6c0bb;
-  --trim-face: #6d7874;
-  --trim-shadow: #48514e;
+  --changed: #e3a019;
+  --changed-soft: #fff4dc;
+  --changed-ink: #74490a;
 
-  --focus: #ffd166;
+  --low-fill: #eff1f4;
+  --low-edge: #d9dde4;
+  --low-ink: #2a2f38;
+  --medium-fill: #e7effd;
+  --medium-edge: #c2d5f6;
+  --medium-ink: #173a73;
+  --high-fill: #efe9fc;
+  --high-edge: #d6c7f5;
+  --high-ink: #42267b;
 
-  /* Type. Archivo Narrow is the screen-printed legend voice; Archivo sets strip text.
-     Both are bundled, never fetched: this runs on a Pi that may have no internet. */
-  --face-legend: 'Archivo Narrow', ui-sans-serif, system-ui, sans-serif;
-  --face-strip: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  --shadow-pop: 0 16px 40px -12px rgb(20 26 40 / 22%), 0 2px 6px rgb(20 26 40 / 6%);
+  --shadow-lift: 0 12px 28px -8px rgb(20 26 40 / 28%), 0 2px 4px rgb(20 26 40 / 8%);
 
-  /* One spacing rhythm. */
-  --gap-hair: 2px;
-  --gap-tight: 6px;
-  --gap: 12px;
-  --gap-wide: 24px;
-  --gap-room: 40px;
+  --face: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --trim-height: 64px;
-  --rail-width: 264px;
+  --radius-s: 6px;
+  --radius: 8px;
+  --radius-l: 12px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --topbar-height: 60px;
+  --sidebar-width: 292px;
   --gutter-width: 56px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    /* The same object in daylight. The enamel still has to be a saturated, mid-value
-       green so the bone strips read as objects sitting on it - a pale ground would make
-       strip and board the same value and the board would vanish into grey. */
-    --enamel: #8fa79f;
-    --enamel-sunk: #7b958c;
-    --enamel-frame: #5f7a71;
+    --page: #141519;
+    --surface: #1b1c21;
+    --surface-sunk: #17181c;
+    --surface-hover: #23252b;
+    --line: #2a2c33;
+    --line-strong: #383b44;
+    --line-faint: #212329;
+    --off-hours: rgb(0 0 0 / 24%);
 
-    --rule-hour: rgb(250 252 250 / 52%);
-    --rule-half: rgb(250 252 250 / 24%);
-    --rule-edge: rgb(250 252 250 / 72%);
+    --ink: #eceef2;
+    --ink-2: #b4b9c4;
+    --ink-3: #9197a3;
 
-    --legend: #0f1f1c;
-    --legend-quiet: #2e4842;
+    --accent: #8292f7;
+    --accent-hover: #9aa7f9;
+    --accent-soft: #262a47;
+    --accent-ink: #10142e;
 
-    --strip: #f7f3e8;
-    --strip-edge: #cdc5b2;
-    --strip-ink: #141c1a;
-    --strip-ink-quiet: #4e5955;
-    --strip-done: #c8cbc0;
+    --now: #ff6b63;
 
-    --chinagraph: #12201d;
-    --chinagraph-soft: rgb(18 32 29 / 62%);
+    --risk: #ff8078;
+    --risk-soft: #3a2022;
+    --risk-edge: #6e3236;
+    --risk-ink: #ffc2bc;
 
-    --signal: #a32d12;
-    --signal-ink: #fff3ef;
+    --changed: #f0b545;
+    --changed-soft: #3a2f16;
+    --changed-ink: #f7d690;
 
-    --trim: #8c9a95;
-    --trim-lit: #cdd6d2;
-    --trim-face: #7c8a85;
-    --trim-shadow: #4a5652;
+    --low-fill: #25272e;
+    --low-edge: #363943;
+    --low-ink: #dcdfe5;
+    --medium-fill: #1c2a40;
+    --medium-edge: #2d4569;
+    --medium-ink: #cbdcfa;
+    --high-fill: #29213f;
+    --high-edge: #45366b;
+    --high-ink: #ddd0fb;
 
-    --focus: #7a4a00;
+    --shadow-pop: 0 18px 44px -12px rgb(0 0 0 / 60%), 0 2px 6px rgb(0 0 0 / 30%);
+    --shadow-lift: 0 14px 30px -8px rgb(0 0 0 / 65%), 0 2px 4px rgb(0 0 0 / 30%);
   }
 }

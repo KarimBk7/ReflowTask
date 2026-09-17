@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import jakarta.validation.Valid;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -26,6 +27,7 @@ final class ConfigPayloads {
 	record Window(@NotNull DayOfWeek day, @NotNull LocalTime startTime, @NotNull LocalTime endTime,
 			@Size(max = 100) String label) {
 
+		@JsonIgnore
 		@AssertTrue(message = "must end after it starts")
 		public boolean isOrdered() {
 			// Missing fields are reported by @NotNull; do not report them twice here.
@@ -51,6 +53,7 @@ final class ConfigPayloads {
 		 * Working hours are keyed by weekday, so a second window for the same day would be a
 		 * primary-key violation - reported here as a validation error instead of a 500.
 		 */
+		@JsonIgnore
 		@AssertTrue(message = "each weekday may have only one working window")
 		public boolean isOneWindowPerDay() {
 			if (this.workingHours == null) {

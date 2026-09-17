@@ -1,17 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import type { Block, Task } from './api/types'
-import { ChevronIcon, ReflowIcon } from './design/Icon'
+import { ApiError } from './api/client'
+import type { Block, TaskInput } from './api/types'
+import { ChevronIcon, ClockIcon, PlusIcon, ReflowIcon } from './design/Icon'
 import { t } from './i18n/en'
 import {
-  boardDays,
-  boardWindow,
   ghostsFrom,
-  unrackedWork,
+  movedFromFor,
+  needsAttention,
   useConfig,
   useCreateTask,
   useDeleteTask,
   useEvents,
+  useMoveBlock,
   useReplan,
   useSchedule,
   useSetPinned,
@@ -20,21 +21,31 @@ import {
   useUpdateConfig,
   useUpdateTask,
 } from './lib/board'
-import { DAY_NAMES, addDays, isoDay, startOfWeek } from './lib/time'
-import { HoursForm } from './week/HoursForm'
-import { MarginRecord } from './week/MarginRecord'
-import { StripForm } from './week/StripForm'
-import { StripRail } from './week/StripRail'
-import { WeekBoard } from './week/WeekBoard'
+import { addDays, startOfWeek } from './lib/time'
+import { BlockDetails } from './week/BlockDetails'
+import { HoursPanel } from './week/HoursPanel'
+import { Popover } from './week/Popover'
+import { Activity, NeedsAttention } from './week/Sidebar'
+import { TaskEditor } from './week/TaskEditor'
+import { type Draft, WeekGrid } from './week/WeekGrid'
 import './design/tokens.css'
-import './design/board.css'
+import './design/app.css'
+
+type Open =
+  | { kind: 'create'; anchor: DOMRect; slot: Date | null; placement: 'side' | 'below' }
+  | { kind: 'block'; anchor: DOMRect; blockId: number }
+  | { kind: 'edit'; anchor: DOMRect; taskId: number }
+
+const POPOVER_HEADING = 'popover-heading'
+const NOTICE_MS = 6000
 
 export default function App() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
-  // The task open in the rail form, or null while the form writes a new one.
-  const [editing, setEditing] = useState<Task | null>(null)
-  // The rail shows either the strips and their form, or the working-hours editor in their place.
-  const [hoursOpen, setHoursOpen] = useState(false)
+  const [open, setOpen] = useState<Open | null>(null)
+  const [draft, setDraft] = useState<Draft | null>(null)
+  // null follows the server: the hours panel opens by itself until the owner has saved hours once.
+  const [hoursChoice, setHoursChoice] = useState<boolean | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const config = useConfig()
   const schedule = useSchedule(weekStart)
@@ -44,192 +55,258 @@ export default function App() {
   const replan = useReplan()
   const setStatus = useSetStatus()
   const setPinned = useSetPinned()
+  const moveBlock = useMoveBlock()
   const deleteTask = useDeleteTask()
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
   const updateConfig = useUpdateConfig()
 
-  // Every mutation counts, including create and update: without them a quick second click
-  // on Save sends the task twice and the board ends up with a duplicate.
+  // Every mutation counts: without create and update here, a quick second click sends the task twice.
   const busy =
     replan.isPending ||
     setStatus.isPending ||
     setPinned.isPending ||
+    moveBlock.isPending ||
     deleteTask.isPending ||
     createTask.isPending ||
     updateTask.isPending ||
     updateConfig.isPending
 
-  const days = boardDays(config.data)
-  const window = boardWindow(config.data)
+  const welcome = config.data?.onboarded === false
+  const hoursOpen = hoursChoice ?? welcome
+
   const blocks = schedule.data ?? []
+  const attention = useMemo(() => needsAttention(tasks.data ?? []), [tasks.data])
+  const ghosts = useMemo(() => ghostsFrom(events.data), [events.data])
 
-  const rail = useMemo(() => unrackedWork(tasks.data ?? []), [tasks.data])
-  const ghosts = useMemo(() => ghostsFrom(events.data, weekStart), [events.data, weekStart])
+  useEffect(() => {
+    if (!notice) return
+    const timer = window.setTimeout(() => setNotice(null), NOTICE_MS)
+    return () => window.clearTimeout(timer)
+  }, [notice])
 
-  const lastDay = addDays(weekStart, days[days.length - 1] - 1)
-  const range = `${weekStart.getDate()} – ${lastDay.getDate()} ${lastDay.toLocaleDateString('en', {
-    month: 'long',
-  })}`
-
-  function togglePin(block: Block) {
-    setPinned.mutate({ id: block.id, pinned: !block.pinned })
-  }
-
-  /**
-   * A block only carries its task id and title, so the full task is looked up before the
-   * form opens. Editing always starts from the server's copy, never from what a strip shows.
+  /*
+   * A press outside an open popover closes it, and that same press must not also open a new task
+   * at the spot it landed on: dismissing is the whole intent. The flag lives for one click.
    */
-  function editBlock(block: Block) {
-    const task = tasks.data?.find((candidate) => candidate.id === block.taskId)
-    if (!task) return
-    // The task form lives in the same rail as the hours editor; without closing it, the edit
-    // would open behind the editor where nobody can see it.
-    setHoursOpen(false)
-    setEditing(task)
+  const dismissing = useRef(false)
+  const close = useCallback(() => {
+    setOpen(null)
+    setDraft(null)
+    dismissing.current = true
+    window.addEventListener('click', () => window.setTimeout(() => (dismissing.current = false), 0), {
+      once: true,
+      capture: true,
+    })
+    // A keyboard close produces no click, so the flag must not wait for one.
+    window.setTimeout(() => (dismissing.current = false), 400)
+  }, [])
+
+  function fail(error: unknown) {
+    setNotice(error instanceof ApiError ? error.message : t('error.offline'))
   }
 
-  async function saveTask(input: Parameters<typeof createTask.mutateAsync>[0]) {
-    if (editing) {
-      await updateTask.mutateAsync({ id: editing.id, input })
-      setEditing(null)
-    } else {
-      await createTask.mutateAsync(input)
+  const lastDay = addDays(weekStart, 6)
+  const range =
+    weekStart.getMonth() === lastDay.getMonth()
+      ? `${weekStart.getDate()} – ${lastDay.getDate()} ${lastDay.toLocaleDateString('en', { month: 'long', year: 'numeric' })}`
+      : `${weekStart.toLocaleDateString('en', { day: 'numeric', month: 'short' })} – ${lastDay.toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' })}`
+
+  // A replan recreates blocks, so the one a popover was showing can vanish; its popover then simply
+  // does not render.
+  const openBlock = open?.kind === 'block' ? blocks.find((block) => block.id === open.blockId) : undefined
+  const openTask =
+    open?.kind === 'edit' ? tasks.data?.find((task) => task.id === open.taskId) : undefined
+
+  async function create(input: TaskInput) {
+    await createTask.mutateAsync(input)
+    setOpen(null)
+    setDraft(null)
+  }
+
+  async function save(taskId: number, input: TaskInput) {
+    await updateTask.mutateAsync({ id: taskId, input })
+    setOpen(null)
+  }
+
+  async function remove(taskId: number) {
+    try {
+      await deleteTask.mutateAsync(taskId)
+      setOpen(null)
+    } catch (error) {
+      fail(error)
     }
   }
 
-  function toggleDone(block: Block) {
-    setStatus.mutate({ id: block.taskId, status: block.status === 'DONE' ? 'OPEN' : 'DONE' })
+  async function move(block: Block, start: Date, end: Date) {
+    try {
+      await moveBlock.mutateAsync({ id: block.id, start, end })
+    } catch (error) {
+      fail(error)
+      throw error
+    }
   }
 
   const unreachable = config.isError || schedule.isError || tasks.isError
 
   return (
-    <div className="frame">
-      <header className="trim">
-        <h1 className="mark">{t('app.name')}</h1>
+    <div className="app">
+      <header className="topbar">
+        <h1 className="brand">
+          <span className="brand-mark" aria-hidden="true" />
+          {t('app.name')}
+        </h1>
 
-        {/* The week's dates are fired into the extrusion itself; only the movement
-            controls are fittings on it. */}
-        <p className="week-range" aria-live="polite">
-          {range}
-        </p>
-
-        <nav className="week-nav" aria-label={t('week.thisWeek')}>
-          <button
-            type="button"
-            className="trim-button"
-            onClick={() => setWeekStart(addDays(weekStart, -7))}
-          >
+        <nav className="week-nav" aria-label={t('week.navigation')}>
+          <button type="button" className="button button-secondary button-small" onClick={() => setWeekStart(startOfWeek(new Date()))}>
+            {t('week.today')}
+          </button>
+          <button type="button" className="icon-button" onClick={() => setWeekStart(addDays(weekStart, -7))}>
             <ChevronIcon direction="left" />
             <span className="sr-only">{t('week.previous')}</span>
           </button>
-          <button
-            type="button"
-            className="trim-button trim-button-text"
-            onClick={() => setWeekStart(startOfWeek(new Date()))}
-          >
-            {t('week.today')}
-          </button>
-          <button
-            type="button"
-            className="trim-button"
-            onClick={() => setWeekStart(addDays(weekStart, 7))}
-          >
+          <button type="button" className="icon-button" onClick={() => setWeekStart(addDays(weekStart, 7))}>
             <ChevronIcon direction="right" />
             <span className="sr-only">{t('week.next')}</span>
           </button>
+          <p className="week-range" aria-live="polite">
+            {range}
+          </p>
         </nav>
 
-        <button
-          type="button"
-          className="trim-button trim-button-text"
-          aria-pressed={hoursOpen}
-          onClick={() => {
-            // Opening the hours editor abandons any task edit in progress in the same rail.
-            setEditing(null)
-            setHoursOpen((open) => !open)
-          }}
-        >
-          {t('hours.open')}
-        </button>
-
-        {/* Bolted to the right end of the extrusion, through its two fixings. */}
-        <div className="lever-plate">
-          <span className="fixing" aria-hidden="true" />
+        <div className="topbar-actions">
           <button
             type="button"
-            className="lever"
-            onClick={() => replan.mutate(undefined)}
+            className="button button-ghost"
+            onClick={() => replan.mutate(undefined, { onError: fail })}
             disabled={busy}
           >
             <ReflowIcon />
-            {t('action.replan')}
+            <span className="label-wide">{t('action.replan')}</span>
           </button>
-          <span className="fixing" aria-hidden="true" />
+          <button
+            type="button"
+            className="button button-ghost"
+            aria-pressed={hoursOpen}
+            onClick={() => setHoursChoice(!hoursOpen)}
+          >
+            <ClockIcon />
+            <span className="label-wide">{t('hours.open')}</span>
+          </button>
+          <button
+            type="button"
+            className="button button-primary"
+            onClick={(event) =>
+              setOpen({ kind: 'create', anchor: event.currentTarget.getBoundingClientRect(), slot: null, placement: 'below' })
+            }
+          >
+            <PlusIcon />
+            {t('action.newTask')}
+          </button>
         </div>
       </header>
 
-      {unreachable && (
-        <p className="board-error" role="alert">
-          {t('error.offline')}
+      {(unreachable || notice) && (
+        <p className="notice" role={unreachable ? 'alert' : 'status'}>
+          {unreachable ? t('error.offline') : notice}
         </p>
       )}
 
-      <div className="frame-body">
-        {/* The rail runs down the left of the board: unracked strips sit beside the board
-            they have not been seated into. */}
-        <div className="frame-rail">
+      <div className="app-body">
+        <aside className="sidebar" data-wide={hoursOpen || undefined}>
           {hoursOpen && config.data ? (
-            <HoursForm
+            <HoursPanel
               config={config.data}
+              welcome={welcome}
               onSave={(next) => updateConfig.mutateAsync(next)}
-              onClose={() => setHoursOpen(false)}
+              onClose={() => setHoursChoice(false)}
               busy={busy}
             />
           ) : (
             <>
-              <StripRail
-                entries={rail}
-                onDelete={(id) => {
-                  // Deleting the task being edited would leave the form saving into nothing.
-                  if (editing?.id === id) setEditing(null)
-                  deleteTask.mutate(id)
-                }}
-                onEdit={setEditing}
-                busy={busy}
+              <NeedsAttention
+                tasks={attention}
+                onOpen={(task, anchor) => setOpen({ kind: 'edit', anchor, taskId: task.id })}
               />
-              {/* Keyed by task so switching which task is edited remounts the fields from it. */}
-              <StripForm
-                key={editing?.id ?? 'new'}
-                editing={editing}
-                onSave={saveTask}
-                onCancel={() => setEditing(null)}
-                busy={busy}
-              />
+              <Activity events={events.data} />
             </>
           )}
-        </div>
+        </aside>
 
-        <div className="frame-board">
-          <WeekBoard
+        <main className="calendar">
+          <WeekGrid
             weekStart={weekStart}
-            days={days}
-            windowStart={window.start}
-            windowEnd={window.end}
             config={config.data}
             blocks={blocks}
             ghosts={ghosts}
-            onTogglePin={togglePin}
-            onToggleDone={toggleDone}
-            onEdit={editBlock}
+            draft={draft}
+            selectedBlockId={open?.kind === 'block' ? open.blockId : null}
+            busy={busy}
+            onOpenBlock={(block, anchor) => setOpen({ kind: 'block', anchor, blockId: block.id })}
+            onCreateAt={(slot, anchor) => {
+              if (dismissing.current) return
+              setOpen({ kind: 'create', anchor, slot, placement: 'side' })
+              // The editor starts fixed at the slot unless that time has passed, and the outline follows.
+              setDraft(slot.getTime() >= Date.now() ? { start: slot, minutes: 60 } : null)
+            }}
+            onMove={move}
+          />
+        </main>
+      </div>
+
+      {open?.kind === 'create' && (
+        <Popover anchor={open.anchor} placement={open.placement} labelledBy={POPOVER_HEADING} onClose={close}>
+          <TaskEditor
+            headingId={POPOVER_HEADING}
+            task={null}
+            slot={open.slot}
+            onSubmit={create}
+            onCancel={close}
+            onDraftChange={(minutes, fixed) =>
+              setDraft(open.slot && fixed ? { start: open.slot, minutes: minutes || 15 } : null)
+            }
             busy={busy}
           />
-          <MarginRecord events={events.data} />
-        </div>
-      </div>
+        </Popover>
+      )}
+
+      {open?.kind === 'block' && openBlock && (
+        <Popover anchor={open.anchor} labelledBy={POPOVER_HEADING} onClose={close}>
+          <BlockDetails
+            headingId={POPOVER_HEADING}
+            block={openBlock}
+            task={tasks.data?.find((task) => task.id === openBlock.taskId)}
+            movedFrom={movedFromFor(openBlock, ghosts)}
+            onToggleDone={() => {
+              setStatus.mutate(
+                { id: openBlock.taskId, status: openBlock.status === 'DONE' ? 'OPEN' : 'DONE' },
+                { onError: fail },
+              )
+              setOpen(null)
+            }}
+            onTogglePin={() => setPinned.mutate({ id: openBlock.id, pinned: !openBlock.pinned }, { onError: fail })}
+            onEdit={() => setOpen({ kind: 'edit', anchor: open.anchor, taskId: openBlock.taskId })}
+            onClose={close}
+            busy={busy}
+          />
+        </Popover>
+      )}
+
+      {open?.kind === 'edit' && openTask && (
+        <Popover anchor={open.anchor} labelledBy={POPOVER_HEADING} onClose={close}>
+          <TaskEditor
+            key={openTask.id}
+            headingId={POPOVER_HEADING}
+            task={openTask}
+            slot={null}
+            onSubmit={(input) => save(openTask.id, input)}
+            onCancel={close}
+            onDelete={() => remove(openTask.id)}
+            busy={busy}
+          />
+        </Popover>
+      )}
     </div>
   )
 }
 
-export { DAY_NAMES, isoDay }

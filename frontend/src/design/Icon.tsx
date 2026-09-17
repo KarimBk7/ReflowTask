@@ -1,16 +1,16 @@
 /**
- * The board's icon set: authored SVG at one stroke weight, sized to the legend's cap height.
- * Small enough to read as punched or stencilled marks on the strip rather than as UI chrome.
+ * The app's icon set: authored SVG on a 16px grid at one 1.5px stroke, so every mark shares a
+ * weight with the text beside it.
  */
 
-type IconProps = { className?: string }
+type IconProps = { className?: string; size?: number }
 
-function Frame({ children, className }: IconProps & { children: React.ReactNode }) {
+function Frame({ children, className, size = 16 }: IconProps & { children: React.ReactNode }) {
   return (
     <svg
       viewBox="0 0 16 16"
-      width="14"
-      height="14"
+      width={size}
+      height={size}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"
@@ -25,7 +25,7 @@ function Frame({ children, className }: IconProps & { children: React.ReactNode 
   )
 }
 
-/** Pinned: a magnet strip the replan must not move. */
+/** Pinned: replans leave this block where it is. */
 export function PinIcon(props: IconProps) {
   return (
     <Frame {...props}>
@@ -72,6 +72,32 @@ export function TrashIcon(props: IconProps) {
   )
 }
 
+export function EditIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <path d="M10.5 2.75 13.25 5.5 5.5 13.25H2.75V10.5z" />
+      <path d="M9 4.25 11.75 7" />
+    </Frame>
+  )
+}
+
+export function CloseIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <path d="M4 4l8 8M12 4l-8 8" />
+    </Frame>
+  )
+}
+
+export function ClockIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <circle cx="8" cy="8" r="6.25" />
+      <path d="M8 4.5V8l2.25 1.5" />
+    </Frame>
+  )
+}
+
 export function ChevronIcon({ direction = 'left', ...props }: IconProps & { direction?: 'left' | 'right' }) {
   return (
     <Frame {...props}>
@@ -80,7 +106,7 @@ export function ChevronIcon({ direction = 'left', ...props }: IconProps & { dire
   )
 }
 
-/** The replan lever's mark: a strip lifted and re-seated. */
+/** Replan: two blocks trading places. */
 export function ReflowIcon(props: IconProps) {
   return (
     <Frame {...props}>
@@ -88,6 +114,21 @@ export function ReflowIcon(props: IconProps) {
       <path d="M7.5 2.25 9.75 4.5 7.5 6.75" />
       <path d="M14 11.5H6.5" />
       <path d="M8.5 9.25 6.25 11.5l2.25 2.25" />
+    </Frame>
+  )
+}
+
+/** Priority as rising bars, so it reads without colour: one, two or three filled. */
+export function PriorityIcon({ level, ...props }: IconProps & { level: 1 | 2 | 3 }) {
+  return (
+    <Frame {...props}>
+      {[0, 1, 2].map((index) => (
+        <path
+          key={index}
+          d={`M${4 + index * 4} ${12.5}V${9.5 - index * 3}`}
+          opacity={index < level ? 1 : 0.28}
+        />
+      ))}
     </Frame>
   )
 }

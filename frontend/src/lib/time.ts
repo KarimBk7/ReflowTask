@@ -52,6 +52,13 @@ export function toLocalDateTime(date: Date): string {
   )
 }
 
+/** The same calendar day at a number of minutes past its midnight. */
+export function atMinutes(date: Date, minutes: number): Date {
+  const at = new Date(date)
+  at.setHours(0, minutes, 0, 0)
+  return at
+}
+
 export function formatClock(minutes: number): string {
   const hours = Math.floor(minutes / 60)
   return `${String(hours).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
@@ -67,6 +74,11 @@ export function formatDuration(totalMinutes: number): string {
   const minutes = totalMinutes % 60
   if (hours === 0) return `${minutes}m`
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`
+}
+
+/** 'Tue 10:00': enough to place a time within the visible week. */
+export function formatDayTime(date: Date): string {
+  return `${DAY_NAMES[isoDay(date) - 1]} ${formatTime(date)}`
 }
 
 /** 'Fri 18 Sep', or 'Fri 18 Sep 14:00' when the user gave an explicit time. */

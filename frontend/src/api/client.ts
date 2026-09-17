@@ -86,6 +86,10 @@ export const api = {
 
   replan: () => request<RescheduleEvent[]>('/schedule/replan', { method: 'POST' }),
 
+  /** Moves or resizes a block. The server pins it there and replans everything else. */
+  moveBlock: (id: number, startAt: LocalDateTime, endAt: LocalDateTime) =>
+    request<Block>(`/schedule/blocks/${id}`, { method: 'PATCH', body: JSON.stringify({ startAt, endAt }) }),
+
   pinBlock: (id: number) => request<Block>(`/schedule/blocks/${id}/pin`, { method: 'POST' }),
 
   unpinBlock: (id: number) => request<Block>(`/schedule/blocks/${id}/unpin`, { method: 'POST' }),
