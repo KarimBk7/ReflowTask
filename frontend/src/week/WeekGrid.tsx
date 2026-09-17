@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Block } from '../api/types'
 import { t } from '../i18n/en'
 import type { BoardConfig, Ghost } from '../lib/board'
-import { blockedOn, boardDays, firstWorkingMinute, isToday, movedFromFor, workingOn, workload } from '../lib/board'
+import { blockedOn, boardDays, firstWorkingMinute, isToday, originFor, workingOn, workload } from '../lib/board'
 import {
   DAY_NAMES,
   addDays,
@@ -37,10 +37,15 @@ interface WeekGridProps {
   onMove: (block: Block, start: Date, end: Date) => Promise<unknown>
 }
 
-const PX_PER_MIN = 1
+const PX_PER_MIN = 1.2
 const SNAP = 15
 const DAY_MINUTES = 24 * 60
 const DRAG_THRESHOLD = 4
+/**
+ * The replan record keeps where a task started, not how long its old block was, so the outline
+ * marks the old start at a fixed height instead of guessing a length from the task's current pieces.
+ */
+const GHOST_MINUTES = 30
 
 const snap = (minutes: number) => Math.round(minutes / SNAP) * SNAP
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
@@ -271,6 +276,11 @@ export function WeekGrid({
 
       <div className="grid-body">
         <div className="grid-gutter" aria-hidden="true">
+          {days.some((day) => isToday(addDays(weekStart, day - 1))) && (
+            <span className="gutter-now" style={{ top: `calc(${minutesOfDay(now)} * var(--px-per-min))` }}>
+              {formatClock(minutesOfDay(now))}
+            </span>
+          )}
           {hours.map((minute) => (
             <span key={minute} className="gutter-hour" style={{ top: `calc(${minute} * var(--px-per-min))` }}>
               {formatClock(minute)}
@@ -290,13 +300,12 @@ export function WeekGrid({
                 now={now}
                 items={placed.filter((item) => item.dayIndex === dayIndex)}
                 ghosts={ghosts.filter((ghost) => sameDate(ghost.from, date))}
-                blocks={blocks}
                 draft={draft && sameDate(draft.start, date) ? draft : null}
                 renderBlock={(item) => (
                   <BlockCard
                     key={item.key}
                     item={item}
-                    movedFrom={movedFromFor(item.block, ghosts)}
+                    origin={originFor(item.block, ghosts)}
                     selected={item.block.id === selectedBlockId}
                     editable={editable(item.block)}
                     onOpen={openBlock}
@@ -356,13 +365,12 @@ interface DayColumnProps {
   now: Date
   items: Placed[]
   ghosts: Ghost[]
-  blocks: Block[]
   draft: Draft | null
   renderBlock: (item: Placed) => React.ReactNode
   onCreateAt: (start: Date, anchor: DOMRect) => void
 }
 
-function DayColumn({ day, date, config, now, items, ghosts, blocks, draft, renderBlock, onCreateAt }: DayColumnProps) {
+function DayColumn({ day, date, config, now, items, ghosts, draft, renderBlock, onCreateAt }: DayColumnProps) {
   const hoverRef = useRef<HTMLDivElement>(null)
   const working = workingOn(config, day)
   const today = sameDate(date, now)
@@ -439,11 +447,11 @@ function DayColumn({ day, date, config, now, items, ghosts, blocks, draft, rende
           aria-hidden="true"
           style={{
             top: `calc(${minutesOfDay(ghost.from)} * var(--px-per-min))`,
-            height: `calc(${ghostMinutes(ghost, blocks)} * var(--px-per-min) - 2px)`,
+            height: `calc(${GHOST_MINUTES} * var(--px-per-min) - 2px)`,
           }}
         >
           {/* Labelled only where no block covers it: a label peeking out under a block reads as its text. */}
-          {!items.some((item) => item.start < minutesOfDay(ghost.from) + ghostMinutes(ghost, blocks) && item.end > minutesOfDay(ghost.from)) && (
+          {!items.some((item) => item.start < minutesOfDay(ghost.from) + GHOST_MINUTES && item.end > minutesOfDay(ghost.from)) && (
             <span className="ghost-label">{ghost.kind === 'MISSED' ? t('grid.missedHere') : t('grid.wasHere')}</span>
           )}
         </div>
@@ -473,10 +481,4 @@ function DayColumn({ day, date, config, now, items, ghosts, blocks, draft, rende
   )
 }
 
-/** The old outline takes the size of the task's current first block; a vanished task gets 30 minutes. */
-function ghostMinutes(ghost: Ghost, blocks: Block[]): number {
-  const current = blocks.find((block) => block.taskId === ghost.taskId)
-  if (!current) return 30
-  return Math.max(15, (new Date(current.endAt).getTime() - new Date(current.startAt).getTime()) / 60_000)
-}
 

@@ -76,9 +76,12 @@ export function formatDuration(totalMinutes: number): string {
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`
 }
 
-/** 'Tue 10:00': enough to place a time within the visible week. */
+/**
+ * 'Tue 22, 10:00'. The day of the month is always there: a bare weekday reads as this week's,
+ * and a replan routinely moves work into the next one.
+ */
 export function formatDayTime(date: Date): string {
-  return `${DAY_NAMES[isoDay(date) - 1]} ${formatTime(date)}`
+  return `${DAY_NAMES[isoDay(date) - 1]} ${date.getDate()}, ${formatTime(date)}`
 }
 
 /** 'Fri 18 Sep', or 'Fri 18 Sep 14:00' when the user gave an explicit time. */

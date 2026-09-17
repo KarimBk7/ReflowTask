@@ -1,12 +1,13 @@
 import type { Block, Task } from '../api/types'
 import { CheckIcon, CloseIcon, EditIcon, PinIcon, PriorityIcon, RiskIcon } from '../design/Icon'
 import { t } from '../i18n/en'
+import type { Ghost } from '../lib/board'
 import { DAY_NAMES, formatDayTime, formatDeadline, formatDuration, formatTime, isoDay } from '../lib/time'
 
 interface BlockDetailsProps {
   block: Block
   task: Task | undefined
-  movedFrom: Date | null
+  origin: Ghost | null
   onToggleDone: () => void
   onTogglePin: () => void
   onEdit: () => void
@@ -23,7 +24,7 @@ const LEVEL = { LOW: 1, MEDIUM: 2, HIGH: 3 } as const
  * here rather than on the block itself, so a block on the calendar only ever carries its title
  * and time and never runs out of room for its controls.
  */
-export function BlockDetails({ block, task, movedFrom, onToggleDone, onTogglePin, onEdit, onClose, busy, headingId }: BlockDetailsProps) {
+export function BlockDetails({ block, task, origin, onToggleDone, onTogglePin, onEdit, onClose, busy, headingId }: BlockDetailsProps) {
   const start = new Date(block.startAt)
   const end = new Date(block.endAt)
   const minutes = (end.getTime() - start.getTime()) / 60_000
@@ -52,10 +53,10 @@ export function BlockDetails({ block, task, movedFrom, onToggleDone, onTogglePin
       </p>
 
       <ul className="details-facts">
-        {movedFrom && (
+        {origin && (
           <li className="fact fact-changed">
             <span className="fact-mark" aria-hidden="true" />
-            {t('details.movedFrom')} {formatDayTime(movedFrom)}
+            {t(origin.kind === 'MISSED' ? 'details.missedAt' : 'details.movedFrom')} {formatDayTime(origin.from)}
           </li>
         )}
         {block.atRisk && (

@@ -1,6 +1,7 @@
 import type { Block } from '../api/types'
 import { CheckIcon, PinIcon, PriorityIcon, RiskIcon } from '../design/Icon'
 import { t } from '../i18n/en'
+import type { Ghost } from '../lib/board'
 import { formatClock, formatDayTime, formatDuration } from '../lib/time'
 
 /** A block laid out on the grid: which column, and its minutes within that day. */
@@ -15,7 +16,8 @@ export interface Placed {
 
 interface BlockCardProps {
   item: Placed
-  movedFrom: Date | null
+  /** What the last replan did to this block, if anything. */
+  origin: Ghost | null
   selected: boolean
   editable: boolean
   onOpen: (block: Block, anchor: DOMRect) => void
@@ -29,12 +31,15 @@ const LEVEL = { LOW: 1, MEDIUM: 2, HIGH: 3 } as const
  * A time block on the calendar: title and time, and nothing to press but the block itself.
  * Opening it shows the details and actions; dragging it moves it; its bottom edge resizes it.
  */
-export function BlockCard({ item, movedFrom, selected, editable, onOpen, onDragStart, onKeyboardMove }: BlockCardProps) {
+export function BlockCard({ item, origin, selected, editable, onOpen, onDragStart, onKeyboardMove }: BlockCardProps) {
   const { block, start, end } = item
   const minutes = end - start
   const visible = Math.min(end, 24 * 60) - start
   const done = block.status === 'DONE'
   const size = visible < 30 ? 'xs' : visible < 45 ? 'sm' : visible < 80 ? 'md' : 'lg'
+  const missed = origin?.kind === 'MISSED'
+  const change = origin && `${t(missed ? 'state.missedAt' : 'state.movedFrom')} ${formatDayTime(origin.from)}`
+  const shortChange = origin && `${t(missed ? 'state.missedShort' : 'state.movedFromShort')} ${formatDayTime(origin.from)}`
   const range = `${formatClock(start)} – ${formatClock(end % (24 * 60))}`
 
   const label = [
@@ -44,7 +49,7 @@ export function BlockCard({ item, movedFrom, selected, editable, onOpen, onDragS
     block.pinned && t('state.pinned'),
     block.atRisk && t('state.atRisk'),
     done && t('status.DONE'),
-    movedFrom && `${t('state.movedFrom')} ${formatDayTime(movedFrom)}`,
+    change,
   ]
     .filter(Boolean)
     .join(', ')
@@ -58,7 +63,7 @@ export function BlockCard({ item, movedFrom, selected, editable, onOpen, onDragS
       data-risk={block.atRisk || undefined}
       data-done={done || undefined}
       data-pinned={block.pinned || undefined}
-      data-moved={movedFrom ? true : undefined}
+      data-moved={origin ? true : undefined}
       data-dragging={item.dragging || undefined}
       data-selected={selected || undefined}
       data-editable={editable || undefined}
@@ -80,28 +85,28 @@ export function BlockCard({ item, movedFrom, selected, editable, onOpen, onDragS
           <span className="block-title">{block.taskTitle}</span>
           {(size === 'xs' || size === 'sm') && <span className="block-start">{formatClock(start)}</span>}
           <span className="block-marks" aria-hidden="true">
-            {block.atRisk && <RiskIcon size={12} className="mark-risk" />}
-            {block.pinned && <PinIcon size={12} />}
-            {done && <CheckIcon size={12} />}
-            {size !== 'xs' && <PriorityIcon size={12} level={LEVEL[block.priority]} />}
+            {block.atRisk && <RiskIcon size={13} className="mark-risk" />}
+            {block.pinned && <PinIcon size={13} />}
+            {done && <CheckIcon size={13} />}
+            {size !== 'xs' && <PriorityIcon size={13} level={LEVEL[block.priority]} />}
           </span>
         </span>
 
         {(size === 'md' || size === 'lg') && (
           <span className="block-meta" aria-hidden="true">
             {range}
-            {size === 'md' && movedFrom && (
+            {size === 'md' && shortChange && (
               <span className="block-from">
                 {' · '}
-                {t('state.movedFromShort')} {formatDayTime(movedFrom)}
+                {shortChange}
               </span>
             )}
           </span>
         )}
 
-        {size === 'lg' && movedFrom && (
+        {size === 'lg' && change && (
           <span className="block-chip" aria-hidden="true">
-            {t('state.movedFrom')} {formatDayTime(movedFrom)}
+            {change}
           </span>
         )}
       </button>

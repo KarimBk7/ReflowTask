@@ -64,9 +64,12 @@ export const en = {
   'state.atRisk': 'At risk',
   'state.movedFrom': 'Moved from',
   'state.movedFromShort': 'from',
+  'state.missedAt': 'Missed',
+  'state.missedShort': 'missed',
   'state.pinned': 'Pinned',
 
   'details.movedFrom': 'Moved by the last replan, from',
+  'details.missedAt': 'Replanned here after it was missed at',
   'details.atRisk': 'Ends after its deadline,',
   'details.pinned': 'Pinned. Replans leave it here.',
   'details.done': 'Done',

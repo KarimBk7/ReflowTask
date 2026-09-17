@@ -173,14 +173,14 @@ export function ghostsFrom(events: RescheduleEvent[] | undefined): Ghost[] {
 }
 
 /**
- * Where a block was before the last replan. A move is recorded per task, as the first piece's old
- * and new start, so only the block now sitting at that new start carries it. Marking every piece of
- * a split task would label pieces that never moved, and with a time they never had.
+ * What the last replan did to a block: moved it here, or replanned it here after a miss. A change
+ * is recorded per task, as the first piece's old and new start, so only the block now sitting at
+ * that new start carries it. Marking every piece of a split task would label pieces that never
+ * moved, with a time they never had.
  */
-export function movedFromFor(block: Block, ghosts: Ghost[]): Date | null {
+export function originFor(block: Block, ghosts: Ghost[]): Ghost | null {
   const start = new Date(block.startAt).getTime()
-  const ghost = ghosts.find((g) => g.taskId === block.taskId && g.to?.getTime() === start)
-  return ghost ? ghost.from : null
+  return ghosts.find((g) => g.taskId === block.taskId && g.to?.getTime() === start) ?? null
 }
 
 export function blockedOn(config: BoardConfig | undefined, day: number): ConfigWindow[] {

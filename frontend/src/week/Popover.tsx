@@ -40,7 +40,10 @@ export function Popover({ anchor, placement = 'side', labelledBy, onClose, child
     if (!element || sheet) return
     function place() {
       if (!element) return
-      const { width, height } = element.getBoundingClientRect()
+      // Layout size, not the painted box: the entrance animation starts scaled down, and a size
+      // measured mid-animation would let the finished popover run past the viewport edge.
+      const width = element.offsetWidth
+      const height = element.offsetHeight
       let left: number
       let origin: string
       if (placement === 'below') {

@@ -515,6 +515,9 @@ input[type='date'] {
   top: 0;
   z-index: 6;
   background: var(--surface);
+  /* Sticky offsets land on fractional pixels; this covers the sliver above the header so
+     scrolled content never shows through it. */
+  box-shadow: 0 -3px 0 var(--surface);
   border-bottom: 1px solid var(--line);
 }
 
@@ -620,6 +623,21 @@ input[type='date'] {
   background: var(--surface);
 }
 
+.gutter-now {
+  position: absolute;
+  right: 6px;
+  z-index: 1;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-50%);
+}
+
 .gutter-hour {
   position: absolute;
   right: 10px;
@@ -655,6 +673,10 @@ input[type='date'] {
   inset-inline: 0;
   background: var(--off-hours);
   pointer-events: none;
+}
+
+.day[data-today] {
+  background-color: color-mix(in srgb, var(--accent-soft) 35%, transparent);
 }
 
 .day[data-off] {
@@ -735,13 +757,15 @@ input[type='date'] {
   color: var(--risk-ink);
 }
 
+/* The present, in today's indigo. It runs beneath blocks: drawn over them it strikes through
+   their text, which in a task list reads as done. */
 .now-line {
   position: absolute;
   inset-inline: 0;
-  z-index: 4;
+  z-index: 1;
   height: 2px;
   margin-top: -1px;
-  background: var(--now);
+  background: var(--accent);
   pointer-events: none;
 }
 
@@ -753,7 +777,7 @@ input[type='date'] {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--now);
+  background: var(--accent);
 }
 
 /* ── Blocks ───────────────────────────────────────────────────────────────── */
@@ -858,7 +882,6 @@ input[type='date'] {
   align-items: center;
   gap: 3px;
   flex: none;
-  opacity: 0.8;
 }
 
 .block-marks .mark-risk {
@@ -898,18 +921,19 @@ input[type='date'] {
 
 .block[data-size='xs'] .block-body {
   justify-content: center;
-  padding: 0 6px;
+  padding: 1px 7px;
 }
 
 .block[data-size='xs'] .block-title,
 .block[data-size='xs'] .block-start {
   font-size: 11px;
-  line-height: 1;
+  line-height: 14px;
 }
 
+/* The moved ring sits outside the block, so it never crowds the text inside. */
 .block[data-moved] .block-body {
-  box-shadow: 0 0 0 2px var(--changed);
-  border-color: transparent;
+  outline: 2px solid var(--changed);
+  outline-offset: 1px;
 }
 
 .block[data-done] {
@@ -1036,8 +1060,10 @@ input[type='date'] {
   font-weight: 500;
 }
 
-.editor-title:focus {
+.editor-title:focus,
+.editor-title:focus-visible {
   border-bottom-color: var(--accent);
+  box-shadow: none;
 }
 
 .editor-row {
@@ -1481,6 +1507,12 @@ textarea::placeholder {
 
 .time-range input {
   width: 96px;
+  color: var(--ink);
+}
+
+input::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
 }
 
 .break-row {

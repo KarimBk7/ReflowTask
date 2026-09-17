@@ -6,7 +6,7 @@ import { ChevronIcon, ClockIcon, PlusIcon, ReflowIcon } from './design/Icon'
 import { t } from './i18n/en'
 import {
   ghostsFrom,
-  movedFromFor,
+  originFor,
   needsAttention,
   useConfig,
   useCreateTask,
@@ -276,7 +276,7 @@ export default function App() {
             headingId={POPOVER_HEADING}
             block={openBlock}
             task={tasks.data?.find((task) => task.id === openBlock.taskId)}
-            movedFrom={movedFromFor(openBlock, ghosts)}
+            origin={originFor(openBlock, ghosts)}
             onToggleDone={() => {
               setStatus.mutate(
                 { id: openBlock.taskId, status: openBlock.status === 'DONE' ? 'OPEN' : 'DONE' },
