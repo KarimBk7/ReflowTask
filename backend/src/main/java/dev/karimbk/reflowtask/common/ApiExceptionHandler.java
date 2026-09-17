@@ -18,6 +18,11 @@ class ApiExceptionHandler {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
 	}
 
+	@ExceptionHandler(ConflictException.class)
+	ProblemDetail handleConflict(ConflictException ex) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+	}
+
 	/**
 	 * Spring's default validation response does not say which field failed. A client
 	 * building a form needs that, so the violations are attached explicitly.

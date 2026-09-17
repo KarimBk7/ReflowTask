@@ -13,9 +13,11 @@ import java.util.List;
  * @param horizonDays how far ahead to plan, counting today
  * @param minChunkMinutes smallest piece a split task may be broken into, so long work does
  * not shatter into useless fragments
+ * @param bufferMinutes minutes kept free between scheduled tasks and on both sides of fixed
+ * blocks, so a day is not planned wall to wall. 0 places work back to back.
  */
 public record SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow> blockedPeriods, int horizonDays,
-		int minChunkMinutes) {
+		int minChunkMinutes, int bufferMinutes) {
 
 	public SchedulingConfig {
 		if (horizonDays < 1) {
@@ -24,8 +26,17 @@ public record SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow>
 		if (minChunkMinutes < 1) {
 			throw new IllegalArgumentException("minChunkMinutes must be at least 1, was " + minChunkMinutes);
 		}
+		if (bufferMinutes < 0) {
+			throw new IllegalArgumentException("bufferMinutes cannot be negative, was " + bufferMinutes);
+		}
 		workingHours = List.copyOf(workingHours);
 		blockedPeriods = List.copyOf(blockedPeriods);
+	}
+
+	/** Without a buffer: work is placed back to back, exactly as before buffers existed. */
+	public SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow> blockedPeriods, int horizonDays,
+			int minChunkMinutes) {
+		this(workingHours, blockedPeriods, horizonDays, minChunkMinutes, 0);
 	}
 
 	List<DailyWindow> workingHoursOn(DayOfWeek day) {

@@ -121,6 +121,7 @@ export function HoursForm({ config, onSave, onClose, busy }: HoursFormProps) {
         })),
         horizonDays: Number(horizon),
         minChunkMinutes: Number(minChunk),
+        bufferMinutes: config.bufferMinutes,
       })
       onClose()
     } catch (error) {

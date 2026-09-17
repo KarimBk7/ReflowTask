@@ -40,7 +40,7 @@ public final class SchedulePlanner {
 		List<TimeSlot> free = freeCapacity(obstacles, config, now);
 		List<PlannedBlock> planned = new ArrayList<>();
 		for (SchedulableTask task : inPlanningOrder(tasks)) {
-			place(task, free, config.minChunkMinutes(), planned);
+			place(task, free, config.minChunkMinutes(), config.bufferMinutes(), planned);
 		}
 		return planned;
 	}
@@ -81,7 +81,10 @@ public final class SchedulePlanner {
 					pieces = subtract(pieces, blocked.on(date));
 				}
 				for (TimeSlot obstacle : obstacles) {
-					pieces = subtract(pieces, obstacle);
+					// Widened by the buffer on both sides, so a fixed appointment keeps room
+					// to arrive at and recover from. With no buffer this is the obstacle itself.
+					pieces = subtract(pieces, new TimeSlot(obstacle.start().minusMinutes(config.bufferMinutes()),
+							obstacle.end().plusMinutes(config.bufferMinutes())));
 				}
 				free.addAll(pieces);
 			}
@@ -114,7 +117,7 @@ public final class SchedulePlanner {
 	 * takes. Stops when the task is fully placed or the horizon runs out; a shortfall is
 	 * reported by the caller comparing placed minutes against the estimate, not by failing.
 	 */
-	private static void place(SchedulableTask task, List<TimeSlot> free, int minChunkMinutes,
+	private static void place(SchedulableTask task, List<TimeSlot> free, int minChunkMinutes, int bufferMinutes,
 			List<PlannedBlock> planned) {
 		long remaining = task.minutesToPlace();
 		ListIterator<TimeSlot> slots = free.listIterator();
@@ -136,11 +139,15 @@ public final class SchedulePlanner {
 			planned.add(new PlannedBlock(task.id(), slot.start(), slot.start().plusMinutes(chunk)));
 			remaining -= chunk;
 
-			if (chunk == available) {
+			// Whatever work comes next in this slot starts after the buffer. A task only takes
+			// part of a slot when it finishes inside it, so this never wedges a buffer between
+			// two pieces of the same task: those always land in separate slots.
+			long consumed = chunk + bufferMinutes;
+			if (consumed >= available) {
 				slots.remove();
 			}
 			else {
-				slots.set(slot.startingAt(slot.start().plusMinutes(chunk)));
+				slots.set(slot.startingAt(slot.start().plusMinutes(consumed)));
 			}
 		}
 	}

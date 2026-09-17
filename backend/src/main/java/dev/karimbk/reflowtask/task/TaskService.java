@@ -61,10 +61,18 @@ public class TaskService {
 	 */
 	@Transactional
 	public TaskResponse create(TaskRequest request) {
+		LocalDateTime fixedStart = request.fixedStart();
+		if (fixedStart != null) {
+			// Checked before the task is saved, so a refused time leaves nothing behind.
+			this.scheduler.assertCanFix(fixedStart, fixedStart.plusMinutes(request.estimatedMinutes()), null);
+		}
 		Task task = new Task(request.title(), request.description(), request.estimatedMinutes(),
 				Task.toDeadline(request.deadlineDate(), request.deadlineTime()),
 				request.deadlineTime() != null, request.priority(), LocalDateTime.now(this.clock));
 		Task saved = this.tasks.save(task);
+		if (fixedStart != null) {
+			this.scheduler.fix(saved, fixedStart);
+		}
 		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
 		return respond(saved);
 	}

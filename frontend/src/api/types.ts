@@ -39,6 +39,8 @@ export interface TaskInput {
   /** 'HH:mm:ss'. Requires deadlineDate; the server rejects a time without a date. */
   deadlineTime?: string | null
   priority: Priority
+  /** Create only: fix the task at this time as a pinned block instead of letting the scheduler place it. */
+  fixedStart?: LocalDateTime | null
 }
 
 export interface Block {
@@ -99,4 +101,8 @@ export interface BoardConfig {
   blockedPeriods: ConfigWindow[]
   horizonDays: number
   minChunkMinutes: number
+  /** Minutes kept free between scheduled tasks and around fixed blocks. 0–120. */
+  bufferMinutes: number
+  /** Read-only: true once the configuration has been saved. The server ignores what is sent. */
+  onboarded?: boolean
 }

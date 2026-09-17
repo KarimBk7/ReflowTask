@@ -272,6 +272,72 @@ class SchedulePlannerTests {
 				new PlannedBlock(1, at(MONDAY.plusDays(1), 9, 0), at(MONDAY.plusDays(1), 10, 0)));
 	}
 
+	// --- buffer time ----------------------------------------------------------------
+
+	/** Mon-Fri 09:00-18:00 with no breaks, so buffer arithmetic is not tangled with lunch. */
+	private static SchedulingConfig bufferedConfig(int bufferMinutes) {
+		List<DailyWindow> working = List.of(new DailyWindow(DayOfWeek.MONDAY, NINE, SIX_PM),
+				new DailyWindow(DayOfWeek.TUESDAY, NINE, SIX_PM), new DailyWindow(DayOfWeek.WEDNESDAY, NINE, SIX_PM),
+				new DailyWindow(DayOfWeek.THURSDAY, NINE, SIX_PM), new DailyWindow(DayOfWeek.FRIDAY, NINE, SIX_PM));
+		return new SchedulingConfig(working, List.of(), 14, 30, bufferMinutes);
+	}
+
+	@Test
+	void aBufferSeparatesConsecutiveTasks() {
+		List<PlannedBlock> plan = SchedulePlanner.plan(
+				List.of(task(1, 60, null, Priority.HIGH), task(2, 60, null, Priority.LOW)), List.of(),
+				bufferedConfig(15), at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 10, 0)),
+				new PlannedBlock(2, at(MONDAY, 10, 15), at(MONDAY, 11, 15)));
+	}
+
+	@Test
+	void aZeroBufferPlacesTasksBackToBack() {
+		List<PlannedBlock> plan = SchedulePlanner.plan(
+				List.of(task(1, 60, null, Priority.HIGH), task(2, 60, null, Priority.LOW)), List.of(),
+				bufferedConfig(0), at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 10, 0)),
+				new PlannedBlock(2, at(MONDAY, 10, 0), at(MONDAY, 11, 0)));
+	}
+
+	@Test
+	void aBufferIsKeptOnBothSidesOfAFixedBlock() {
+		// A fixed 10:00-11:00 appointment: work must stop by 09:45 and not resume before 11:15.
+		List<TimeSlot> fixed = List.of(new TimeSlot(at(MONDAY, 10, 0), at(MONDAY, 11, 0)));
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(
+				List.of(task(1, 45, null, Priority.HIGH), task(2, 30, null, Priority.LOW)), fixed,
+				bufferedConfig(15), at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 9, 45)),
+				new PlannedBlock(2, at(MONDAY, 11, 15), at(MONDAY, 11, 45)));
+	}
+
+	@Test
+	void aBufferThatLeavesTooLittleRoomPushesWorkOnward() {
+		// Only 09:00-10:30 is free on Monday. After a one-hour task and a 15-minute buffer, 15
+		// minutes remain - below the 30-minute minimum - so the next hour of work waits.
+		List<TimeSlot> restOfMonday = List.of(new TimeSlot(at(MONDAY, 10, 30), at(MONDAY, 18, 0)));
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(
+				List.of(task(1, 60, null, Priority.HIGH), task(2, 60, null, Priority.LOW)), restOfMonday,
+				bufferedConfig(15), at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 10, 0)),
+				new PlannedBlock(2, at(MONDAY.plusDays(1), 9, 0), at(MONDAY.plusDays(1), 10, 0)));
+	}
+
+	@Test
+	void aBufferNeverSplitsOneTaskAgainstItself() {
+		// A long task filling a whole free stretch is placed as one block, not broken by buffers.
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(task(1, 180, null, Priority.MEDIUM)), List.of(),
+				bufferedConfig(15), at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 12, 0)));
+	}
+
 	// --- wall-clock semantics -------------------------------------------------------
 
 	@Test

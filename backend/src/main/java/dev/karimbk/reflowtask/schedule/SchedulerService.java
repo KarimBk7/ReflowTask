@@ -1,6 +1,7 @@
 package dev.karimbk.reflowtask.schedule;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,6 +14,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import dev.karimbk.reflowtask.common.ConflictException;
+import dev.karimbk.reflowtask.common.NotFoundException;
 import dev.karimbk.reflowtask.config.SchedulingConfigProvider;
 import dev.karimbk.reflowtask.task.Task;
 import dev.karimbk.reflowtask.task.TaskRepository;
@@ -41,6 +44,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class SchedulerService {
 
+	/** Matches the ceiling a task's estimate may be given through the API. */
+	private static final long MAX_ESTIMATE_MINUTES = 43_200;
+
 	private final TaskRepository tasks;
 
 	private final TimeBlockRepository blocks;
@@ -58,6 +64,62 @@ public class SchedulerService {
 		this.events = events;
 		this.config = config;
 		this.clock = clock;
+	}
+
+	/**
+	 * Refuses to fix work at a time the schedule cannot give it. Called before anything is
+	 * written, so a refused request leaves no task behind without its block.
+	 *
+	 * @param ignoreBlockId the block being moved, which may of course overlap its own old place
+	 */
+	@Transactional(readOnly = true)
+	public void assertCanFix(LocalDateTime start, LocalDateTime end, Long ignoreBlockId) {
+		if (!end.isAfter(LocalDateTime.now(this.clock))) {
+			throw new ConflictException("Work cannot be fixed at a time that has already passed.");
+		}
+		boolean clash = this.blocks.findOverlapping(start, end)
+			.stream()
+			.anyMatch((block) -> block.isPinned() && !block.getId().equals(ignoreBlockId));
+		if (clash) {
+			throw new ConflictException("That time overlaps something that is already fixed.");
+		}
+	}
+
+	/** Fixes a task at a chosen time with a pinned block covering its whole estimate. */
+	@Transactional
+	public void fix(Task task, LocalDateTime start) {
+		LocalDateTime end = start.plusMinutes(task.getEstimatedMinutes());
+		assertCanFix(start, end, null);
+		this.blocks.save(new TimeBlock(task, start, end, true));
+	}
+
+	/**
+	 * Moves or resizes a block to where the user dragged it, pins it there, and replans the rest.
+	 *
+	 * Resizing changes the task's estimate by exactly the change in length: stretching a block
+	 * says the work takes longer. Moving without resizing leaves the estimate alone.
+	 */
+	@Transactional
+	public TimeBlock move(long blockId, LocalDateTime start, LocalDateTime end) {
+		TimeBlock block = this.blocks.findById(blockId).orElseThrow(() -> new NotFoundException("Time block", blockId));
+		LocalDateTime now = LocalDateTime.now(this.clock);
+		if (block.getTask().getStatus() == TaskStatus.DONE) {
+			throw new ConflictException("A completed task's time cannot be moved.");
+		}
+		if (block.hasEndedBy(now)) {
+			throw new ConflictException("Time that has already passed cannot be moved.");
+		}
+		assertCanFix(start, end, blockId);
+
+		long change = Duration.between(start, end).toMinutes()
+				- Duration.between(block.getStartAt(), block.getEndAt()).toMinutes();
+		Task task = block.getTask();
+		task.setEstimatedMinutes((int) Math.clamp(task.getEstimatedMinutes() + change, 1, MAX_ESTIMATE_MINUTES));
+
+		block.moveTo(start, end);
+		this.blocks.flush();
+		replan(RescheduleTrigger.MANUAL);
+		return block;
 	}
 
 	/**

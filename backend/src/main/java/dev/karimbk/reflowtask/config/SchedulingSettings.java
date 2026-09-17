@@ -21,6 +21,14 @@ public class SchedulingSettings {
 	@Column(nullable = false)
 	private int minChunkMinutes;
 
+	/** Minutes kept free between scheduled tasks and around fixed blocks. */
+	@Column(nullable = false)
+	private int bufferMinutes;
+
+	/** False until the owner first saves their hours; drives the first-run setup. */
+	@Column(nullable = false)
+	private boolean onboarded;
+
 	protected SchedulingSettings() {
 		// for JPA
 	}
@@ -44,6 +52,22 @@ public class SchedulingSettings {
 
 	public void setMinChunkMinutes(int minChunkMinutes) {
 		this.minChunkMinutes = minChunkMinutes;
+	}
+
+	public int getBufferMinutes() {
+		return this.bufferMinutes;
+	}
+
+	public void setBufferMinutes(int bufferMinutes) {
+		this.bufferMinutes = bufferMinutes;
+	}
+
+	public boolean isOnboarded() {
+		return this.onboarded;
+	}
+
+	public void markOnboarded() {
+		this.onboarded = true;
 	}
 
 }

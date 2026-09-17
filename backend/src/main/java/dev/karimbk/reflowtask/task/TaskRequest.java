@@ -1,6 +1,7 @@
 package dev.karimbk.reflowtask.task;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import jakarta.validation.constraints.AssertTrue;
@@ -32,7 +33,12 @@ public record TaskRequest(
 
 		LocalTime deadlineTime,
 
-		@NotNull Priority priority) {
+		@NotNull Priority priority,
+
+		// Create only, and optional: when set, the task is fixed at this time as a pinned block
+		// instead of being placed by the scheduler. Ignored on update, where moving a block is
+		// what changes its time.
+		LocalDateTime fixedStart) {
 
 	@AssertTrue(message = "deadlineTime requires deadlineDate")
 	public boolean isDeadlineConsistent() {

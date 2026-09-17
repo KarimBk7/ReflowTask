@@ -77,9 +77,74 @@ class ConfigApiTests {
 	}
 
 	private static String config(String workingHours, String blockedPeriods, Object horizon, Object minChunk) {
+		return config(workingHours, blockedPeriods, horizon, minChunk, 0);
+	}
+
+	private static String config(String workingHours, String blockedPeriods, Object horizon, Object minChunk,
+			Object buffer) {
 		return """
-				{"workingHours":[%s],"blockedPeriods":[%s],"horizonDays":%s,"minChunkMinutes":%s}"""
-			.formatted(workingHours, blockedPeriods, horizon, minChunk);
+				{"workingHours":[%s],"blockedPeriods":[%s],"horizonDays":%s,"minChunkMinutes":%s,"bufferMinutes":%s}"""
+			.formatted(workingHours, blockedPeriods, horizon, minChunk, buffer);
+	}
+
+	@Test
+	void aFreshInstallImposesNoBreaks() throws Exception {
+		// A break is the owner's decision. The lunch V2 once seeded is gone, and nothing replaced it.
+		this.mvc.perform(get("/api/v1/config"))
+			.andExpect(jsonPath("$.blockedPeriods", hasSize(0)))
+			.andExpect(jsonPath("$.workingHours", hasSize(5)));
+	}
+
+	@Test
+	void aFreshInstallIsNotYetOnboarded() throws Exception {
+		this.mvc.perform(get("/api/v1/config")).andExpect(jsonPath("$.onboarded").value(false));
+	}
+
+	@Test
+	void savingTheConfigurationStoresTheBufferAndOnboardsTheOwner() throws Exception {
+		this.mvc
+			.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+					.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30, 15)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.bufferMinutes").value(15))
+			.andExpect(jsonPath("$.onboarded").value(true));
+
+		this.mvc.perform(get("/api/v1/config"))
+			.andExpect(jsonPath("$.bufferMinutes").value(15))
+			.andExpect(jsonPath("$.onboarded").value(true));
+	}
+
+	@Test
+	void aClientCannotUndoOnboardingBySendingTheFlag() throws Exception {
+		String body = """
+				{"workingHours":[%s],"blockedPeriods":[],"horizonDays":14,"minChunkMinutes":30,"bufferMinutes":0,"onboarded":false}"""
+			.formatted(window("MONDAY", "09:00", "18:00"));
+
+		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON).content(body))
+			.andExpect(jsonPath("$.onboarded").value(true));
+	}
+
+	@Test
+	void rejectsABufferOutOfRange() throws Exception {
+		this.mvc
+			.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+					.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30, 500)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.errors.bufferMinutes").exists());
+	}
+
+	@Test
+	void theBufferIsAppliedWhenTheScheduleIsReplanned() throws Exception {
+		Task first = this.tasks.save(new Task("First", null, 60, null, false, Priority.HIGH, MONDAY.atTime(7, 0)));
+		Task second = this.tasks.save(new Task("Second", null, 60, null, false, Priority.LOW, MONDAY.atTime(7, 0)));
+
+		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+				.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30, 20)));
+
+		assertThat(this.blocks.findByTaskId(first.getId())).singleElement()
+			.satisfies((block) -> assertThat(block.getEndAt()).isEqualTo(MONDAY.atTime(10, 0)));
+		assertThat(this.blocks.findByTaskId(second.getId())).singleElement()
+			.satisfies((block) -> assertThat(block.getStartAt()).isEqualTo(MONDAY.atTime(10, 20)));
 	}
 
 	@Test

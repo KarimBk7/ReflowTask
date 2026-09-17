@@ -47,7 +47,8 @@ public class ConfigService {
 					period.getLabel()))
 			.sorted(BY_DAY_THEN_START)
 			.toList();
-		return new Config(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes());
+		return new Config(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes(),
+				current.getBufferMinutes(), current.isOnboarded());
 	}
 
 	/**
@@ -83,6 +84,9 @@ public class ConfigService {
 		SchedulingSettings current = currentSettings();
 		current.setHorizonDays(config.horizonDays());
 		current.setMinChunkMinutes(config.minChunkMinutes());
+		current.setBufferMinutes(config.bufferMinutes());
+		// Whatever the request says: saving the configuration is itself what onboarding means.
+		current.markOnboarded();
 		this.settings.save(current);
 		this.settings.flush();
 

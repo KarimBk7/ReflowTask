@@ -43,7 +43,8 @@ public class SchedulingConfigProvider {
 			.stream()
 			.map((period) -> new DailyWindow(period.getDay(), period.getStartTime(), period.getEndTime()))
 			.toList();
-		return new SchedulingConfig(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes());
+		return new SchedulingConfig(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes(),
+				current.getBufferMinutes());
 	}
 
 }

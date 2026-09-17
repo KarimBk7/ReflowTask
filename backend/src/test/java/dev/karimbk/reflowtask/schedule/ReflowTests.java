@@ -154,20 +154,24 @@ class ReflowTests {
 
 	@Test
 	void finishingEarlyFreesTheTimeForOtherWork() {
+		// Planned before the working day starts, so every block below is still in the future.
+		// (This scenario once leaned on a seeded lunch break splitting the task into a started
+		// and an unstarted piece; with no default breaks it has to stand on its own. Keeping
+		// work that has already started is covered by aBlockStillRunningIsNotTouched.)
+		this.clock.set(MONDAY.atTime(8, 0));
 		Task finished = givenTask("Finished early", 240, null, Priority.HIGH);
 		Task waiting = givenTask("Waiting", 60, null, Priority.LOW);
 		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
 
-		// 240 minutes of higher-priority work takes 09:00-12:00 and 13:00-14:00, so the
-		// waiting task starts after it.
-		assertThat(blocksOf(waiting).get(0).getStartAt()).isEqualTo(MONDAY.atTime(14, 0));
+		// Four hours of higher-priority work takes 09:00-13:00, so the waiting task follows it.
+		assertThat(blocksOf(waiting).get(0).getStartAt()).isEqualTo(MONDAY.atTime(13, 0));
 
 		finished.setStatus(TaskStatus.DONE);
 		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
 
-		// Its 13:00 block was still in the future and is released; the 09:00 block has
-		// started, so it keeps its time. The waiting task moves up into the freed slot.
-		assertThat(blocksOf(waiting).get(0).getStartAt()).isEqualTo(MONDAY.atTime(13, 0));
+		// None of the finished task's time had started, so all of it is released and the waiting
+		// task moves up to the start of the day.
+		assertThat(blocksOf(waiting).get(0).getStartAt()).isEqualTo(MONDAY.atTime(9, 0));
 	}
 
 	@Test

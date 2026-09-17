@@ -71,6 +71,13 @@ public class TimeBlock {
 		this.pinned = pinned;
 	}
 
+	/** Places the block where the user put it. A block the user positioned is pinned there. */
+	public void moveTo(LocalDateTime startAt, LocalDateTime endAt) {
+		this.startAt = startAt;
+		this.endAt = endAt;
+		this.pinned = true;
+	}
+
 	public TimeSlot toSlot() {
 		return new TimeSlot(this.startAt, this.endAt);
 	}
