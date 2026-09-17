@@ -324,11 +324,17 @@ input[type='date'] {
   margin-left: 8px;
 }
 
-/* Floats over the calendar instead of pushing it down: a block must not jump under the pointer
-   because a message appeared. */
+/* Floats at the bottom instead of pushing the calendar down: a block must not jump under the
+   pointer because a message appeared, and the day headers stay readable while it shows. */
+.notice[data-kind='info'] {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--surface);
+  color: var(--ink);
+}
+
 .notice {
   position: fixed;
-  top: calc(var(--topbar-height) + var(--space-2));
+  bottom: var(--space-5);
   left: 50%;
   z-index: 60;
   max-width: min(480px, calc(100vw - 32px));
@@ -953,6 +959,28 @@ input[type='date'] {
   border-color: transparent;
 }
 
+/* The other parts of a split task, while one of them is pointed at: split work reads as one task,
+   not as copies of it. */
+.block[data-related]:not(:hover) .block-body {
+  outline: 2px dashed var(--accent);
+  outline-offset: 1px;
+}
+
+/* A task the scheduler just placed pulses once, so the eye finds where it went. */
+.block[data-flash] .block-body {
+  animation: flash 1.2s var(--ease-out) 2;
+}
+
+@keyframes flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+  30% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+}
+
 .block[data-dragging] {
   z-index: 7;
   box-shadow: var(--shadow-lift);
@@ -1356,6 +1384,33 @@ textarea::placeholder {
   height: 10px;
   border: 1.5px dashed var(--changed);
   border-radius: 3px;
+}
+
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.help-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 18px;
+  list-style: disc;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.help-list li::marker {
+  color: var(--ink-3);
+}
+
+.editor-note {
+  margin-top: -6px;
+  color: var(--ink-3);
+  font-size: 12.5px;
 }
 
 .details-description {

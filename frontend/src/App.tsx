@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { ApiError } from './api/client'
-import type { Block, TaskInput } from './api/types'
-import { ChevronIcon, ClockIcon, PlusIcon, ReflowIcon } from './design/Icon'
+import { ApiError, api } from './api/client'
+import type { Block, Task, TaskInput } from './api/types'
+import { ChevronIcon, ClockIcon, HelpIcon, PlusIcon, ReflowIcon } from './design/Icon'
 import { t } from './i18n/en'
 import {
+  describeWorkingHours,
   ghostsFrom,
   originFor,
   needsAttention,
@@ -21,9 +22,10 @@ import {
   useUpdateConfig,
   useUpdateTask,
 } from './lib/board'
-import { addDays, startOfWeek } from './lib/time'
+import { addDays, formatDayTime, startOfWeek, toLocalDateTime } from './lib/time'
 import { BlockDetails } from './week/BlockDetails'
 import { HoursPanel } from './week/HoursPanel'
+import { HowItWorks } from './week/HowItWorks'
 import { Popover } from './week/Popover'
 import { Activity, NeedsAttention } from './week/Sidebar'
 import { TaskEditor } from './week/TaskEditor'
@@ -35,6 +37,7 @@ type Open =
   | { kind: 'create'; anchor: DOMRect; slot: Date | null; placement: 'side' | 'below' }
   | { kind: 'block'; anchor: DOMRect; blockId: number }
   | { kind: 'edit'; anchor: DOMRect; taskId: number }
+  | { kind: 'help'; anchor: DOMRect }
 
 const POPOVER_HEADING = 'popover-heading'
 const NOTICE_MS = 6000
@@ -45,7 +48,8 @@ export default function App() {
   const [draft, setDraft] = useState<Draft | null>(null)
   // null follows the server: the hours panel opens by itself until the owner has saved hours once.
   const [hoursChoice, setHoursChoice] = useState<boolean | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  const [notice, setNotice] = useState<{ text: string; kind: 'error' | 'info' } | null>(null)
+  const [flashBlockId, setFlashBlockId] = useState<number | null>(null)
 
   const config = useConfig()
   const schedule = useSchedule(weekStart)
@@ -76,6 +80,11 @@ export default function App() {
   const hoursOpen = hoursChoice ?? welcome
 
   const blocks = schedule.data ?? []
+  const taskMinutes = useMemo(
+    () => new Map((tasks.data ?? []).map((task) => [task.id, task.estimatedMinutes])),
+    [tasks.data],
+  )
+  const hoursSummary = describeWorkingHours(config.data)
   const attention = useMemo(() => needsAttention(tasks.data ?? []), [tasks.data])
   const ghosts = useMemo(() => ghostsFrom(events.data), [events.data])
 
@@ -103,7 +112,7 @@ export default function App() {
   }, [])
 
   function fail(error: unknown) {
-    setNotice(error instanceof ApiError ? error.message : t('error.offline'))
+    setNotice({ kind: 'error', text: error instanceof ApiError ? error.message : t('error.offline') })
   }
 
   const lastDay = addDays(weekStart, 6)
@@ -119,9 +128,41 @@ export default function App() {
     open?.kind === 'edit' ? tasks.data?.find((task) => task.id === open.taskId) : undefined
 
   async function create(input: TaskInput) {
-    await createTask.mutateAsync(input)
+    const task = await createTask.mutateAsync(input)
     setOpen(null)
     setDraft(null)
+    if (!input.fixedStart) await revealPlacement(task)
+  }
+
+  /**
+   * Work handed to the scheduler can land out of sight, in a later week or a later hour. Say where it
+   * went, go to that week and pulse the block, so placing a task never looks like nothing happened.
+   */
+  async function revealPlacement(task: Task) {
+    try {
+      const from = new Date()
+      const horizon = (config.data?.horizonDays ?? 14) + 1
+      const parts = (await api.schedule(toLocalDateTime(from), toLocalDateTime(addDays(from, horizon))))
+        .filter((block) => block.taskId === task.id)
+        .sort((a, b) => a.startAt.localeCompare(b.startAt))
+      if (parts.length === 0) {
+        setNotice({ kind: 'info', text: t('placed.none') })
+        return
+      }
+      const first = new Date(parts[0].startAt)
+      setWeekStart(startOfWeek(first))
+      setFlashBlockId(parts[0].id)
+      window.setTimeout(() => setFlashBlockId(null), 2400)
+      setNotice({
+        kind: 'info',
+        text:
+          parts.length === 1
+            ? `${t('placed.single')} ${formatDayTime(first)}.`
+            : `${t('placed.split')} ${parts.length} ${t('placed.partsFirst')} ${formatDayTime(first)}.`,
+      })
+    } catch (error) {
+      fail(error)
+    }
   }
 
   async function save(taskId: number, input: TaskInput) {
@@ -186,6 +227,14 @@ export default function App() {
           </button>
           <button
             type="button"
+            className="icon-button"
+            onClick={(event) => setOpen({ kind: 'help', anchor: event.currentTarget.getBoundingClientRect() })}
+          >
+            <HelpIcon />
+            <span className="sr-only">{t('action.help')}</span>
+          </button>
+          <button
+            type="button"
             className="button button-ghost"
             aria-pressed={hoursOpen}
             onClick={() => setHoursChoice(!hoursOpen)}
@@ -207,8 +256,12 @@ export default function App() {
       </header>
 
       {(unreachable || notice) && (
-        <p className="notice" role={unreachable ? 'alert' : 'status'}>
-          {unreachable ? t('error.offline') : notice}
+        <p
+          className="notice"
+          data-kind={unreachable ? 'error' : notice?.kind}
+          role={unreachable || notice?.kind === 'error' ? 'alert' : 'status'}
+        >
+          {unreachable ? t('error.offline') : notice?.text}
         </p>
       )}
 
@@ -241,6 +294,8 @@ export default function App() {
             ghosts={ghosts}
             draft={draft}
             selectedBlockId={open?.kind === 'block' ? open.blockId : null}
+            taskMinutes={taskMinutes}
+            flashBlockId={flashBlockId}
             busy={busy}
             onOpenBlock={(block, anchor) => setOpen({ kind: 'block', anchor, blockId: block.id })}
             onCreateAt={(slot, anchor) => {
@@ -260,6 +315,7 @@ export default function App() {
             headingId={POPOVER_HEADING}
             task={null}
             slot={open.slot}
+            hoursSummary={hoursSummary}
             onSubmit={create}
             onCancel={close}
             onDraftChange={(minutes, fixed) =>
@@ -277,6 +333,7 @@ export default function App() {
             block={openBlock}
             task={tasks.data?.find((task) => task.id === openBlock.taskId)}
             origin={originFor(openBlock, ghosts)}
+            otherParts={blocks.filter((block) => block.taskId === openBlock.taskId && block.id !== openBlock.id)}
             onToggleDone={() => {
               setStatus.mutate(
                 { id: openBlock.taskId, status: openBlock.status === 'DONE' ? 'OPEN' : 'DONE' },
@@ -292,6 +349,12 @@ export default function App() {
         </Popover>
       )}
 
+      {open?.kind === 'help' && (
+        <Popover anchor={open.anchor} placement="below" labelledBy={POPOVER_HEADING} onClose={close}>
+          <HowItWorks config={config.data} onClose={close} headingId={POPOVER_HEADING} />
+        </Popover>
+      )}
+
       {open?.kind === 'edit' && openTask && (
         <Popover anchor={open.anchor} labelledBy={POPOVER_HEADING} onClose={close}>
           <TaskEditor
@@ -299,6 +362,7 @@ export default function App() {
             headingId={POPOVER_HEADING}
             task={openTask}
             slot={null}
+            hoursSummary={hoursSummary}
             onSubmit={(input) => save(openTask.id, input)}
             onCancel={close}
             onDelete={() => remove(openTask.id)}

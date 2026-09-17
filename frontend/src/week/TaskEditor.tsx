@@ -16,6 +16,8 @@ interface TaskEditorProps {
   onDraftChange?: (minutes: number, fixed: boolean) => void
   onDelete?: () => Promise<unknown>
   busy: boolean
+  /** The owner's working hours in a phrase, so "place it" says where it will look. */
+  hoursSummary: string | null
   /** Id for the form heading, which labels the popover. */
   headingId: string
 }
@@ -51,7 +53,7 @@ function deadlineDates() {
  * time pickers. A task started from a clicked slot can be fixed at that time (an appointment) or
  * handed to the scheduler with the slot ignored.
  */
-export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDelete, busy, headingId }: TaskEditorProps) {
+export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDelete, busy, hoursSummary, headingId }: TaskEditorProps) {
   const id = useId()
   const dates = deadlineDates()
   const initialMinutes = task?.estimatedMinutes ?? 60
@@ -132,6 +134,9 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
     }
   }
 
+  const placement = hoursSummary
+    ? `${t('task.letPlaceIn')}, ${hoursSummary}. ${t('task.letPlaceOrder')}`
+    : t('task.letPlaceHint')
   const invalidMinutes = !Number.isInteger(minutes) || minutes < 1 || minutes > 43_200
 
   return (
@@ -151,6 +156,9 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
         aria-invalid={Boolean(errors.title) || undefined}
       />
       {errors.title && <p className="field-error">{errors.title}</p>}
+
+      {/* From the New task button there is no clicked time: the task is always placed, so say where. */}
+      {!task && !slot && <p className="editor-note">{placement}</p>}
 
       {!task && slot && (
         <fieldset className="editor-row">
@@ -175,7 +183,7 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
               <input type="radio" name={`${id}-when`} checked={!fixed} onChange={() => chooseFixed(false)} />
               <span className="choice-text">
                 <span className="choice-title">{t('task.letPlace')}</span>
-                <span className="choice-hint">{t('task.letPlaceHint')}</span>
+                <span className="choice-hint">{placement}</span>
               </span>
             </label>
           </div>

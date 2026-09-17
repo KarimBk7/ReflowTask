@@ -8,6 +8,8 @@ interface BlockDetailsProps {
   block: Block
   task: Task | undefined
   origin: Ghost | null
+  /** The task's other blocks in the week on screen. */
+  otherParts: Block[]
   onToggleDone: () => void
   onTogglePin: () => void
   onEdit: () => void
@@ -24,7 +26,7 @@ const LEVEL = { LOW: 1, MEDIUM: 2, HIGH: 3 } as const
  * here rather than on the block itself, so a block on the calendar only ever carries its title
  * and time and never runs out of room for its controls.
  */
-export function BlockDetails({ block, task, origin, onToggleDone, onTogglePin, onEdit, onClose, busy, headingId }: BlockDetailsProps) {
+export function BlockDetails({ block, task, origin, otherParts, onToggleDone, onTogglePin, onEdit, onClose, busy, headingId }: BlockDetailsProps) {
   const start = new Date(block.startAt)
   const end = new Date(block.endAt)
   const minutes = (end.getTime() - start.getTime()) / 60_000
@@ -64,6 +66,16 @@ export function BlockDetails({ block, task, origin, onToggleDone, onTogglePin, o
             <RiskIcon size={14} />
             {t('details.atRisk')}
             {task?.deadline && ` ${formatDeadline(task.deadline, task.deadlineHasTime)}`}
+          </li>
+        )}
+        {task && minutes < task.estimatedMinutes && (
+          <li className="fact fact-parts">
+            <span>
+              {t('details.partOf')} {formatDuration(task.estimatedMinutes)} {t('details.partTask')}{' '}
+              {otherParts.length > 0
+                ? `${t('details.otherParts')} ${otherParts.map((part) => formatDayTime(new Date(part.startAt))).join(', ')}.`
+                : t('details.partsElsewhere')}
+            </span>
           </li>
         )}
         {block.pinned && (

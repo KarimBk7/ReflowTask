@@ -31,6 +31,10 @@ interface WeekGridProps {
   ghosts: Ghost[]
   draft: Draft | null
   selectedBlockId: number | null
+  /** Each task's estimate, so a block can say it is one part of a longer task. */
+  taskMinutes: Map<number, number>
+  /** A block to scroll to and pulse once, after the scheduler placed a new task. */
+  flashBlockId: number | null
   busy: boolean
   onOpenBlock: (block: Block, anchor: DOMRect) => void
   onCreateAt: (start: Date, anchor: DOMRect) => void
@@ -71,6 +75,8 @@ export function WeekGrid({
   ghosts,
   draft,
   selectedBlockId,
+  taskMinutes,
+  flashBlockId,
   busy,
   onOpenBlock,
   onCreateAt,
@@ -84,6 +90,17 @@ export function WeekGrid({
     null,
   )
   const [now, setNow] = useState(() => new Date())
+  const [hoveredTask, setHoveredTask] = useState<number | null>(null)
+
+  // A task placed out of sight is scrolled into view once its block has rendered.
+  const revealed = useRef<number | null>(null)
+  useEffect(() => {
+    if (flashBlockId === null || revealed.current === flashBlockId) return
+    const element = scrollRef.current?.querySelector<HTMLElement>(`[data-block-id="${flashBlockId}"]`)
+    if (!element) return
+    revealed.current = flashBlockId
+    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' })
+  })
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000)
@@ -307,6 +324,10 @@ export function WeekGrid({
                     item={item}
                     origin={originFor(item.block, ghosts)}
                     selected={item.block.id === selectedBlockId}
+                    taskMinutes={taskMinutes.get(item.block.taskId)}
+                    related={hoveredTask === item.block.taskId && placed.filter((other) => other.block.taskId === item.block.taskId).length > 1}
+                    flash={item.block.id === flashBlockId}
+                    onHover={setHoveredTask}
                     editable={editable(item.block)}
                     onOpen={openBlock}
                     onDragStart={startDrag}
@@ -387,7 +408,7 @@ function DayColumn({ day, date, config, now, items, ghosts, draft, renderBlock, 
   function hover(event: React.PointerEvent<HTMLDivElement>) {
     const marker = hoverRef.current
     if (!marker) return
-    if (event.pointerType !== 'mouse' || !onEmpty(event)) {
+    if (event.pointerType !== 'mouse' || event.buttons !== 0 || !onEmpty(event)) {
       marker.hidden = true
       return
     }

@@ -6,7 +6,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.ListIterator;
 
 import dev.karimbk.reflowtask.task.Priority;
 
@@ -113,43 +112,88 @@ public final class SchedulePlanner {
 	}
 
 	/**
-	 * Fills the task's remaining minutes from the earliest free capacity, consuming what it
-	 * takes. Stops when the task is fully placed or the horizon runs out; a shortfall is
-	 * reported by the caller comparing placed minutes against the estimate, not by failing.
+	 * Places the task in one block when that costs nothing, and splits it only when it must.
+	 *
+	 * Splitting is worked out first, on a copy of the free capacity. If it produces more than one
+	 * piece, the task is kept whole instead in the earliest gap that holds all of it, provided that
+	 * gap starts no later than splitting would have started its last piece, and does not miss a
+	 * deadline splitting would meet. So a one-hour task never shows up as two half-hours around
+	 * someone's meeting when an hour-long gap follows anyway, while a six-hour task still splits
+	 * at lunch, and nothing is ever pushed later than the greedy pass would have put it.
 	 */
 	private static void place(SchedulableTask task, List<TimeSlot> free, int minChunkMinutes, int bufferMinutes,
 			List<PlannedBlock> planned) {
 		long remaining = task.minutesToPlace();
-		ListIterator<TimeSlot> slots = free.listIterator();
+		List<PlannedBlock> split = fill(task.id(), remaining, new ArrayList<>(free), minChunkMinutes, bufferMinutes);
 
-		while (remaining > 0 && slots.hasNext()) {
-			TimeSlot slot = slots.next();
-			long available = slot.minutes();
-			if (available <= 0) {
-				continue;
+		if (split.size() > 1) {
+			PlannedBlock last = split.get(split.size() - 1);
+			boolean splitMeetsDeadline = task.deadline() == null || !last.end().isAfter(task.deadline());
+			for (int index = 0; index < free.size(); index++) {
+				TimeSlot slot = free.get(index);
+				if (slot.start().isAfter(last.start())) {
+					break;
+				}
+				LocalDateTime end = slot.start().plusMinutes(remaining);
+				boolean wholeMeetsDeadline = task.deadline() == null || !end.isAfter(task.deadline());
+				if (slot.minutes() >= remaining && (wholeMeetsDeadline || !splitMeetsDeadline)) {
+					planned.add(new PlannedBlock(task.id(), slot.start(), end));
+					consume(free, index, remaining, bufferMinutes);
+					return;
+				}
 			}
-			long chunk = Math.min(available, remaining);
+		}
+
+		planned.addAll(fill(task.id(), remaining, free, minChunkMinutes, bufferMinutes));
+	}
+
+	/**
+	 * The greedy pass: fills minutes from the earliest free capacity, consuming what it takes.
+	 * Stops when the minutes are placed or the horizon runs out; a shortfall is reported by the
+	 * caller comparing placed minutes against the estimate, not by failing.
+	 */
+	private static List<PlannedBlock> fill(long taskId, long minutes, List<TimeSlot> free, int minChunkMinutes,
+			int bufferMinutes) {
+		List<PlannedBlock> pieces = new ArrayList<>();
+		long remaining = minutes;
+		int index = 0;
+
+		while (remaining > 0 && index < free.size()) {
+			TimeSlot slot = free.get(index);
+			long chunk = Math.min(slot.minutes(), remaining);
 
 			// Skip a slot too small to be worth splitting into — unless this is the last
 			// scrap of the task, where a short final piece is exactly right.
-			if (chunk < minChunkMinutes && remaining >= minChunkMinutes) {
+			if (chunk <= 0 || (chunk < minChunkMinutes && remaining >= minChunkMinutes)) {
+				index++;
 				continue;
 			}
 
-			planned.add(new PlannedBlock(task.id(), slot.start(), slot.start().plusMinutes(chunk)));
+			pieces.add(new PlannedBlock(taskId, slot.start(), slot.start().plusMinutes(chunk)));
 			remaining -= chunk;
-
-			// Whatever work comes next in this slot starts after the buffer. A task only takes
-			// part of a slot when it finishes inside it, so this never wedges a buffer between
-			// two pieces of the same task: those always land in separate slots.
-			long consumed = chunk + bufferMinutes;
-			if (consumed >= available) {
-				slots.remove();
-			}
-			else {
-				slots.set(slot.startingAt(slot.start().plusMinutes(consumed)));
+			if (!consume(free, index, chunk, bufferMinutes)) {
+				index++;
 			}
 		}
+		return pieces;
+	}
+
+	/**
+	 * Takes {@code minutes} from the start of a free slot. Whatever work comes next in the slot
+	 * starts after the buffer. A task only takes part of a slot when it finishes inside it, so this
+	 * never wedges a buffer between two pieces of the same task: those always land in separate slots.
+	 *
+	 * @return true when the slot was used up and removed, so the next slot now sits at this index
+	 */
+	private static boolean consume(List<TimeSlot> free, int index, long minutes, int bufferMinutes) {
+		TimeSlot slot = free.get(index);
+		long consumed = minutes + bufferMinutes;
+		if (consumed >= slot.minutes()) {
+			free.remove(index);
+			return true;
+		}
+		free.set(index, slot.startingAt(slot.start().plusMinutes(consumed)));
+		return false;
 	}
 
 	/** Rounds up to the next {@code step}-minute boundary, leaving exact boundaries alone. */

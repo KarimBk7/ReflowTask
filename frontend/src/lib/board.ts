@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '../api/client'
 import type { Block, BoardConfig, ConfigWindow, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
-import { addDays, isoDay, minutesOfDay, parseClock, sameDate, toLocalDateTime } from './time'
+import { DAY_NAMES, addDays, isoDay, minutesOfDay, parseClock, sameDate, toLocalDateTime } from './time'
 
 export type { BoardConfig, ConfigWindow }
 
@@ -37,6 +37,23 @@ export function boardDays(config: BoardConfig | undefined, blocks: Block[], week
     if (start >= weekStart && start < weekEnd) days.add(isoDay(start))
   }
   return [...days].sort((a, b) => a - b)
+}
+
+/**
+ * Working hours in a phrase: "Mon–Fri 09:00–18:00", or just the days when their hours differ.
+ * Null when there are no working hours at all.
+ */
+export function describeWorkingHours(config: BoardConfig | undefined): string | null {
+  const hours = [...(config?.workingHours ?? [])].sort((a, b) => dayNumber(a.day) - dayNumber(b.day))
+  if (hours.length === 0) return null
+  const numbers = hours.map((w) => dayNumber(w.day))
+  const consecutive = numbers.every((n, i) => i === 0 || n === numbers[i - 1] + 1)
+  const days =
+    consecutive && numbers.length > 2
+      ? `${DAY_NAMES[numbers[0] - 1]}–${DAY_NAMES[numbers[numbers.length - 1] - 1]}`
+      : numbers.map((n) => DAY_NAMES[n - 1]).join(', ')
+  const same = hours.every((w) => w.startTime === hours[0].startTime && w.endTime === hours[0].endTime)
+  return same ? `${days} ${hours[0].startTime.slice(0, 5)}–${hours[0].endTime.slice(0, 5)}` : days
 }
 
 /** The earliest working start, where the grid scrolls to on open. */
@@ -77,7 +94,7 @@ export function useEvents() {
  * dragged block relies on that: it holds its dropped position until the server's copy of that
  * position has arrived, instead of snapping back for a frame.
  */
-function useBoardMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>, alsoConfig = false) {
+function useBoardMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TResult>, alsoConfig = false) {
   const client = useQueryClient()
   return useMutation({
     mutationFn: fn,

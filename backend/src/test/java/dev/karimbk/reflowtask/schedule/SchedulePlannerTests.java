@@ -153,18 +153,20 @@ class SchedulePlannerTests {
 				defaultConfig(), at(MONDAY, 9, 0));
 
 		assertThat(plan.stream().mapToLong(PlannedBlock::minutes).sum()).isEqualTo(180);
-		assertThat(plan.get(0).start()).isEqualTo(at(MONDAY, 11, 0));
+		// Kept whole in the afternoon rather than chipped into the hour before lunch.
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 13, 0), at(MONDAY, 16, 0)));
 	}
 
 	// --- obstacles ------------------------------------------------------------------
 
 	@Test
 	void neverSchedulesOverLunch() {
-		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(task(1, 240, null, Priority.MEDIUM)), List.of(),
+		// Six hours: no single stretch of the day holds it, so it splits, and the split is at lunch.
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(task(1, 360, null, Priority.MEDIUM)), List.of(),
 				defaultConfig(), at(MONDAY, 9, 0));
 
 		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 12, 0)),
-				new PlannedBlock(1, at(MONDAY, 13, 0), at(MONDAY, 14, 0)));
+				new PlannedBlock(1, at(MONDAY, 13, 0), at(MONDAY, 16, 0)));
 	}
 
 	@Test
@@ -224,6 +226,59 @@ class SchedulePlannerTests {
 	}
 
 	@Test
+	void aTaskIsKeptWholeInALaterGapInsteadOfBeingChopped() {
+		// Free: 09:00-09:30 and 10:00-11:00. Splitting would give 09:00-09:30 plus 10:00-10:30, which
+		// shows the same task twice for no gain: its last piece would start at 10:00 either way.
+		List<TimeSlot> pinned = List.of(new TimeSlot(at(MONDAY, 9, 30), at(MONDAY, 10, 0)),
+				new TimeSlot(at(MONDAY, 11, 0), at(MONDAY, 12, 0)));
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(task(1, 60, null, Priority.MEDIUM)), pinned,
+				defaultConfig(), at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 10, 0), at(MONDAY, 11, 0)));
+	}
+
+	@Test
+	void keepingATaskWholeNeverStartsItLaterThanSplittingWould() {
+		// A one-hour meeting at 10:00. The only gap holding two hours starts at 13:00, later than the
+		// 11:00 where splitting puts the second piece, so the task splits around the meeting.
+		List<TimeSlot> pinned = List.of(new TimeSlot(at(MONDAY, 10, 0), at(MONDAY, 11, 0)));
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(task(1, 120, null, Priority.MEDIUM)), pinned,
+				defaultConfig(), at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 10, 0)),
+				new PlannedBlock(1, at(MONDAY, 11, 0), at(MONDAY, 12, 0)));
+	}
+
+	@Test
+	void aTaskIsNotKeptWholeWhenThatWouldMissADeadlineSplittingMeets() {
+		// Same gaps as the chopping case, but due at 10:40: split, it finishes 10:30; whole, 11:00.
+		List<TimeSlot> pinned = List.of(new TimeSlot(at(MONDAY, 9, 30), at(MONDAY, 10, 0)),
+				new TimeSlot(at(MONDAY, 11, 0), at(MONDAY, 12, 0)));
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(task(1, 60, at(MONDAY, 10, 40), Priority.MEDIUM)),
+				pinned, defaultConfig(), at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 9, 30)),
+				new PlannedBlock(1, at(MONDAY, 10, 0), at(MONDAY, 10, 30)));
+	}
+
+	@Test
+	void aWholeTaskLeavesItsSkippedGapForOtherWork() {
+		// The hour-long task takes 10:00-11:00 whole; the half-hour gap it skipped still gets used.
+		List<TimeSlot> pinned = List.of(new TimeSlot(at(MONDAY, 9, 30), at(MONDAY, 10, 0)),
+				new TimeSlot(at(MONDAY, 11, 0), at(MONDAY, 12, 0)));
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(
+				List.of(task(1, 60, at(MONDAY, 17, 0), Priority.MEDIUM), task(2, 30, null, Priority.LOW)), pinned,
+				defaultConfig(), at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 10, 0), at(MONDAY, 11, 0)),
+				new PlannedBlock(2, at(MONDAY, 9, 0), at(MONDAY, 9, 30)));
+	}
+
+	@Test
 	void aShortFinalRemainderMayUseASmallSlot() {
 		// The same 20-minute slot is fine when the task only needs 20 minutes.
 		List<TimeSlot> pinned = List.of(new TimeSlot(at(MONDAY, 9, 20), at(MONDAY, 18, 0)));
@@ -264,12 +319,12 @@ class SchedulePlannerTests {
 
 	@Test
 	void capacityAlreadyPastIsNotOffered() {
-		// Planning at 17:30 leaves 30 minutes today, then the rest waits for tomorrow.
+		// Planning at 17:30 leaves 30 minutes today. Splitting would start the last piece tomorrow at
+		// 09:00 anyway, so the whole task goes there instead of leaving a 30-minute scrap tonight.
 		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(task(1, 90, null, Priority.MEDIUM)), List.of(),
 				defaultConfig(), at(MONDAY, 17, 30));
 
-		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 17, 30), at(MONDAY, 18, 0)),
-				new PlannedBlock(1, at(MONDAY.plusDays(1), 9, 0), at(MONDAY.plusDays(1), 10, 0)));
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY.plusDays(1), 9, 0), at(MONDAY.plusDays(1), 10, 30)));
 	}
 
 	// --- buffer time ----------------------------------------------------------------

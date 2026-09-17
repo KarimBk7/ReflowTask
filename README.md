@@ -33,9 +33,11 @@ The scheduler is the core of the project, and it is deliberately simple.
 last), then priority, then creation order, and each one takes the earliest free capacity inside
 working hours. It is not an optimiser and doesn't pretend to be.
 
-**Work splits when it has to.** A four-hour task that no single gap can hold is spread across
-several blocks — but never into pieces smaller than a configurable minimum, except a task's final
-remainder.
+**Work stays in one piece when it can.** A task is kept in a single block when a free gap holds
+it, as long as that does not start it later than splitting would or make it miss a deadline.
+Work that no gap can hold, such as a six-hour task on a day with lunch, is split into parts, never
+shorter than a configurable minimum except a task's final remainder. Each part says which task it
+belongs to and how long the whole task is.
 
 **Buffers are optional.** A configurable buffer keeps time free after each task and on both
 sides of fixed blocks. It defaults to zero.
@@ -72,6 +74,8 @@ working hours.
 - **Drag a block** to move it (it is pinned there) or drag its bottom edge to resize it (the
   task's estimate follows); Alt+arrow keys do the same from the keyboard
 - Click a block for its details and actions: mark done, pin or unpin, edit, delete
+- When the scheduler places a new task, the app says where it went and jumps to it; a **How
+  planning works** panel explains the rules with your own hours filled in
 - A workload meter per day: planned time against available working time
 - Automatic placement on every change, and an hourly replan for missed work
 - Working hours per weekday, breaks shared across several days, buffer time, planning horizon
