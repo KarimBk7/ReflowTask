@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -232,6 +233,30 @@ class BlockEditingApiTests {
 		this.mvc.perform(patch("/api/v1/schedule/blocks/" + blockId).contentType(MediaType.APPLICATION_JSON)
 				.content(move(12, 0, 11, 0)))
 			.andExpect(status().isBadRequest());
+	}
+
+	/**
+	 * A drag that needs nothing else to move is still a change worth recording. Without this,
+	 * the board's "what changed" record silently misses every drag that had no side effects -
+	 * which is most of them - and an old ghost from an earlier, unrelated move keeps showing
+	 * long after the block has moved again.
+	 */
+	@Test
+	void movingABlockWithNoSideEffectsIsStillRecordedAsAMove() throws Exception {
+		long id = createTask("Report", 60, null);
+		long blockId = blocksOf(id).get(0).getId();
+		// A tick apart, so the two events sort unambiguously by time - a real clock never ties.
+		this.clock.set(MONDAY.atTime(8, 1));
+
+		this.mvc.perform(patch("/api/v1/schedule/blocks/" + blockId).contentType(MediaType.APPLICATION_JSON)
+				.content(move(11, 0, 12, 0)))
+			.andExpect(status().isOk());
+
+		this.mvc.perform(get("/api/v1/reschedule-events"))
+			.andExpect(jsonPath("$[0].items[0].taskTitle").value("Report"))
+			.andExpect(jsonPath("$[0].items[0].kind").value("MOVED"))
+			.andExpect(jsonPath("$[0].items[0].previousStartAt").value("%s:00".formatted(iso(9, 0))))
+			.andExpect(jsonPath("$[0].items[0].newStartAt").value("%s:00".formatted(iso(11, 0))));
 	}
 
 }

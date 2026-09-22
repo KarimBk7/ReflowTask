@@ -116,9 +116,15 @@ public class SchedulerService {
 		Task task = block.getTask();
 		task.setEstimatedMinutes((int) Math.clamp(task.getEstimatedMinutes() + change, 1, MAX_ESTIMATE_MINUTES));
 
+		// Captured before the move: by the time replan() takes its own "before" snapshot, this
+		// block's row already holds the new position, since it is saved and flushed first. Without
+		// this override, a drag that needs nothing else to shift would compare the new position
+		// against itself, see no change, and go unrecorded - and the board's ghost of an earlier,
+		// unrelated move would keep showing long after this block had moved again.
+		LocalDateTime previousStart = block.getStartAt();
 		block.moveTo(start, end);
 		this.blocks.flush();
-		replan(RescheduleTrigger.MANUAL);
+		replan(RescheduleTrigger.MANUAL, Map.of(task.getId(), List.of(previousStart)));
 		return block;
 	}
 
@@ -142,6 +148,16 @@ public class SchedulerService {
 	 */
 	@Transactional
 	public Optional<RescheduleEvent> replan(RescheduleTrigger trigger) {
+		return replan(trigger, Map.of());
+	}
+
+	/**
+	 * @param manualBeforeOverrides the true pre-move position of a block a caller has already
+	 * moved and flushed (see {@link #move}), keyed by task id. Without this, that task's own move
+	 * would compare its new position against itself and look unchanged.
+	 */
+	private Optional<RescheduleEvent> replan(RescheduleTrigger trigger,
+			Map<Long, List<LocalDateTime>> manualBeforeOverrides) {
 		LocalDateTime now = LocalDateTime.now(this.clock);
 		Disposition disposition = disposeOf(this.blocks.findAllWithTask(), now);
 
@@ -156,7 +172,8 @@ public class SchedulerService {
 			.filter((candidate) -> candidate.minutesToPlace() > 0)
 			.toList();
 
-		Map<Long, List<LocalDateTime>> before = startsPerTask(disposition.stillPlanned());
+		Map<Long, List<LocalDateTime>> before = new HashMap<>(startsPerTask(disposition.stillPlanned()));
+		before.putAll(manualBeforeOverrides);
 
 		List<PlannedBlock> planned = SchedulePlanner.plan(toPlan, slotsOf(disposition.obstacles()),
 				this.config.current(), now);
