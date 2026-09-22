@@ -114,6 +114,33 @@ class ConfigApiTests {
 			.andExpect(jsonPath("$.onboarded").value(true));
 	}
 
+	/**
+	 * The one thing this product does that no plain task list can is invisible until something
+	 * is actually missed. A first-run owner should not have to wait days for that to happen by
+	 * chance, so finishing setup seeds one example already missed, and the replan setup already
+	 * triggers picks it up through the ordinary miss-detection path - no special-cased UI.
+	 */
+	@Test
+	void finishingSetupForTheFirstTimeDemonstratesAMissLiveInTheActivity() throws Exception {
+		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+				.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30)));
+
+		this.mvc.perform(get("/api/v1/reschedule-events"))
+			.andExpect(jsonPath("$[0].items[0].kind").value("MISSED"))
+			.andExpect(jsonPath("$[0].items[0].taskTitle").value("See how this works: I was missed"));
+	}
+
+	@Test
+	void finishingSetupASecondTimeDoesNotSeedAnotherDemo() throws Exception {
+		String body = config(window("MONDAY", "09:00", "18:00"), "", 14, 30);
+		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON).content(body));
+		long afterFirst = this.tasks.count();
+
+		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON).content(body));
+
+		assertThat(this.tasks.count()).isEqualTo(afterFirst);
+	}
+
 	@Test
 	void aClientCannotUndoOnboardingBySendingTheFlag() throws Exception {
 		String body = """
@@ -135,6 +162,13 @@ class ConfigApiTests {
 
 	@Test
 	void theBufferIsAppliedWhenTheScheduleIsReplanned() throws Exception {
+		// Onboard first and clear what that seeds (its own test covers it), so this test's two
+		// tasks are the only thing competing for capacity below.
+		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+				.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30)));
+		this.blocks.deleteAll();
+		this.tasks.deleteAll();
+
 		Task first = this.tasks.save(new Task("First", null, 60, null, false, Priority.HIGH, MONDAY.atTime(7, 0)));
 		Task second = this.tasks.save(new Task("Second", null, 60, null, false, Priority.LOW, MONDAY.atTime(7, 0)));
 

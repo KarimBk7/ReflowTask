@@ -82,7 +82,13 @@ export function useTasks() {
 }
 
 export function useEvents() {
-  return useQuery({ queryKey: ['events'], queryFn: api.rescheduleEvents })
+  return useQuery({
+    queryKey: ['events'],
+    queryFn: api.rescheduleEvents,
+    // The automatic hourly check can miss a deadline while this tab just sits open with no
+    // interaction to trigger a refetch. Polling is how a background miss ever gets noticed.
+    refetchInterval: 5 * 60_000,
+  })
 }
 
 /**

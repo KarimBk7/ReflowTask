@@ -332,6 +332,14 @@ input[type='date'] {
   color: var(--ink);
 }
 
+/* A miss the scheduler already repaired: the same amber the board marks a moved block with,
+   not red - this is the system working, not a failure. */
+.notice[data-kind='changed'] {
+  border-color: var(--changed);
+  background: var(--changed-soft);
+  color: var(--changed-ink);
+}
+
 .notice {
   position: fixed;
   bottom: var(--space-5);

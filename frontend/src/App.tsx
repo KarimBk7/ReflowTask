@@ -48,8 +48,9 @@ export default function App() {
   const [draft, setDraft] = useState<Draft | null>(null)
   // null follows the server: the hours panel opens by itself until the owner has saved hours once.
   const [hoursChoice, setHoursChoice] = useState<boolean | null>(null)
-  const [notice, setNotice] = useState<{ text: string; kind: 'error' | 'info' } | null>(null)
+  const [notice, setNotice] = useState<{ text: string; kind: 'error' | 'info' | 'changed' } | null>(null)
   const [flashBlockId, setFlashBlockId] = useState<number | null>(null)
+  const helpButtonRef = useRef<HTMLButtonElement>(null)
 
   const config = useConfig()
   const schedule = useSchedule(weekStart)
@@ -93,6 +94,46 @@ export default function App() {
     const timer = window.setTimeout(() => setNotice(null), NOTICE_MS)
     return () => window.clearTimeout(timer)
   }, [notice])
+
+  /*
+   * Reflow's whole point - a missed deadline repairs itself - happens silently otherwise: the
+   * calendar only shows a small "Missed" mark on the block, easy to never notice. The most
+   * recent event is checked once per load and once per poll, and only a NEW one (an id not seen
+   * before) can raise this, so it never re-announces the same miss on every re-render.
+   */
+  const lastAnnouncedEventId = useRef<number | null>(null)
+  useEffect(() => {
+    const latest = events.data?.[0]
+    if (!latest || latest.id === lastAnnouncedEventId.current) return
+    lastAnnouncedEventId.current = latest.id
+    const missed = latest.items.filter((item) => item.kind === 'MISSED')
+    if (missed.length === 0) return
+    setNotice({
+      kind: 'changed',
+      text:
+        missed.length === 1
+          ? `"${missed[0].taskTitle}" ${t('missed.one')}`
+          : `${missed.length} ${t('missed.many')}`,
+    })
+  }, [events.data])
+
+  /** Opens the help popover once, ever, the first time the owner has something to look at. */
+  useEffect(() => {
+    if (welcome || hoursOpen || !config.data || open) return
+    let seen = true
+    try {
+      seen = localStorage.getItem('reflowtask-seen-help') === 'true'
+    } catch {
+      /* Private browsing or a blocked store: treat as already seen rather than nag every load. */
+    }
+    if (seen || !helpButtonRef.current) return
+    try {
+      localStorage.setItem('reflowtask-seen-help', 'true')
+    } catch {
+      /* Nothing to persist to; the popover still opens this once. */
+    }
+    setOpen({ kind: 'help', anchor: helpButtonRef.current.getBoundingClientRect() })
+  }, [welcome, hoursOpen, config.data, open])
 
   /*
    * A press outside an open popover closes it, and that same press must not also open a new task
@@ -226,6 +267,7 @@ export default function App() {
             <span className="label-wide">{t('action.replan')}</span>
           </button>
           <button
+            ref={helpButtonRef}
             type="button"
             className="icon-button"
             onClick={(event) => setOpen({ kind: 'help', anchor: event.currentTarget.getBoundingClientRect() })}

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import dev.karimbk.reflowtask.common.ConflictException;
 import dev.karimbk.reflowtask.common.NotFoundException;
 import dev.karimbk.reflowtask.config.SchedulingConfigProvider;
+import dev.karimbk.reflowtask.task.Priority;
 import dev.karimbk.reflowtask.task.Task;
 import dev.karimbk.reflowtask.task.TaskRepository;
 import dev.karimbk.reflowtask.task.TaskStatus;
@@ -126,6 +127,21 @@ public class SchedulerService {
 		this.blocks.flush();
 		replan(RescheduleTrigger.MANUAL, Map.of(task.getId(), List.of(previousStart)));
 		return block;
+	}
+
+	/**
+	 * Seeds one example task with a block that has already ended, unfinished - so the very next
+	 * replan (config's onboarding save triggers one right after this runs) demonstrates the
+	 * reflow itself: a "Missed" mark and the task placed again, live, on the one thing this
+	 * product is named for, instead of making a first-run owner wait for a real miss to ever
+	 * see it happen.
+	 */
+	@Transactional
+	public void seedDemoMiss() {
+		LocalDateTime now = LocalDateTime.now(this.clock);
+		Task demo = this.tasks
+			.save(new Task("See how this works: I was missed", null, 30, null, false, Priority.MEDIUM, now));
+		this.blocks.save(new TimeBlock(demo, now.minusMinutes(45), now.minusMinutes(15), false));
 	}
 
 	/**

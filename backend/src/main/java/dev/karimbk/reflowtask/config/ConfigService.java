@@ -82,6 +82,7 @@ public class ConfigService {
 			.toList());
 
 		SchedulingSettings current = currentSettings();
+		boolean firstTimeSetup = !current.isOnboarded();
 		current.setHorizonDays(config.horizonDays());
 		current.setMinChunkMinutes(config.minChunkMinutes());
 		current.setBufferMinutes(config.bufferMinutes());
@@ -90,6 +91,9 @@ public class ConfigService {
 		this.settings.save(current);
 		this.settings.flush();
 
+		if (firstTimeSetup) {
+			this.scheduler.seedDemoMiss();
+		}
 		this.scheduler.replan(RescheduleTrigger.CONFIG_CHANGED);
 		return current();
 	}

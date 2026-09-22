@@ -77,6 +77,9 @@ export const en = {
   'placed.partsFirst': 'parts, first on',
   'placed.none': 'No free time found within your planning horizon. It is listed under Needs attention.',
 
+  'missed.one': 'was missed and has been replanned automatically.',
+  'missed.many': 'tasks were missed and have been replanned automatically.',
+
   'details.movedFrom': 'Moved by the last replan, from',
   'details.missedAt': 'Replanned here after it was missed at',
   'details.atRisk': 'Ends after its deadline,',
