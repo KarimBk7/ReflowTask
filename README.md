@@ -133,10 +133,24 @@ export SPRING_DATASOURCE_PASSWORD=...
 ./mvnw spring-boot:run
 ```
 
-Flyway creates the schema on first start.
+Flyway creates the schema on first start. Verified: all three migrations apply cleanly against a
+real PostgreSQL 17.
 
-> **Not yet verified against PostgreSQL.** The migrations are written to run on both H2 and
-> PostgreSQL, but so far they have only been run, and tested, on H2.
+## Running with Docker Compose
+
+```bash
+cp .env.example .env    # set a real POSTGRES_PASSWORD
+docker compose up -d
+```
+
+This builds and starts three containers: PostgreSQL (a named volume keeps its data across
+restarts), the backend on the `prod` profile, and the frontend served by nginx on
+<http://localhost:8080>, which also proxies `/api` to the backend so the browser sees one origin.
+Set `TZ` in `.env` to the timezone your working hours are actually in — the scheduler works in
+wall-clock time, and a container defaults to UTC otherwise.
+
+For a Raspberry Pi, both `backend/Dockerfile` and `frontend/Dockerfile` build unmodified with
+Docker's own multi-arch base images; no ARM-specific changes were needed.
 
 ## Security model — read this before exposing it
 
@@ -179,7 +193,8 @@ cd backend
 ./mvnw test
 ```
 
-The backend has 80 tests. The placement algorithm is a pure function — tasks, obstacles,
+The backend has 84 tests, and they run again inside `backend/Dockerfile`'s build stage, so a
+broken image never gets as far as `docker compose up`. The placement algorithm is a pure function — tasks, obstacles,
 configuration and the current time in, blocks out — so most of its rules are tested directly
 without a database. Replanning, missed blocks and configuration changes are tested end to end
 against H2 with a controllable clock.
@@ -203,17 +218,17 @@ frontend/
 PRODUCT.md       who this is for and the decisions behind it
 DESIGN.md        the visual design system
 PROJECT_SPEC.md  the original project brief (German)
+docker-compose.yml, backend/Dockerfile, frontend/Dockerfile   deployment
 ```
 
 ## Status
 
 The MVP scope is complete: task management, automatic placement, replanning, pinning, the week
-calendar with click-to-create and drag editing, and configuration all work.
+calendar with click-to-create and drag editing, configuration, and Docker Compose deployment
+(tested on a Raspberry Pi 5, PostgreSQL included) all work.
 
 Not built yet:
 
-- **Deployment.** The goal is Docker Compose on a Raspberry Pi. There is no Dockerfile or
-  Compose file yet, and nothing has been tested on a Pi.
 - **Frontend tests.**
 
 Known issues:

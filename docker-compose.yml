@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: reflowtask
+      POSTGRES_USER: reflowtask
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reflowtask -d reflowtask"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/reflowtask
+      SPRING_DATASOURCE_USERNAME: reflowtask
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # The scheduler works in wall-clock time ("09:00 means 09:00"); without this a
+      # container defaults to UTC and every block would land at the wrong hour.
+      TZ: ${TZ:-Europe/Berlin}
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres-data:
