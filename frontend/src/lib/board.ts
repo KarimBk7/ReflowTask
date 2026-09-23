@@ -195,12 +195,18 @@ export interface Ghost {
  * Ghosts come from the most recent replan only. Older history stays in the activity feed: "what
  * changed since I last looked" means the last change, and a week carrying every outline it
  * ever drew would be unreadable.
+ *
+ * Deleting or finishing a task replans without recording anything when nothing else moves, so the
+ * last event can outlive its tasks. Passing the current tasks drops marks for any that are gone
+ * or done; without them (tests, first load) every mark is kept.
  */
-export function ghostsFrom(events: RescheduleEvent[] | undefined): Ghost[] {
+export function ghostsFrom(events: RescheduleEvent[] | undefined, tasks?: Task[]): Ghost[] {
   const latest = events?.[0]
   if (!latest) return []
+  const open = tasks && new Set(tasks.filter((task) => task.status !== 'DONE').map((task) => task.id))
   return latest.items
     .filter((item) => (item.kind === 'MOVED' || item.kind === 'MISSED') && item.previousStartAt)
+    .filter((item) => !open || (item.taskId !== null && open.has(item.taskId)))
     .map((item, index) => ({
       key: `${latest.id}-${index}`,
       taskId: item.taskId,

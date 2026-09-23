@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ApiError, api } from './api/client'
@@ -114,7 +115,7 @@ function Board({ user }: { user: AuthUser }) {
   )
   const hoursSummary = describeWorkingHours(config.data)
   const attention = useMemo(() => needsAttention(tasks.data ?? []), [tasks.data])
-  const ghosts = useMemo(() => ghostsFrom(events.data), [events.data])
+  const ghosts = useMemo(() => ghostsFrom(events.data, tasks.data), [events.data, tasks.data])
 
   useEffect(() => {
     if (!notice) return
@@ -126,13 +127,32 @@ function Board({ user }: { user: AuthUser }) {
    * Reflow's whole point - a missed deadline repairs itself - happens silently otherwise: the
    * calendar only shows a small "Missed" mark on the block, easy to never notice. The most
    * recent event is checked once per load and once per poll, and only a NEW one (an id not seen
-   * before) can raise this, so it never re-announces the same miss on every re-render.
+   * before, remembered per person across reloads) can raise this, so the same miss is announced once.
+   *
+   * A new event also means the schedule changed. When the hourly job did it, nothing on this page
+   * asked for fresh blocks, so the calendar would keep drawing the missed block where it was while
+   * the activity feed already says it moved; refetching keeps the two in step.
    */
-  const lastAnnouncedEventId = useRef<number | null>(null)
+  const client = useQueryClient()
+  const seenEventKey = `reflowtask-seen-event-${user.id}`
+  const lastSeenEventId = useRef<number | null>(null)
   useEffect(() => {
     const latest = events.data?.[0]
-    if (!latest || latest.id === lastAnnouncedEventId.current) return
-    lastAnnouncedEventId.current = latest.id
+    if (!latest || latest.id === lastSeenEventId.current) return
+    const firstLook = lastSeenEventId.current === null
+    lastSeenEventId.current = latest.id
+    if (!firstLook) {
+      client.invalidateQueries({ queryKey: ['schedule'] })
+      client.invalidateQueries({ queryKey: ['tasks'] })
+    }
+    let announced: string | null = null
+    try {
+      announced = localStorage.getItem(seenEventKey)
+      localStorage.setItem(seenEventKey, String(latest.id))
+    } catch {
+      /* No storage: announce as before, once per load. */
+    }
+    if (announced === String(latest.id)) return
     const missed = latest.items.filter((item) => item.kind === 'MISSED')
     if (missed.length === 0) return
     setNotice({
@@ -142,7 +162,7 @@ function Board({ user }: { user: AuthUser }) {
           ? `"${missed[0].taskTitle}" ${t('missed.one')}`
           : `${missed.length} ${t('missed.many')}`,
     })
-  }, [events.data])
+  }, [events.data, client, seenEventKey])
 
   /** Opens the help popover once, ever, the first time the owner has something to look at. */
   useEffect(() => {

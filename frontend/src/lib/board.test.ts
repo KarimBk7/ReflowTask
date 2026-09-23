@@ -140,6 +140,14 @@ describe('ghosts from the last replan', () => {
     expect(ghostsFrom([event]).map((g) => g.taskId)).toEqual([1, 2])
   })
 
+  it('drops marks for tasks that were deleted or finished since that replan', () => {
+    // A later delete or completion that moved nothing records no new event, so the last event
+    // still names these tasks; the board must not keep pointing at them.
+    const current = [task(1), task(2, { status: 'DONE' })]
+    expect(ghostsFrom([event], current).map((g) => g.taskId)).toEqual([1])
+    expect(ghostsFrom([event], []).map((g) => g.taskId)).toEqual([])
+  })
+
   it('uses only the most recent replan and tolerates none', () => {
     expect(ghostsFrom(undefined)).toEqual([])
     expect(ghostsFrom([])).toEqual([])
