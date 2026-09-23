@@ -18,6 +18,13 @@ interface HoursPanelProps {
 const WEEK: DayOfWeek[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 const WEEKDAYS: DayOfWeek[] = WEEK.slice(0, 5)
 
+/** Common weeks in one click. Anything else, like Tue to Sat, is the day switches below. */
+const PRESETS: { key: 'hours.presetWeekdays' | 'hours.presetSix' | 'hours.presetAll'; days: DayOfWeek[] }[] = [
+  { key: 'hours.presetWeekdays', days: WEEKDAYS },
+  { key: 'hours.presetSix', days: WEEK.slice(0, 6) },
+  { key: 'hours.presetAll', days: WEEK },
+]
+
 interface DayRow {
   day: DayOfWeek
   working: boolean
@@ -95,6 +102,21 @@ export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPane
     setDays((rows) => rows.map((row) => (row.day === day ? { ...row, ...change } : row)))
   }
 
+  /**
+   * A day switched on takes the hours of the first working day, so turning on Saturday for
+   * someone who works 07:00-15:00 does not quietly give it 09:00-17:00.
+   */
+  function setWorking(rows: DayRow[], working: (day: DayOfWeek) => boolean): DayRow[] {
+    const model = rows.find((row) => row.working)
+    return rows.map((row) => {
+      const on = working(row.day)
+      if (on && !row.working && model) return { ...row, working: true, start: model.start, end: model.end }
+      return { ...row, working: on }
+    })
+  }
+
+  const workingDays = days.filter((row) => row.working).map((row) => row.day)
+
   function updateBreak(key: number, change: Partial<BreakRow>) {
     setBreaks((rows) => rows.map((row) => (row.key === key ? { ...row, ...change } : row)))
   }
@@ -146,6 +168,25 @@ export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPane
 
       <fieldset className="hours-section">
         <legend className="section-label">{t('hours.working')}</legend>
+        <p className="section-hint">{t('hours.workingHint')}</p>
+        <div className="chips">
+          {PRESETS.map((preset) => {
+            const selected =
+              workingDays.length === preset.days.length && preset.days.every((day) => workingDays.includes(day))
+            return (
+              <button
+                key={preset.key}
+                type="button"
+                className="chip"
+                data-selected={selected || undefined}
+                aria-pressed={selected}
+                onClick={() => setDays((rows) => setWorking(rows, (day) => preset.days.includes(day)))}
+              >
+                {t(preset.key)}
+              </button>
+            )
+          })}
+        </div>
         {days.map((row) => {
           const name = DAY_NAMES[WEEK.indexOf(row.day)]
           const invalid = row.working && !endsAfterStart(row.start, row.end)
@@ -155,7 +196,11 @@ export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPane
                 <input
                   type="checkbox"
                   checked={row.working}
-                  onChange={(event) => updateDay(row.day, { working: event.target.checked })}
+                  onChange={(event) =>
+                    setDays((rows) =>
+                      setWorking(rows, (day) => (day === row.day ? event.target.checked : rows.some((r) => r.day === day && r.working))),
+                    )
+                  }
                 />
                 <span className="switch-track" aria-hidden="true" />
                 <span className="hours-day-name">{name}</span>

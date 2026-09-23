@@ -10,6 +10,7 @@ import { UserManagement } from './auth/UserManagement'
 import { ChevronIcon, ClockIcon, HelpIcon, LogoutIcon, PlusIcon, ReflowIcon, UsersIcon } from './design/Icon'
 import { t } from './i18n/en'
 import {
+  boardDays,
   describeWorkingHours,
   ghostsFrom,
   originFor,
@@ -70,7 +71,7 @@ function Board({ user }: { user: AuthUser }) {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
   const [view, setView] = useState<'week' | 'month'>('week')
   // A display preference of this browser, per person, so it survives a reload.
-  const weekendKey = `reflowtask-show-weekend-${user.id}`
+  const weekendKey = `reflowtask-show-days-off-${user.id}`
   const [showWeekend, setShowWeekend] = useState(() => {
     try {
       return localStorage.getItem(weekendKey) === 'true'
@@ -340,14 +341,15 @@ function Board({ user }: { user: AuthUser }) {
               </label>
             ))}
           </div>
-          {view === 'week' && (
+          {view === 'week' && (showWeekend || boardDays(config.data, blocks, weekStart).length < 7) && (
             <button
               type="button"
               className="button button-ghost button-small"
               aria-pressed={showWeekend}
+              title={t('view.daysOffHint')}
               onClick={toggleWeekend}
             >
-              {t('view.weekend')}
+              {t('view.daysOff')}
             </button>
           )}
         </nav>
