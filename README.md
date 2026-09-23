@@ -154,12 +154,19 @@ Docker's own multi-arch base images; no ARM-specific changes were needed.
 
 ## Security model — read this before exposing it
 
-**ReflowTask has no authentication.** There is no login and no user account; anyone who can
-reach the port can read and change the schedule.
+**ReflowTask has a household login, not an internet-grade account system.** Each person has their
+own username and password and sees only their own tasks, hours and activity; an admin can add and
+remove accounts. Passwords are stored as bcrypt hashes and a session is a random token in an
+`HttpOnly`, `SameSite=Lax` cookie. There is no email, password reset or rate limiting.
 
-The intended setup is a private network. Run it on a home server and reach it over a VPN such as
-Tailscale or WireGuard, so access is controlled at the network layer. **Do not port-forward it or
-expose it to the internet.** Adding login is on the roadmap, but only if the project gets that far.
+A fresh install seeds an `admin` account with the temporary password `changeme`, and the app makes
+you choose a new one at first login. **Do that before anyone else can reach the port.**
+
+The intended setup is still a private network. Run it on a home server and reach it over a VPN such
+as Tailscale or WireGuard. **Do not port-forward it or expose it to the internet.** The session
+cookie has no `Secure` flag, because plain HTTP inside the private network would never send one, and
+a cookie belongs to one hostname: opening the same instance by its LAN name and its Tailscale name
+means logging in twice.
 
 ## API
 
@@ -193,7 +200,7 @@ cd backend
 ./mvnw test
 ```
 
-The backend has 84 tests, and they run again inside `backend/Dockerfile`'s build stage, so a
+The backend has 105 tests, and they run again inside `backend/Dockerfile`'s build stage, so a
 broken image never gets as far as `docker compose up`. The placement algorithm is a pure function — tasks, obstacles,
 configuration and the current time in, blocks out — so most of its rules are tested directly
 without a database. Replanning, missed blocks and configuration changes are tested end to end
@@ -239,7 +246,7 @@ Known issues:
   keeps only start times; where new work now fills that slot, the outline is mostly hidden.
 - Dragging blocks works with a mouse or pen; on a touch screen a block is tapped to open it.
 
-Possible later additions include login, calendar sync (CalDAV), recurring tasks, task
+Possible later additions include calendar sync (CalDAV), recurring tasks, task
 dependencies, and a mobile client.
 
 ## License
