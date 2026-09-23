@@ -19,6 +19,9 @@ public class BlockedPeriod {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = false)
+	private long userId;
+
 	@Column(name = "day_of_week", nullable = false)
 	private short dayOfWeek;
 
@@ -34,7 +37,8 @@ public class BlockedPeriod {
 		// for JPA
 	}
 
-	public BlockedPeriod(DayOfWeek day, LocalTime startTime, LocalTime endTime, String label) {
+	public BlockedPeriod(long userId, DayOfWeek day, LocalTime startTime, LocalTime endTime, String label) {
+		this.userId = userId;
 		this.dayOfWeek = (short) day.getValue();
 		this.startTime = startTime;
 		this.endTime = endTime;
@@ -43,6 +47,10 @@ public class BlockedPeriod {
 
 	public Long getId() {
 		return this.id;
+	}
+
+	public long getUserId() {
+		return this.userId;
 	}
 
 	public DayOfWeek getDay() {

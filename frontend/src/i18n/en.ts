@@ -159,6 +159,27 @@ export const en = {
   'hours.rejected': 'The server rejected these settings. Check the hours and planning values.',
 
   'error.offline': 'Cannot reach the server.',
+
+  'auth.bootstrapTitle': 'Set up ReflowTask',
+  'auth.bootstrapIntro': 'Create the first account. It will be the admin for this household.',
+  'auth.loginTitle': 'Log in',
+  'auth.changePasswordTitle': 'Choose a password',
+  'auth.changePasswordIntro': 'This account was created with a temporary password. Choose your own before continuing.',
+  'auth.username': 'Username',
+  'auth.password': 'Password',
+  'auth.newPassword': 'New password',
+  'auth.logIn': 'Log in',
+  'auth.createAccount': 'Create account',
+  'auth.setPassword': 'Set password',
+  'auth.logout': 'Log out',
+  'auth.usersTitle': 'Household accounts',
+  'auth.addMember': 'Add member',
+  'auth.memberUsername': 'Username for the new member',
+  'auth.memberPassword': 'Temporary password',
+  'auth.mustChangePassword': 'Must change password',
+  'auth.you': 'you',
+  'auth.admin': 'Admin',
+  'auth.member': 'Member',
 } as const
 
 export type StringKey = keyof typeof en

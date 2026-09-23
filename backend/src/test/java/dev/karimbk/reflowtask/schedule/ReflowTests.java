@@ -39,6 +39,9 @@ class ReflowTests {
 
 	private static final LocalDate MONDAY = LocalDate.of(2026, 9, 1).with(TemporalAdjusters.next(DayOfWeek.MONDAY));
 
+	/** The admin account seeded by V4__household_users.sql. */
+	private static final long USER_ID = 1L;
+
 	@TestConfiguration
 	static class FixedClock {
 
@@ -68,12 +71,12 @@ class ReflowTests {
 	}
 
 	private Task givenTask(String title, int minutes, LocalDateTime deadline, Priority priority) {
-		return this.tasks.save(new Task(title, null, minutes, deadline, deadline != null, priority,
+		return this.tasks.save(new Task(USER_ID, title, null, minutes, deadline, deadline != null, priority,
 				MONDAY.atTime(8, 0)));
 	}
 
 	private List<TimeBlock> blocksOf(Task task) {
-		return this.blocks.findAllWithTask()
+		return this.blocks.findAllWithTaskByUserId(USER_ID)
 			.stream()
 			.filter((block) -> block.getTask().getId().equals(task.getId()))
 			.sorted((a, b) -> a.getStartAt().compareTo(b.getStartAt()))
@@ -86,7 +89,7 @@ class ReflowTests {
 	void anOpenTaskGetsScheduledAndTheEventSaysSo() {
 		Task task = givenTask("Write docs", 120, null, Priority.MEDIUM);
 
-		Optional<RescheduleEvent> event = this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		Optional<RescheduleEvent> event = this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		assertThat(blocksOf(task)).singleElement()
 			.satisfies((block) -> assertThat(block.getStartAt()).isEqualTo(MONDAY.atTime(9, 0)));
@@ -98,9 +101,9 @@ class ReflowTests {
 	@Test
 	void replanningWithNothingToChangeRecordsNoEvent() {
 		givenTask("Write docs", 120, null, Priority.MEDIUM);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
-		assertThat(this.scheduler.replan(RescheduleTrigger.SCHEDULED_JOB)).isEmpty();
+		assertThat(this.scheduler.replan(USER_ID, RescheduleTrigger.SCHEDULED_JOB)).isEmpty();
 	}
 
 	// --- the differentiator ---------------------------------------------------------
@@ -108,12 +111,12 @@ class ReflowTests {
 	@Test
 	void aMissedBlockIsRemovedAndTheTaskIsReplannedLater() {
 		Task task = givenTask("Write docs", 120, null, Priority.MEDIUM);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 		assertThat(blocksOf(task).get(0).getStartAt()).isEqualTo(MONDAY.atTime(9, 0));
 
 		// The block ran 09:00-11:00 and was never completed. It is now the afternoon.
 		this.clock.set(MONDAY.atTime(14, 0));
-		Optional<RescheduleEvent> event = this.scheduler.replan(RescheduleTrigger.SCHEDULED_JOB);
+		Optional<RescheduleEvent> event = this.scheduler.replan(USER_ID, RescheduleTrigger.SCHEDULED_JOB);
 
 		assertThat(blocksOf(task)).singleElement()
 			.satisfies((block) -> assertThat(block.getStartAt()).isEqualTo(MONDAY.atTime(14, 0)));
@@ -128,11 +131,11 @@ class ReflowTests {
 	@Test
 	void aCompletedTaskIsNotTreatedAsMissed() {
 		Task task = givenTask("Write docs", 120, null, Priority.MEDIUM);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 		task.setStatus(TaskStatus.DONE);
 
 		this.clock.set(MONDAY.atTime(14, 0));
-		this.scheduler.replan(RescheduleTrigger.SCHEDULED_JOB);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.SCHEDULED_JOB);
 
 		// The elapsed block stays as the record of when the work was done.
 		assertThat(blocksOf(task)).singleElement()
@@ -142,11 +145,11 @@ class ReflowTests {
 	@Test
 	void aBlockStillRunningIsNotTouched() {
 		Task task = givenTask("Write docs", 120, null, Priority.MEDIUM);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		// 09:30 is inside the 09:00-11:00 block: the user may be working on it right now.
 		this.clock.set(MONDAY.atTime(9, 30));
-		this.scheduler.replan(RescheduleTrigger.SCHEDULED_JOB);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.SCHEDULED_JOB);
 
 		assertThat(blocksOf(task)).singleElement()
 			.satisfies((block) -> assertThat(block.getStartAt()).isEqualTo(MONDAY.atTime(9, 0)));
@@ -161,13 +164,13 @@ class ReflowTests {
 		this.clock.set(MONDAY.atTime(8, 0));
 		Task finished = givenTask("Finished early", 240, null, Priority.HIGH);
 		Task waiting = givenTask("Waiting", 60, null, Priority.LOW);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		// Four hours of higher-priority work takes 09:00-13:00, so the waiting task follows it.
 		assertThat(blocksOf(waiting).get(0).getStartAt()).isEqualTo(MONDAY.atTime(13, 0));
 
 		finished.setStatus(TaskStatus.DONE);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		// None of the finished task's time had started, so all of it is released and the waiting
 		// task moves up to the start of the day.
@@ -181,11 +184,11 @@ class ReflowTests {
 		// back is the system working; only the knock-on moves belong in the history.
 		Task finished = givenTask("Finished", 60, null, Priority.HIGH);
 		Task other = givenTask("Other", 60, null, Priority.LOW);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		this.clock.set(MONDAY.atTime(8, 0));
 		finished.setStatus(TaskStatus.DONE);
-		Optional<RescheduleEvent> event = this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		Optional<RescheduleEvent> event = this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		assertThat(event).isPresent();
 		assertThat(event.get().getItems()).noneSatisfy((item) -> {
@@ -201,13 +204,13 @@ class ReflowTests {
 	void aDeletedTaskDoesNotBreakTheFollowingReplan() {
 		Task doomed = givenTask("Doomed", 60, null, Priority.HIGH);
 		givenTask("Survivor", 60, null, Priority.LOW);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		this.scheduler.releaseBlocksOf(doomed.getId());
 		this.tasks.delete(doomed);
 		this.tasks.flush();
 
-		assertThat(this.scheduler.replan(RescheduleTrigger.TASK_CHANGED)).isPresent();
+		assertThat(this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED)).isPresent();
 		assertThat(blocksOf(doomed)).isEmpty();
 	}
 
@@ -216,12 +219,12 @@ class ReflowTests {
 	@Test
 	void aPinnedBlockSurvivesAReplanAndPushesOtherWorkAside() {
 		Task pinnedTask = givenTask("Dentist", 60, null, Priority.LOW);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 		TimeBlock block = blocksOf(pinnedTask).get(0);
 		block.setPinned(true);
 
 		Task urgent = givenTask("Urgent", 60, MONDAY.atTime(12, 0), Priority.HIGH);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		// Despite being lower priority and undated, the pinned block keeps 09:00.
 		assertThat(blocksOf(pinnedTask)).singleElement()
@@ -232,10 +235,10 @@ class ReflowTests {
 	@Test
 	void onlyTheUnpinnedRemainderOfAPartlyPinnedTaskIsReplanned() {
 		Task task = givenTask("Long job", 240, null, Priority.MEDIUM);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 		blocksOf(task).forEach((block) -> block.setPinned(true));
 
-		this.scheduler.replan(RescheduleTrigger.SCHEDULED_JOB);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.SCHEDULED_JOB);
 
 		// Fully covered by pinned blocks, so nothing new is added.
 		assertThat(blocksOf(task).stream().mapToLong((block) -> block.toSlot().minutes()).sum()).isEqualTo(240);
@@ -248,7 +251,7 @@ class ReflowTests {
 		givenTask("Later", 60, MONDAY.atTime(17, 0), Priority.MEDIUM);
 		Task sooner = givenTask("Sooner", 60, MONDAY.atTime(11, 0), Priority.MEDIUM);
 
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		assertThat(blocksOf(sooner).get(0).getStartAt()).isEqualTo(MONDAY.atTime(9, 0));
 	}
@@ -259,7 +262,7 @@ class ReflowTests {
 		givenTask("Fills the day", 480, MONDAY.atTime(9, 30), Priority.HIGH);
 		Task doomed = givenTask("Impossible", 60, MONDAY.atTime(10, 0), Priority.HIGH);
 
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		List<TimeBlock> placed = blocksOf(doomed);
 		assertThat(placed).isNotEmpty();
@@ -271,7 +274,7 @@ class ReflowTests {
 		// Far more work than the 14-day horizon can hold.
 		Task huge = givenTask("Huge", 480 * 40, null, Priority.MEDIUM);
 
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 
 		long scheduled = blocksOf(huge).stream().mapToLong((block) -> block.toSlot().minutes()).sum();
 		assertThat(scheduled).isGreaterThan(0).isLessThan(huge.getEstimatedMinutes());

@@ -1,6 +1,8 @@
 package dev.karimbk.reflowtask.config;
 
 import dev.karimbk.reflowtask.config.ConfigPayloads.Config;
+import dev.karimbk.reflowtask.user.CurrentUser;
+import dev.karimbk.reflowtask.user.User;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,13 +29,13 @@ class ConfigController {
 	}
 
 	@GetMapping
-	Config current() {
-		return this.service.current();
+	Config current(@CurrentUser User user) {
+		return this.service.current(user.getId());
 	}
 
 	@PutMapping
-	Config replace(@Valid @RequestBody Config config) {
-		return this.service.replace(config);
+	Config replace(@CurrentUser User user, @Valid @RequestBody Config config) {
+		return this.service.replace(user.getId(), config);
 	}
 
 }

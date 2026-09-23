@@ -35,21 +35,21 @@ public class TaskService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<TaskResponse> findAll() {
-		// One query for every block, not one per task.
+	public List<TaskResponse> findAll(long userId) {
+		// One query for every block of this user's tasks, not one per task.
 		Map<Long, List<TimeBlock>> byTask = new HashMap<>();
-		for (TimeBlock block : this.blocks.findAll()) {
+		for (TimeBlock block : this.blocks.findAllWithTaskByUserId(userId)) {
 			byTask.computeIfAbsent(block.getTask().getId(), (id) -> new ArrayList<>()).add(block);
 		}
-		return this.tasks.findAllByOrderByCreatedAtDesc()
+		return this.tasks.findByUserIdOrderByCreatedAtDesc(userId)
 			.stream()
 			.map((task) -> respond(task, byTask.getOrDefault(task.getId(), List.of())))
 			.toList();
 	}
 
 	@Transactional(readOnly = true)
-	public TaskResponse findById(long id) {
-		return respond(require(id));
+	public TaskResponse findById(long userId, long id) {
+		return respond(require(userId, id));
 	}
 
 	/**
@@ -60,53 +60,53 @@ public class TaskService {
 	 * where it sat before this change.
 	 */
 	@Transactional
-	public TaskResponse create(TaskRequest request) {
+	public TaskResponse create(long userId, TaskRequest request) {
 		LocalDateTime fixedStart = request.fixedStart();
 		if (fixedStart != null) {
 			// Checked before the task is saved, so a refused time leaves nothing behind.
-			this.scheduler.assertCanFix(fixedStart, fixedStart.plusMinutes(request.estimatedMinutes()), null);
+			this.scheduler.assertCanFix(userId, fixedStart, fixedStart.plusMinutes(request.estimatedMinutes()), null);
 		}
-		Task task = new Task(request.title(), request.description(), request.estimatedMinutes(),
+		Task task = new Task(userId, request.title(), request.description(), request.estimatedMinutes(),
 				Task.toDeadline(request.deadlineDate(), request.deadlineTime()),
 				request.deadlineTime() != null, request.priority(), LocalDateTime.now(this.clock));
 		Task saved = this.tasks.save(task);
 		if (fixedStart != null) {
-			this.scheduler.fix(saved, fixedStart);
+			this.scheduler.fix(userId, saved, fixedStart);
 		}
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(userId, RescheduleTrigger.TASK_CHANGED);
 		return respond(saved);
 	}
 
 	@Transactional
-	public TaskResponse update(long id, TaskRequest request) {
-		Task task = require(id);
+	public TaskResponse update(long userId, long id, TaskRequest request) {
+		Task task = require(userId, id);
 		task.setTitle(request.title());
 		task.setDescription(request.description());
 		task.setEstimatedMinutes(request.estimatedMinutes());
 		task.setDeadline(Task.toDeadline(request.deadlineDate(), request.deadlineTime()),
 				request.deadlineTime() != null);
 		task.setPriority(request.priority());
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(userId, RescheduleTrigger.TASK_CHANGED);
 		return respond(task);
 	}
 
 	@Transactional
-	public TaskResponse changeStatus(long id, TaskStatus status) {
-		Task task = require(id);
+	public TaskResponse changeStatus(long userId, long id, TaskStatus status) {
+		Task task = require(userId, id);
 		task.setStatus(status);
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(userId, RescheduleTrigger.TASK_CHANGED);
 		return respond(task);
 	}
 
 	@Transactional
-	public void delete(long id) {
-		Task task = require(id);
+	public void delete(long userId, long id) {
+		Task task = require(userId, id);
 		// The task's blocks must go before the task does: the database would cascade them,
 		// but Hibernate cannot see that and the replan below would trip over the leftovers.
 		this.scheduler.releaseBlocksOf(id);
 		this.tasks.delete(task);
 		this.tasks.flush();
-		this.scheduler.replan(RescheduleTrigger.TASK_CHANGED);
+		this.scheduler.replan(userId, RescheduleTrigger.TASK_CHANGED);
 	}
 
 	private TaskResponse respond(Task task) {
@@ -130,8 +130,8 @@ public class TaskService {
 		return TaskResponse.of(task, (int) minutes, atRisk);
 	}
 
-	private Task require(long id) {
-		return this.tasks.findById(id).orElseThrow(() -> new NotFoundException("Task", id));
+	private Task require(long userId, long id) {
+		return this.tasks.findByIdAndUserId(id, userId).orElseThrow(() -> new NotFoundException("Task", id));
 	}
 
 }

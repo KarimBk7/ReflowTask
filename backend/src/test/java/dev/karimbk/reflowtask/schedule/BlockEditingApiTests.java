@@ -9,6 +9,8 @@ import java.util.List;
 import com.jayway.jsonpath.JsonPath;
 import dev.karimbk.reflowtask.SettableClock;
 import dev.karimbk.reflowtask.task.TaskRepository;
+import dev.karimbk.reflowtask.user.AuthTestSupport;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -64,16 +66,20 @@ class BlockEditingApiTests {
 	@Autowired
 	private TaskRepository tasks;
 
+	private Cookie cookie;
+
 	@BeforeEach
-	void beforeTheWorkingDay() {
+	void beforeTheWorkingDay() throws Exception {
 		this.clock.set(MONDAY.atTime(8, 0));
+		this.cookie = new AuthTestSupport(this.mvc).login();
 	}
 
 	private long createTask(String title, int minutes, String fixedStart) throws Exception {
 		String body = """
 				{"title":"%s","estimatedMinutes":%d,"priority":"MEDIUM","fixedStart":%s}"""
 			.formatted(title, minutes, fixedStart == null ? "null" : "\"" + fixedStart + "\"");
-		String response = this.mvc.perform(post("/api/v1/tasks").contentType(MediaType.APPLICATION_JSON).content(body))
+		String response = this.mvc
+			.perform(post("/api/v1/tasks").cookie(this.cookie).contentType(MediaType.APPLICATION_JSON).content(body))
 			.andReturn()
 			.getResponse()
 			.getContentAsString();
@@ -135,7 +141,8 @@ class BlockEditingApiTests {
 		long taskCount = this.tasks.count();
 
 		this.mvc
-			.perform(post("/api/v1/tasks").contentType(MediaType.APPLICATION_JSON)
+			.perform(post("/api/v1/tasks").cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content("""
 							{"title":"Clash","estimatedMinutes":60,"priority":"MEDIUM","fixedStart":"%s"}"""
 						.formatted(iso(14, 30))))
@@ -150,7 +157,8 @@ class BlockEditingApiTests {
 		this.clock.set(MONDAY.atTime(12, 0));
 
 		this.mvc
-			.perform(post("/api/v1/tasks").contentType(MediaType.APPLICATION_JSON)
+			.perform(post("/api/v1/tasks").cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content("""
 							{"title":"Too late","estimatedMinutes":60,"priority":"MEDIUM","fixedStart":"%s"}"""
 						.formatted(iso(9, 0))))
@@ -166,7 +174,8 @@ class BlockEditingApiTests {
 		long blockId = blocksOf(moved).get(0).getId();
 
 		this.mvc
-			.perform(patch("/api/v1/schedule/blocks/" + blockId).contentType(MediaType.APPLICATION_JSON)
+			.perform(patch("/api/v1/schedule/blocks/" + blockId).cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content(move(11, 0, 12, 0)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.startAt").value("%s:00".formatted(iso(11, 0))))
@@ -184,8 +193,10 @@ class BlockEditingApiTests {
 		long blockId = blocksOf(id).get(0).getId();
 
 		// 09:00-10:00 stretched to 09:00-10:30.
-		this.mvc.perform(patch("/api/v1/schedule/blocks/" + blockId).contentType(MediaType.APPLICATION_JSON)
-				.content(move(9, 0, 10, 30)))
+		this.mvc
+			.perform(patch("/api/v1/schedule/blocks/" + blockId).cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(move(9, 0, 10, 30)))
 			.andExpect(status().isOk());
 
 		assertThat(this.tasks.findById(id)).get()
@@ -198,8 +209,10 @@ class BlockEditingApiTests {
 		long id = createTask("Report", 60, null);
 		long blockId = blocksOf(id).get(0).getId();
 
-		this.mvc.perform(patch("/api/v1/schedule/blocks/" + blockId).contentType(MediaType.APPLICATION_JSON)
-				.content(move(14, 30, 15, 30)))
+		this.mvc
+			.perform(patch("/api/v1/schedule/blocks/" + blockId).cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(move(14, 30, 15, 30)))
 			.andExpect(status().isConflict());
 	}
 
@@ -209,8 +222,10 @@ class BlockEditingApiTests {
 		long blockId = blocksOf(id).get(0).getId();
 		this.tasks.findById(id).orElseThrow().setStatus(dev.karimbk.reflowtask.task.TaskStatus.DONE);
 
-		this.mvc.perform(patch("/api/v1/schedule/blocks/" + blockId).contentType(MediaType.APPLICATION_JSON)
-				.content(move(11, 0, 12, 0)))
+		this.mvc
+			.perform(patch("/api/v1/schedule/blocks/" + blockId).cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(move(11, 0, 12, 0)))
 			.andExpect(status().isConflict());
 	}
 
@@ -220,8 +235,10 @@ class BlockEditingApiTests {
 		long blockId = blocksOf(id).get(0).getId();
 		this.clock.set(MONDAY.atTime(9, 30));
 
-		this.mvc.perform(patch("/api/v1/schedule/blocks/" + blockId).contentType(MediaType.APPLICATION_JSON)
-				.content(move(7, 0, 8, 0)))
+		this.mvc
+			.perform(patch("/api/v1/schedule/blocks/" + blockId).cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(move(7, 0, 8, 0)))
 			.andExpect(status().isConflict());
 	}
 
@@ -230,8 +247,10 @@ class BlockEditingApiTests {
 		long id = createTask("Report", 60, null);
 		long blockId = blocksOf(id).get(0).getId();
 
-		this.mvc.perform(patch("/api/v1/schedule/blocks/" + blockId).contentType(MediaType.APPLICATION_JSON)
-				.content(move(12, 0, 11, 0)))
+		this.mvc
+			.perform(patch("/api/v1/schedule/blocks/" + blockId).cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(move(12, 0, 11, 0)))
 			.andExpect(status().isBadRequest());
 	}
 
@@ -248,11 +267,13 @@ class BlockEditingApiTests {
 		// A tick apart, so the two events sort unambiguously by time - a real clock never ties.
 		this.clock.set(MONDAY.atTime(8, 1));
 
-		this.mvc.perform(patch("/api/v1/schedule/blocks/" + blockId).contentType(MediaType.APPLICATION_JSON)
-				.content(move(11, 0, 12, 0)))
+		this.mvc
+			.perform(patch("/api/v1/schedule/blocks/" + blockId).cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(move(11, 0, 12, 0)))
 			.andExpect(status().isOk());
 
-		this.mvc.perform(get("/api/v1/reschedule-events"))
+		this.mvc.perform(get("/api/v1/reschedule-events").cookie(this.cookie))
 			.andExpect(jsonPath("$[0].items[0].taskTitle").value("Report"))
 			.andExpect(jsonPath("$[0].items[0].kind").value("MOVED"))
 			.andExpect(jsonPath("$[0].items[0].previousStartAt").value("%s:00".formatted(iso(9, 0))))

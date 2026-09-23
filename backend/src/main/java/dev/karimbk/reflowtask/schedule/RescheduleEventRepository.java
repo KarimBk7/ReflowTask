@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RescheduleEventRepository extends JpaRepository<RescheduleEvent, Long> {
 
-	List<RescheduleEvent> findAllByOrderByOccurredAtDesc(Limit limit);
+	List<RescheduleEvent> findByUserIdOrderByOccurredAtDesc(long userId, Limit limit);
 
 }

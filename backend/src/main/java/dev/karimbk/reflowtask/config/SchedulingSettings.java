@@ -2,18 +2,22 @@ package dev.karimbk.reflowtask.config;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/** Single-row settings table; the row id is fixed at 1 and enforced by a CHECK constraint. */
+/** One row per user; a unique constraint on {@code userId} is what keeps it one row. */
 @Entity
 @Table(name = "scheduling_settings")
 public class SchedulingSettings {
 
-	public static final short SINGLETON_ID = 1;
-
 	@Id
-	private short id = SINGLETON_ID;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+
+	@Column(nullable = false)
+	private long userId;
 
 	@Column(nullable = false)
 	private int horizonDays;
@@ -33,9 +37,14 @@ public class SchedulingSettings {
 		// for JPA
 	}
 
-	public SchedulingSettings(int horizonDays, int minChunkMinutes) {
+	public SchedulingSettings(long userId, int horizonDays, int minChunkMinutes) {
+		this.userId = userId;
 		this.horizonDays = horizonDays;
 		this.minChunkMinutes = minChunkMinutes;
+	}
+
+	public long getUserId() {
+		return this.userId;
 	}
 
 	public int getHorizonDays() {

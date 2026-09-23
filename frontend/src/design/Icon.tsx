@@ -128,6 +128,29 @@ export function ReflowIcon(props: IconProps) {
   )
 }
 
+/** Household accounts, admin-only. */
+export function UsersIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <circle cx="6" cy="6" r="2.25" />
+      <path d="M1.75 13.25c0-2.35 1.9-3.75 4.25-3.75s4.25 1.4 4.25 3.75" />
+      <path d="M10.75 5.75a2 2 0 1 1 1.65 3.1" />
+      <path d="M12 9.75c1.85.2 2.75 1.45 2.75 3.5" />
+    </Frame>
+  )
+}
+
+/** Log out of the current session. */
+export function LogoutIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <path d="M6.5 2.75H3.75a1 1 0 0 0-1 1v8.5a1 1 0 0 0 1 1H6.5" />
+      <path d="M10.5 5.25 13.25 8l-2.75 2.75" />
+      <path d="M13.25 8H6" />
+    </Frame>
+  )
+}
+
 /** Priority as rising bars, so it reads without colour: one, two or three filled. */
 export function PriorityIcon({ level, ...props }: IconProps & { level: 1 | 2 | 3 }) {
   return (

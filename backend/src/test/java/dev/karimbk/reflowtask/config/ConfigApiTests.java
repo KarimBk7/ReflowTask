@@ -12,6 +12,8 @@ import dev.karimbk.reflowtask.schedule.TimeBlockRepository;
 import dev.karimbk.reflowtask.task.Priority;
 import dev.karimbk.reflowtask.task.Task;
 import dev.karimbk.reflowtask.task.TaskRepository;
+import dev.karimbk.reflowtask.user.AuthTestSupport;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +42,9 @@ class ConfigApiTests {
 
 	private static final LocalDate MONDAY = LocalDate.of(2026, 9, 1).with(TemporalAdjusters.next(DayOfWeek.MONDAY));
 
+	/** The admin account seeded by V4__household_users.sql, which every test logs in as. */
+	private static final long USER_ID = 1L;
+
 	@TestConfiguration
 	static class FixedClock {
 
@@ -66,9 +71,12 @@ class ConfigApiTests {
 	@Autowired
 	private RescheduleEventRepository events;
 
+	private Cookie cookie;
+
 	@BeforeEach
-	void resetTime() {
+	void resetTime() throws Exception {
 		this.clock.set(MONDAY.atTime(8, 0));
+		this.cookie = new AuthTestSupport(this.mvc).login();
 	}
 
 	private static String window(String day, String start, String end) {
@@ -90,26 +98,27 @@ class ConfigApiTests {
 	@Test
 	void aFreshInstallImposesNoBreaks() throws Exception {
 		// A break is the owner's decision. The lunch V2 once seeded is gone, and nothing replaced it.
-		this.mvc.perform(get("/api/v1/config"))
+		this.mvc.perform(get("/api/v1/config").cookie(this.cookie))
 			.andExpect(jsonPath("$.blockedPeriods", hasSize(0)))
 			.andExpect(jsonPath("$.workingHours", hasSize(5)));
 	}
 
 	@Test
 	void aFreshInstallIsNotYetOnboarded() throws Exception {
-		this.mvc.perform(get("/api/v1/config")).andExpect(jsonPath("$.onboarded").value(false));
+		this.mvc.perform(get("/api/v1/config").cookie(this.cookie)).andExpect(jsonPath("$.onboarded").value(false));
 	}
 
 	@Test
 	void savingTheConfigurationStoresTheBufferAndOnboardsTheOwner() throws Exception {
 		this.mvc
-			.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+			.perform(put("/api/v1/config").cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30, 15)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.bufferMinutes").value(15))
 			.andExpect(jsonPath("$.onboarded").value(true));
 
-		this.mvc.perform(get("/api/v1/config"))
+		this.mvc.perform(get("/api/v1/config").cookie(this.cookie))
 			.andExpect(jsonPath("$.bufferMinutes").value(15))
 			.andExpect(jsonPath("$.onboarded").value(true));
 	}
@@ -122,10 +131,11 @@ class ConfigApiTests {
 	 */
 	@Test
 	void finishingSetupForTheFirstTimeDemonstratesAMissLiveInTheActivity() throws Exception {
-		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+		this.mvc.perform(put("/api/v1/config").cookie(this.cookie)
+				.contentType(MediaType.APPLICATION_JSON)
 				.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30)));
 
-		this.mvc.perform(get("/api/v1/reschedule-events"))
+		this.mvc.perform(get("/api/v1/reschedule-events").cookie(this.cookie))
 			.andExpect(jsonPath("$[0].items[0].kind").value("MISSED"))
 			.andExpect(jsonPath("$[0].items[0].taskTitle").value("See how this works: I was missed"));
 	}
@@ -133,10 +143,10 @@ class ConfigApiTests {
 	@Test
 	void finishingSetupASecondTimeDoesNotSeedAnotherDemo() throws Exception {
 		String body = config(window("MONDAY", "09:00", "18:00"), "", 14, 30);
-		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON).content(body));
+		this.mvc.perform(put("/api/v1/config").cookie(this.cookie).contentType(MediaType.APPLICATION_JSON).content(body));
 		long afterFirst = this.tasks.count();
 
-		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON).content(body));
+		this.mvc.perform(put("/api/v1/config").cookie(this.cookie).contentType(MediaType.APPLICATION_JSON).content(body));
 
 		assertThat(this.tasks.count()).isEqualTo(afterFirst);
 	}
@@ -147,14 +157,15 @@ class ConfigApiTests {
 				{"workingHours":[%s],"blockedPeriods":[],"horizonDays":14,"minChunkMinutes":30,"bufferMinutes":0,"onboarded":false}"""
 			.formatted(window("MONDAY", "09:00", "18:00"));
 
-		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON).content(body))
+		this.mvc.perform(put("/api/v1/config").cookie(this.cookie).contentType(MediaType.APPLICATION_JSON).content(body))
 			.andExpect(jsonPath("$.onboarded").value(true));
 	}
 
 	@Test
 	void rejectsABufferOutOfRange() throws Exception {
 		this.mvc
-			.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+			.perform(put("/api/v1/config").cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30, 500)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.errors.bufferMinutes").exists());
@@ -164,15 +175,19 @@ class ConfigApiTests {
 	void theBufferIsAppliedWhenTheScheduleIsReplanned() throws Exception {
 		// Onboard first and clear what that seeds (its own test covers it), so this test's two
 		// tasks are the only thing competing for capacity below.
-		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+		this.mvc.perform(put("/api/v1/config").cookie(this.cookie)
+				.contentType(MediaType.APPLICATION_JSON)
 				.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30)));
 		this.blocks.deleteAll();
 		this.tasks.deleteAll();
 
-		Task first = this.tasks.save(new Task("First", null, 60, null, false, Priority.HIGH, MONDAY.atTime(7, 0)));
-		Task second = this.tasks.save(new Task("Second", null, 60, null, false, Priority.LOW, MONDAY.atTime(7, 0)));
+		Task first = this.tasks
+			.save(new Task(USER_ID, "First", null, 60, null, false, Priority.HIGH, MONDAY.atTime(7, 0)));
+		Task second = this.tasks
+			.save(new Task(USER_ID, "Second", null, 60, null, false, Priority.LOW, MONDAY.atTime(7, 0)));
 
-		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+		this.mvc.perform(put("/api/v1/config").cookie(this.cookie)
+				.contentType(MediaType.APPLICATION_JSON)
 				.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30, 20)));
 
 		assertThat(this.blocks.findByTaskId(first.getId())).singleElement()
@@ -187,12 +202,12 @@ class ConfigApiTests {
 				"""
 						{"day":"MONDAY","startTime":"11:30","endTime":"12:00","label":"Walk"}""", 7, 45);
 
-		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON).content(body))
+		this.mvc.perform(put("/api/v1/config").cookie(this.cookie).contentType(MediaType.APPLICATION_JSON).content(body))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.workingHours", hasSize(2)))
 			.andExpect(jsonPath("$.horizonDays").value(7));
 
-		this.mvc.perform(get("/api/v1/config"))
+		this.mvc.perform(get("/api/v1/config").cookie(this.cookie))
 			.andExpect(jsonPath("$.workingHours", hasSize(2)))
 			.andExpect(jsonPath("$.workingHours[0].day").value("MONDAY"))
 			.andExpect(jsonPath("$.workingHours[0].startTime").value("08:00:00"))
@@ -202,19 +217,21 @@ class ConfigApiTests {
 	}
 
 	/**
-	 * Working hours are keyed by weekday, and Hibernate executes inserts before deletes when it
-	 * flushes, so replacing a weekday that already has a row could collide on the primary key.
-	 * The seeded defaults include Monday, so this exercises that case. It guards the behaviour
-	 * rather than the mechanism: see ConfigService for why the collision does not occur.
+	 * Working hours are keyed by (user, weekday), and Hibernate executes inserts before deletes
+	 * when it flushes, so replacing a weekday that already has a row could collide on the
+	 * primary key. The seeded defaults include Monday, so this exercises that case. It guards
+	 * the behaviour rather than the mechanism: see ConfigService for why the collision does not
+	 * occur.
 	 */
 	@Test
 	void replacingAWeekdayThatAlreadyExistsDoesNotCollide() throws Exception {
 		this.mvc
-			.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+			.perform(put("/api/v1/config").cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content(config(window("MONDAY", "07:00", "15:00"), "", 14, 30)))
 			.andExpect(status().isOk());
 
-		this.mvc.perform(get("/api/v1/config"))
+		this.mvc.perform(get("/api/v1/config").cookie(this.cookie))
 			.andExpect(jsonPath("$.workingHours", hasSize(1)))
 			.andExpect(jsonPath("$.workingHours[0].startTime").value("07:00:00"));
 	}
@@ -222,7 +239,8 @@ class ConfigApiTests {
 	@Test
 	void rejectsAWindowThatEndsBeforeItStarts() throws Exception {
 		this.mvc
-			.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+			.perform(put("/api/v1/config").cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content(config(window("MONDAY", "18:00", "09:00"), "", 14, 30)))
 			.andExpect(status().isBadRequest());
 	}
@@ -230,7 +248,8 @@ class ConfigApiTests {
 	@Test
 	void rejectsTheSameWeekdayTwice() throws Exception {
 		this.mvc
-			.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+			.perform(put("/api/v1/config").cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content(config(window("MONDAY", "09:00", "12:00") + "," + window("MONDAY", "13:00", "18:00"),
 							"", 14, 30)))
 			.andExpect(status().isBadRequest())
@@ -240,7 +259,8 @@ class ConfigApiTests {
 	@Test
 	void rejectsPlanningSettingsOutOfRange() throws Exception {
 		this.mvc
-			.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+			.perform(put("/api/v1/config").cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content(config(window("MONDAY", "09:00", "18:00"), "", 0, 30)))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.errors.horizonDays").exists());
@@ -248,11 +268,13 @@ class ConfigApiTests {
 
 	@Test
 	void aRejectedChangeLeavesTheExistingConfigurationUntouched() throws Exception {
-		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+		this.mvc.perform(put("/api/v1/config").cookie(this.cookie)
+				.contentType(MediaType.APPLICATION_JSON)
 				.content(config(window("MONDAY", "18:00", "09:00"), "", 14, 30)));
 
 		// The seeded Monday-to-Friday hours survive a request that failed validation.
-		this.mvc.perform(get("/api/v1/config")).andExpect(jsonPath("$.workingHours", hasSize(5)));
+		this.mvc.perform(get("/api/v1/config").cookie(this.cookie))
+			.andExpect(jsonPath("$.workingHours", hasSize(5)));
 	}
 
 	/**
@@ -261,22 +283,24 @@ class ConfigApiTests {
 	 */
 	@Test
 	void changingWorkingHoursReplansTheScheduleAndRecordsWhy() throws Exception {
-		Task task = this.tasks.save(new Task("Write report", null, 60, null, false, Priority.MEDIUM,
+		Task task = this.tasks.save(new Task(USER_ID, "Write report", null, 60, null, false, Priority.MEDIUM,
 				MONDAY.atTime(7, 0)));
-		this.mvc.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+		this.mvc.perform(put("/api/v1/config").cookie(this.cookie)
+				.contentType(MediaType.APPLICATION_JSON)
 				.content(config(window("MONDAY", "09:00", "18:00"), "", 14, 30)));
 		assertThat(this.blocks.findByTaskId(task.getId())).singleElement()
 			.satisfies((block) -> assertThat(block.getStartAt()).isEqualTo(MONDAY.atTime(9, 0)));
 
 		// Mornings stop being working time.
 		this.mvc
-			.perform(put("/api/v1/config").contentType(MediaType.APPLICATION_JSON)
+			.perform(put("/api/v1/config").cookie(this.cookie)
+					.contentType(MediaType.APPLICATION_JSON)
 					.content(config(window("MONDAY", "13:00", "18:00"), "", 14, 30)))
 			.andExpect(status().isOk());
 
 		assertThat(this.blocks.findByTaskId(task.getId())).singleElement()
 			.satisfies((block) -> assertThat(block.getStartAt()).isEqualTo(MONDAY.atTime(13, 0)));
-		assertThat(this.events.findAllByOrderByOccurredAtDesc(Limit.of(1))).singleElement()
+		assertThat(this.events.findByUserIdOrderByOccurredAtDesc(USER_ID, Limit.of(1))).singleElement()
 			.satisfies((event) -> assertThat(event.getTriggerType()).isEqualTo(RescheduleTrigger.CONFIG_CHANGED));
 	}
 

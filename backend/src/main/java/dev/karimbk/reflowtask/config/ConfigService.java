@@ -1,7 +1,10 @@
 package dev.karimbk.reflowtask.config;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import dev.karimbk.reflowtask.config.ConfigPayloads.Config;
 import dev.karimbk.reflowtask.config.ConfigPayloads.Window;
@@ -34,19 +37,28 @@ public class ConfigService {
 	}
 
 	@Transactional(readOnly = true)
-	public Config current() {
-		SchedulingSettings current = currentSettings();
-		List<Window> working = this.workingHours.findAll()
+	public Config current(long userId) {
+		SchedulingSettings current = this.settings.findOrDefault(userId);
+		List<Window> working = this.workingHours.findByUserId(userId)
 			.stream()
 			.map((hours) -> new Window(hours.getDay(), hours.getStartTime(), hours.getEndTime(), null))
 			.sorted(BY_DAY_THEN_START)
 			.toList();
-		List<Window> blocked = this.blockedPeriods.findAll()
+		List<Window> blocked = this.blockedPeriods.findByUserId(userId)
 			.stream()
 			.map((period) -> new Window(period.getDay(), period.getStartTime(), period.getEndTime(),
 					period.getLabel()))
 			.sorted(BY_DAY_THEN_START)
 			.toList();
+		if (!current.isOnboarded() && working.isEmpty()) {
+			// A new member has no rows yet (only the first admin's were seeded by migration): offer
+			// the same Monday-to-Friday default for the setup screen to start from.
+			working = Stream
+				.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+						DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
+				.map((day) -> new Window(day, LocalTime.of(9, 0), LocalTime.of(18, 0), null))
+				.toList();
+		}
 		return new Config(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes(),
 				current.getBufferMinutes(), current.isOnboarded());
 	}
@@ -59,29 +71,28 @@ public class ConfigService {
 	 * just set. If the replan fails, the configuration change rolls back with it.
 	 */
 	@Transactional
-	public Config replace(Config config) {
-		this.workingHours.deleteAll();
-		this.blockedPeriods.deleteAll();
+	public Config replace(long userId, Config config) {
+		this.workingHours.deleteByUserId(userId);
+		this.blockedPeriods.deleteByUserId(userId);
 		// Hibernate executes inserts before deletes when it flushes, and working hours are keyed
-		// by weekday, so a replaced Monday could be inserted while the old row still exists.
-		// Today that is avoided only incidentally: the id is assigned rather than generated, so
-		// save() merges, and merge's existence lookup flushes these deletes first. (Removing this
-		// line leaves the tests green, which is how that was established.) The explicit flush
-		// makes the ordering a guarantee instead of a side effect that a switch to persist()
-		// would silently remove.
+		// by (user, weekday), so a replaced Monday could be inserted while the old row still
+		// exists. Today that is avoided only incidentally: the id is assigned rather than
+		// generated, so save() merges, and merge's existence lookup flushes these deletes first.
+		// The explicit flush makes the ordering a guarantee instead of a side effect that a
+		// switch to persist() would silently remove.
 		this.workingHours.flush();
 
 		this.workingHours.saveAll(config.workingHours()
 			.stream()
-			.map((window) -> new WorkingHours(window.day(), window.startTime(), window.endTime()))
+			.map((window) -> new WorkingHours(userId, window.day(), window.startTime(), window.endTime()))
 			.toList());
 		this.blockedPeriods.saveAll(config.blockedPeriods()
 			.stream()
-			.map((window) -> new BlockedPeriod(window.day(), window.startTime(), window.endTime(),
+			.map((window) -> new BlockedPeriod(userId, window.day(), window.startTime(), window.endTime(),
 					blankToNull(window.label())))
 			.toList());
 
-		SchedulingSettings current = currentSettings();
+		SchedulingSettings current = this.settings.findOrDefault(userId);
 		boolean firstTimeSetup = !current.isOnboarded();
 		current.setHorizonDays(config.horizonDays());
 		current.setMinChunkMinutes(config.minChunkMinutes());
@@ -92,15 +103,10 @@ public class ConfigService {
 		this.settings.flush();
 
 		if (firstTimeSetup) {
-			this.scheduler.seedDemoMiss();
+			this.scheduler.seedDemoMiss(userId);
 		}
-		this.scheduler.replan(RescheduleTrigger.CONFIG_CHANGED);
-		return current();
-	}
-
-	/** The settings row is seeded by migration; the fallback only keeps a damaged database usable. */
-	private SchedulingSettings currentSettings() {
-		return this.settings.findById(SchedulingSettings.SINGLETON_ID).orElseGet(() -> new SchedulingSettings(14, 30));
+		this.scheduler.replan(userId, RescheduleTrigger.CONFIG_CHANGED);
+		return current(userId);
 	}
 
 	private static String blankToNull(String value) {

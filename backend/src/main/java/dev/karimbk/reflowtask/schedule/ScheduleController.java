@@ -6,6 +6,8 @@ import java.util.List;
 import dev.karimbk.reflowtask.common.NotFoundException;
 import dev.karimbk.reflowtask.schedule.ScheduleResponses.BlockView;
 import dev.karimbk.reflowtask.schedule.ScheduleResponses.EventView;
+import dev.karimbk.reflowtask.user.CurrentUser;
+import dev.karimbk.reflowtask.user.User;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
@@ -43,14 +45,18 @@ class ScheduleController {
 	/** The week view's data: every block overlapping the requested range. */
 	@GetMapping("/schedule")
 	@Transactional(readOnly = true)
-	List<BlockView> schedule(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+	List<BlockView> schedule(@CurrentUser User user,
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-		return this.blocks.findOverlapping(from, to).stream().map(BlockView::of).toList();
+		return this.blocks.findOverlappingForUser(user.getId(), from, to).stream().map(BlockView::of).toList();
 	}
 
 	@PostMapping("/schedule/replan")
-	List<EventView> replan() {
-		return this.scheduler.replan(RescheduleTrigger.MANUAL).map(EventView::of).map(List::of).orElseGet(List::of);
+	List<EventView> replan(@CurrentUser User user) {
+		return this.scheduler.replan(user.getId(), RescheduleTrigger.MANUAL)
+			.map(EventView::of)
+			.map(List::of)
+			.orElseGet(List::of);
 	}
 
 	/** Where a dragged block was dropped. */
@@ -66,34 +72,35 @@ class ScheduleController {
 	/** Moves or resizes a block, pins it there, and replans everything else around it. */
 	@PatchMapping("/schedule/blocks/{id}")
 	@Transactional
-	BlockView move(@PathVariable long id, @Valid @RequestBody MoveRequest request) {
-		return BlockView.of(this.scheduler.move(id, request.startAt(), request.endAt()));
+	BlockView move(@CurrentUser User user, @PathVariable long id, @Valid @RequestBody MoveRequest request) {
+		return BlockView.of(this.scheduler.move(user.getId(), id, request.startAt(), request.endAt()));
 	}
 
 	@PostMapping("/schedule/blocks/{id}/pin")
 	@Transactional
-	BlockView pin(@PathVariable long id) {
-		return setPinned(id, true);
+	BlockView pin(@CurrentUser User user, @PathVariable long id) {
+		return setPinned(user, id, true);
 	}
 
 	@PostMapping("/schedule/blocks/{id}/unpin")
 	@Transactional
-	BlockView unpin(@PathVariable long id) {
-		return setPinned(id, false);
+	BlockView unpin(@CurrentUser User user, @PathVariable long id) {
+		return setPinned(user, id, false);
 	}
 
 	/** Visible history, so a schedule that rearranged itself can be explained. */
 	@GetMapping("/reschedule-events")
 	@Transactional(readOnly = true)
-	List<EventView> rescheduleEvents() {
-		return this.events.findAllByOrderByOccurredAtDesc(Limit.of(EVENT_HISTORY_LIMIT))
+	List<EventView> rescheduleEvents(@CurrentUser User user) {
+		return this.events.findByUserIdOrderByOccurredAtDesc(user.getId(), Limit.of(EVENT_HISTORY_LIMIT))
 			.stream()
 			.map(EventView::of)
 			.toList();
 	}
 
-	private BlockView setPinned(long id, boolean pinned) {
-		TimeBlock block = this.blocks.findById(id).orElseThrow(() -> new NotFoundException("Time block", id));
+	private BlockView setPinned(User user, long id, boolean pinned) {
+		TimeBlock block = this.blocks.findByIdAndTaskUserId(id, user.getId())
+			.orElseThrow(() -> new NotFoundException("Time block", id));
 		block.setPinned(pinned);
 		return BlockView.of(block);
 	}

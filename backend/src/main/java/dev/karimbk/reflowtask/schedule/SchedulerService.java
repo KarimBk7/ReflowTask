@@ -28,6 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Turns the planner's decisions into persisted blocks, and records what changed.
  *
+ * Every entry point takes the acting user's id and never crosses that boundary: every lookup
+ * below is scoped to that user's own tasks and blocks, so one household member's fixed
+ * appointment can never collide with or be moved by another's.
+ *
  * The rules about which existing blocks survive a replan live here, and they are the part
  * users actually feel:
  *
@@ -74,11 +78,11 @@ public class SchedulerService {
 	 * @param ignoreBlockId the block being moved, which may of course overlap its own old place
 	 */
 	@Transactional(readOnly = true)
-	public void assertCanFix(LocalDateTime start, LocalDateTime end, Long ignoreBlockId) {
+	public void assertCanFix(long userId, LocalDateTime start, LocalDateTime end, Long ignoreBlockId) {
 		if (!end.isAfter(LocalDateTime.now(this.clock))) {
 			throw new ConflictException("Work cannot be fixed at a time that has already passed.");
 		}
-		boolean clash = this.blocks.findOverlapping(start, end)
+		boolean clash = this.blocks.findOverlappingForUser(userId, start, end)
 			.stream()
 			.anyMatch((block) -> block.isPinned() && !block.getId().equals(ignoreBlockId));
 		if (clash) {
@@ -88,9 +92,9 @@ public class SchedulerService {
 
 	/** Fixes a task at a chosen time with a pinned block covering its whole estimate. */
 	@Transactional
-	public void fix(Task task, LocalDateTime start) {
+	public void fix(long userId, Task task, LocalDateTime start) {
 		LocalDateTime end = start.plusMinutes(task.getEstimatedMinutes());
-		assertCanFix(start, end, null);
+		assertCanFix(userId, start, end, null);
 		this.blocks.save(new TimeBlock(task, start, end, true));
 	}
 
@@ -101,8 +105,9 @@ public class SchedulerService {
 	 * says the work takes longer. Moving without resizing leaves the estimate alone.
 	 */
 	@Transactional
-	public TimeBlock move(long blockId, LocalDateTime start, LocalDateTime end) {
-		TimeBlock block = this.blocks.findById(blockId).orElseThrow(() -> new NotFoundException("Time block", blockId));
+	public TimeBlock move(long userId, long blockId, LocalDateTime start, LocalDateTime end) {
+		TimeBlock block = this.blocks.findByIdAndTaskUserId(blockId, userId)
+			.orElseThrow(() -> new NotFoundException("Time block", blockId));
 		LocalDateTime now = LocalDateTime.now(this.clock);
 		if (block.getTask().getStatus() == TaskStatus.DONE) {
 			throw new ConflictException("A completed task's time cannot be moved.");
@@ -110,7 +115,7 @@ public class SchedulerService {
 		if (block.hasEndedBy(now)) {
 			throw new ConflictException("Time that has already passed cannot be moved.");
 		}
-		assertCanFix(start, end, blockId);
+		assertCanFix(userId, start, end, blockId);
 
 		long change = Duration.between(start, end).toMinutes()
 				- Duration.between(block.getStartAt(), block.getEndAt()).toMinutes();
@@ -125,7 +130,7 @@ public class SchedulerService {
 		LocalDateTime previousStart = block.getStartAt();
 		block.moveTo(start, end);
 		this.blocks.flush();
-		replan(RescheduleTrigger.MANUAL, Map.of(task.getId(), List.of(previousStart)));
+		replan(userId, RescheduleTrigger.MANUAL, Map.of(task.getId(), List.of(previousStart)));
 		return block;
 	}
 
@@ -137,10 +142,10 @@ public class SchedulerService {
 	 * see it happen.
 	 */
 	@Transactional
-	public void seedDemoMiss() {
+	public void seedDemoMiss(long userId) {
 		LocalDateTime now = LocalDateTime.now(this.clock);
 		Task demo = this.tasks
-			.save(new Task("See how this works: I was missed", null, 30, null, false, Priority.MEDIUM, now));
+			.save(new Task(userId, "See how this works: I was missed", null, 30, null, false, Priority.MEDIUM, now));
 		this.blocks.save(new TimeBlock(demo, now.minusMinutes(45), now.minusMinutes(15), false));
 	}
 
@@ -158,13 +163,13 @@ public class SchedulerService {
 	}
 
 	/**
-	 * Rebuilds the schedule. Returns the recorded event, or empty when nothing actually
+	 * Rebuilds one user's schedule. Returns the recorded event, or empty when nothing actually
 	 * changed — a replan that moved nothing is not news, and writing it anyway would bury
 	 * the real events in noise.
 	 */
 	@Transactional
-	public Optional<RescheduleEvent> replan(RescheduleTrigger trigger) {
-		return replan(trigger, Map.of());
+	public Optional<RescheduleEvent> replan(long userId, RescheduleTrigger trigger) {
+		return replan(userId, trigger, Map.of());
 	}
 
 	/**
@@ -172,12 +177,12 @@ public class SchedulerService {
 	 * moved and flushed (see {@link #move}), keyed by task id. Without this, that task's own move
 	 * would compare its new position against itself and look unchanged.
 	 */
-	private Optional<RescheduleEvent> replan(RescheduleTrigger trigger,
+	private Optional<RescheduleEvent> replan(long userId, RescheduleTrigger trigger,
 			Map<Long, List<LocalDateTime>> manualBeforeOverrides) {
 		LocalDateTime now = LocalDateTime.now(this.clock);
-		Disposition disposition = disposeOf(this.blocks.findAllWithTask(), now);
+		Disposition disposition = disposeOf(this.blocks.findAllWithTaskByUserId(userId), now);
 
-		Map<Long, Task> byId = this.tasks.findByStatusNot(TaskStatus.DONE)
+		Map<Long, Task> byId = this.tasks.findByUserIdAndStatusNot(userId, TaskStatus.DONE)
 			.stream()
 			.collect(Collectors.toMap(Task::getId, Function.identity()));
 		Map<Long, Long> covered = minutesPerTask(disposition.obstacles());
@@ -192,7 +197,7 @@ public class SchedulerService {
 		before.putAll(manualBeforeOverrides);
 
 		List<PlannedBlock> planned = SchedulePlanner.plan(toPlan, slotsOf(disposition.obstacles()),
-				this.config.current(), now);
+				this.config.current(userId), now);
 
 		this.blocks.deleteAll(disposition.toRemove());
 		this.blocks.flush();
@@ -202,7 +207,7 @@ public class SchedulerService {
 		}
 
 		Map<Long, List<LocalDateTime>> after = startsAfter(disposition.obstacles(), planned);
-		return record(trigger, now, before, after, disposition, byId);
+		return record(userId, trigger, now, before, after, disposition, byId);
 	}
 
 	// --- deciding what survives ------------------------------------------------------
@@ -313,7 +318,7 @@ public class SchedulerService {
 		return result;
 	}
 
-	private Optional<RescheduleEvent> record(RescheduleTrigger trigger, LocalDateTime now,
+	private Optional<RescheduleEvent> record(long userId, RescheduleTrigger trigger, LocalDateTime now,
 			Map<Long, List<LocalDateTime>> before, Map<Long, List<LocalDateTime>> after, Disposition disposition,
 			Map<Long, Task> byId) {
 
@@ -343,7 +348,7 @@ public class SchedulerService {
 			return Optional.empty();
 		}
 
-		RescheduleEvent event = new RescheduleEvent(now, trigger, summarize(items));
+		RescheduleEvent event = new RescheduleEvent(userId, now, trigger, summarize(items));
 		items.forEach(event::add);
 		return Optional.of(this.events.save(event));
 	}

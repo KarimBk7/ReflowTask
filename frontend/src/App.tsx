@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ApiError, api } from './api/client'
-import type { Block, Task, TaskInput } from './api/types'
-import { ChevronIcon, ClockIcon, HelpIcon, PlusIcon, ReflowIcon } from './design/Icon'
+import type { AuthUser, Block, Task, TaskInput } from './api/types'
+import { BootstrapScreen } from './auth/BootstrapScreen'
+import { ChangePasswordScreen } from './auth/ChangePasswordScreen'
+import { LoginScreen } from './auth/LoginScreen'
+import { UserManagement } from './auth/UserManagement'
+import { ChevronIcon, ClockIcon, HelpIcon, LogoutIcon, PlusIcon, ReflowIcon, UsersIcon } from './design/Icon'
 import { t } from './i18n/en'
 import {
   describeWorkingHours,
@@ -22,6 +26,7 @@ import {
   useUpdateConfig,
   useUpdateTask,
 } from './lib/board'
+import { useAuthStatus, useLogout, useMe } from './lib/auth'
 import { addDays, formatDayTime, startOfWeek, toLocalDateTime } from './lib/time'
 import { BlockDetails } from './week/BlockDetails'
 import { HoursPanel } from './week/HoursPanel'
@@ -38,11 +43,28 @@ type Open =
   | { kind: 'block'; anchor: DOMRect; blockId: number }
   | { kind: 'edit'; anchor: DOMRect; taskId: number }
   | { kind: 'help'; anchor: DOMRect }
+  | { kind: 'users'; anchor: DOMRect }
 
 const POPOVER_HEADING = 'popover-heading'
 const NOTICE_MS = 6000
 
-export default function App() {
+/**
+ * The gate in front of the board: no account yet, no session, a forced password change, or the
+ * board itself. Each household member's own copy of the app starts here on every load.
+ */
+export default function Root() {
+  const status = useAuthStatus()
+  const me = useMe()
+
+  if (status.isLoading || (status.data && !status.data.needsBootstrap && me.isLoading)) return null
+  if (status.data?.needsBootstrap) return <BootstrapScreen />
+  if (!me.data) return <LoginScreen />
+  if (me.data.mustChangePassword) return <ChangePasswordScreen />
+  return <Board user={me.data} />
+}
+
+function Board({ user }: { user: AuthUser }) {
+  const logout = useLogout()
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
   const [open, setOpen] = useState<Open | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
@@ -120,20 +142,21 @@ export default function App() {
   /** Opens the help popover once, ever, the first time the owner has something to look at. */
   useEffect(() => {
     if (welcome || hoursOpen || !config.data || open) return
+    const seenKey = `reflowtask-seen-help-${user.id}`
     let seen = true
     try {
-      seen = localStorage.getItem('reflowtask-seen-help') === 'true'
+      seen = localStorage.getItem(seenKey) === 'true'
     } catch {
       /* Private browsing or a blocked store: treat as already seen rather than nag every load. */
     }
     if (seen || !helpButtonRef.current) return
     try {
-      localStorage.setItem('reflowtask-seen-help', 'true')
+      localStorage.setItem(seenKey, 'true')
     } catch {
       /* Nothing to persist to; the popover still opens this once. */
     }
     setOpen({ kind: 'help', anchor: helpButtonRef.current.getBoundingClientRect() })
-  }, [welcome, hoursOpen, config.data, open])
+  }, [welcome, hoursOpen, config.data, open, user.id])
 
   /*
    * A press outside an open popover closes it, and that same press must not also open a new task
@@ -284,6 +307,20 @@ export default function App() {
             <ClockIcon />
             <span className="label-wide">{t('hours.open')}</span>
           </button>
+          {user.role === 'ADMIN' && (
+            <button
+              type="button"
+              className="icon-button"
+              onClick={(event) => setOpen({ kind: 'users', anchor: event.currentTarget.getBoundingClientRect() })}
+            >
+              <UsersIcon />
+              <span className="sr-only">{t('auth.usersTitle')}</span>
+            </button>
+          )}
+          <button type="button" className="icon-button" onClick={() => logout.mutate()}>
+            <LogoutIcon />
+            <span className="sr-only">{t('auth.logout')}</span>
+          </button>
           <button
             type="button"
             className="button button-primary"
@@ -394,6 +431,12 @@ export default function App() {
       {open?.kind === 'help' && (
         <Popover anchor={open.anchor} placement="below" labelledBy={POPOVER_HEADING} onClose={close}>
           <HowItWorks config={config.data} onClose={close} headingId={POPOVER_HEADING} />
+        </Popover>
+      )}
+
+      {open?.kind === 'users' && (
+        <Popover anchor={open.anchor} placement="below" labelledBy={POPOVER_HEADING} onClose={close}>
+          <UserManagement currentUser={user} onClose={close} headingId={POPOVER_HEADING} />
         </Popover>
       )}
 

@@ -33,6 +33,9 @@ public class RescheduleEvent {
 	private Long id;
 
 	@Column(nullable = false)
+	private long userId;
+
+	@Column(nullable = false)
 	private LocalDateTime occurredAt;
 
 	@Enumerated(EnumType.STRING)
@@ -49,10 +52,15 @@ public class RescheduleEvent {
 		// for JPA
 	}
 
-	public RescheduleEvent(LocalDateTime occurredAt, RescheduleTrigger triggerType, String summary) {
+	public RescheduleEvent(long userId, LocalDateTime occurredAt, RescheduleTrigger triggerType, String summary) {
+		this.userId = userId;
 		this.occurredAt = occurredAt;
 		this.triggerType = triggerType;
 		this.summary = summary;
+	}
+
+	public long getUserId() {
+		return this.userId;
 	}
 
 	public void add(RescheduleEventItem item) {

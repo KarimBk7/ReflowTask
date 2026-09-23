@@ -51,12 +51,16 @@ public class Task {
 	@Column(nullable = false)
 	private LocalDateTime createdAt;
 
+	@Column(nullable = false)
+	private long userId;
+
 	protected Task() {
 		// for JPA
 	}
 
-	public Task(String title, String description, int estimatedMinutes, LocalDateTime deadline,
+	public Task(long userId, String title, String description, int estimatedMinutes, LocalDateTime deadline,
 			boolean deadlineHasTime, Priority priority, LocalDateTime createdAt) {
+		this.userId = userId;
 		this.title = title;
 		this.description = description;
 		this.estimatedMinutes = estimatedMinutes;
@@ -137,6 +141,10 @@ public class Task {
 
 	public LocalDateTime getCreatedAt() {
 		return this.createdAt;
+	}
+
+	public long getUserId() {
+		return this.userId;
 	}
 
 }

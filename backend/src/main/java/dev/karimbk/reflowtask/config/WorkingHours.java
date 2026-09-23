@@ -5,11 +5,11 @@ import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 
 /**
- * When the user works on a given weekday. A weekday with no row is not a working day, so
+ * When a user works on a given weekday. A weekday with no row is not a working day, so
  * "I don't work Fridays" is a deletion rather than a flag.
  *
  * The day is stored as the ISO number (1 = Monday) rather than an enum ordinal, because
@@ -17,9 +17,14 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "working_hours")
+@IdClass(WorkingHoursId.class)
 public class WorkingHours {
 
-	@Id
+	@jakarta.persistence.Id
+	@Column(nullable = false)
+	private long userId;
+
+	@jakarta.persistence.Id
 	@Column(name = "day_of_week", nullable = false)
 	private short dayOfWeek;
 
@@ -33,10 +38,15 @@ public class WorkingHours {
 		// for JPA
 	}
 
-	public WorkingHours(DayOfWeek day, LocalTime startTime, LocalTime endTime) {
+	public WorkingHours(long userId, DayOfWeek day, LocalTime startTime, LocalTime endTime) {
+		this.userId = userId;
 		this.dayOfWeek = (short) day.getValue();
 		this.startTime = startTime;
 		this.endTime = endTime;
+	}
+
+	public long getUserId() {
+		return this.userId;
 	}
 
 	public DayOfWeek getDay() {

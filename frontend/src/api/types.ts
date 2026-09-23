@@ -76,6 +76,21 @@ export interface RescheduleEvent {
   items: RescheduleItem[]
 }
 
+export type Role = 'ADMIN' | 'MEMBER'
+
+export interface AuthStatus {
+  /** True until the very first account exists; the app shows the bootstrap screen instead. */
+  needsBootstrap: boolean
+}
+
+export interface AuthUser {
+  id: number
+  username: string
+  role: Role
+  /** True right after an admin creates the account; the app forces a password change first. */
+  mustChangePassword: boolean
+}
+
 /** RFC 7807 problem detail, plus the per-field map the backend attaches on validation. */
 export interface ProblemDetail {
   status: number

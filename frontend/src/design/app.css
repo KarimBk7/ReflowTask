@@ -244,6 +244,25 @@ input[type='date'] {
   height: 100dvh;
 }
 
+/* ── Auth screens ─────────────────────────────────────────────────────────── */
+
+.auth-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100dvh;
+  background: var(--page);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 320px;
+  padding: var(--space-5);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+
 .topbar {
   display: flex;
   align-items: center;

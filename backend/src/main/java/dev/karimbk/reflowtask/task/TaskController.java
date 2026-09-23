@@ -3,6 +3,8 @@ package dev.karimbk.reflowtask.task;
 import java.net.URI;
 import java.util.List;
 
+import dev.karimbk.reflowtask.user.CurrentUser;
+import dev.karimbk.reflowtask.user.User;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -31,34 +33,35 @@ class TaskController {
 	}
 
 	@GetMapping
-	List<TaskResponse> list() {
-		return this.service.findAll();
+	List<TaskResponse> list(@CurrentUser User user) {
+		return this.service.findAll(user.getId());
 	}
 
 	@GetMapping("/{id}")
-	TaskResponse get(@PathVariable long id) {
-		return this.service.findById(id);
+	TaskResponse get(@CurrentUser User user, @PathVariable long id) {
+		return this.service.findById(user.getId(), id);
 	}
 
 	@PostMapping
-	ResponseEntity<TaskResponse> create(@Valid @RequestBody TaskRequest request) {
-		TaskResponse created = this.service.create(request);
+	ResponseEntity<TaskResponse> create(@CurrentUser User user, @Valid @RequestBody TaskRequest request) {
+		TaskResponse created = this.service.create(user.getId(), request);
 		return ResponseEntity.created(URI.create("/api/v1/tasks/" + created.id())).body(created);
 	}
 
 	@PutMapping("/{id}")
-	TaskResponse update(@PathVariable long id, @Valid @RequestBody TaskRequest request) {
-		return this.service.update(id, request);
+	TaskResponse update(@CurrentUser User user, @PathVariable long id, @Valid @RequestBody TaskRequest request) {
+		return this.service.update(user.getId(), id, request);
 	}
 
 	@PatchMapping("/{id}/status")
-	TaskResponse changeStatus(@PathVariable long id, @Valid @RequestBody TaskStatusRequest request) {
-		return this.service.changeStatus(id, request.status());
+	TaskResponse changeStatus(@CurrentUser User user, @PathVariable long id,
+			@Valid @RequestBody TaskStatusRequest request) {
+		return this.service.changeStatus(user.getId(), id, request.status());
 	}
 
 	@DeleteMapping("/{id}")
-	ResponseEntity<Void> delete(@PathVariable long id) {
-		this.service.delete(id);
+	ResponseEntity<Void> delete(@CurrentUser User user, @PathVariable long id) {
+		this.service.delete(user.getId(), id);
 		return ResponseEntity.noContent().build();
 	}
 

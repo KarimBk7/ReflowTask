@@ -1,7 +1,6 @@
 package dev.karimbk.reflowtask.schedule;
 
-import java.util.Optional;
-
+import dev.karimbk.reflowtask.user.UserRepository;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -22,14 +21,27 @@ class ReflowJob {
 
 	private final SchedulerService scheduler;
 
-	ReflowJob(SchedulerService scheduler) {
+	private final UserRepository users;
+
+	ReflowJob(SchedulerService scheduler, UserRepository users) {
 		this.scheduler = scheduler;
+		this.users = users;
 	}
 
 	@Scheduled(cron = "${reflowtask.reflow.cron}")
 	void reflow() {
-		Optional<RescheduleEvent> event = this.scheduler.replan(RescheduleTrigger.SCHEDULED_JOB);
-		event.ifPresent((recorded) -> logger.info("Schedule reflowed: " + recorded.getSummary()));
+		// ponytail: sequential loop over users, fine for a household-sized user count.
+		for (long userId : this.users.findAllIds()) {
+			try {
+				this.scheduler.replan(userId, RescheduleTrigger.SCHEDULED_JOB)
+					.ifPresent((recorded) -> logger.info("Schedule reflowed for user " + userId + ": "
+							+ recorded.getSummary()));
+			}
+			catch (RuntimeException ex) {
+				// One user's failure must not stop another's reflow.
+				logger.error("Reflow failed for user " + userId, ex);
+			}
+		}
 	}
 
 }

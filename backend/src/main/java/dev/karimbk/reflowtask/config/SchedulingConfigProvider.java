@@ -16,9 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class SchedulingConfigProvider {
 
-	/** Used when the settings row is somehow absent, so scheduling degrades rather than fails. */
-	private static final SchedulingSettings FALLBACK = new SchedulingSettings(14, 30);
-
 	private final WorkingHoursRepository workingHours;
 
 	private final BlockedPeriodRepository blockedPeriods;
@@ -33,13 +30,13 @@ public class SchedulingConfigProvider {
 	}
 
 	@Transactional(readOnly = true)
-	public SchedulingConfig current() {
-		SchedulingSettings current = this.settings.findById(SchedulingSettings.SINGLETON_ID).orElse(FALLBACK);
-		List<DailyWindow> working = this.workingHours.findAll()
+	public SchedulingConfig current(long userId) {
+		SchedulingSettings current = this.settings.findOrDefault(userId);
+		List<DailyWindow> working = this.workingHours.findByUserId(userId)
 			.stream()
 			.map((hours) -> new DailyWindow(hours.getDay(), hours.getStartTime(), hours.getEndTime()))
 			.toList();
-		List<DailyWindow> blocked = this.blockedPeriods.findAll()
+		List<DailyWindow> blocked = this.blockedPeriods.findByUserId(userId)
 			.stream()
 			.map((period) -> new DailyWindow(period.getDay(), period.getStartTime(), period.getEndTime()))
 			.toList();

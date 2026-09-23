@@ -59,19 +59,17 @@ Confirmed MVP scope:
 - Week calendar view of scheduled blocks, plus a list of tasks that are open, unscheduled, or missed. Completion is markable directly from the calendar.
 - Working-hours configuration surface.
 
-Explicitly out of MVP: multi-user accounts, external calendar integration (Google Calendar, CalDAV, Nextcloud), mobile app, push notifications, ML-based duration estimation, team collaboration.
+Explicitly out of MVP: external calendar integration (Google Calendar, CalDAV, Nextcloud), mobile app, push notifications, ML-based duration estimation, team collaboration.
 
-**Authentication: none in the MVP, and possibly never.** No login screen, no user menu, no session. Nothing in the UI may imply an account exists.
+**Authentication: a household login, and nothing more.** Each person in the household has their own username and password, sees and manages only their own tasks, and has their own working hours, breaks and buffer. One admin can see and manage every account. Passwords are stored only as bcrypt hashes; a session is an opaque random token in an `HttpOnly`, `SameSite=Lax` cookie. There is deliberately no email, password reset, roles beyond admin and member, or OAuth: this is not an account system for the internet.
 
-The security model is the network boundary, and that boundary is a **private VPN (Tailscale or WireGuard)**, not a port-forward. Remote access — including the future mobile client — happens by joining the phone to the same private network as the Pi. The instance is never exposed to the public internet, so the device is authenticated at the network layer and app-level login is not required for sync to work. The README must state this as the deployment model, not as an afterthought.
+The security model is still the network boundary, and that boundary is a **private VPN (Tailscale or WireGuard)**, not a port-forward. The instance is never exposed to the public internet, so the login separates the people sharing one instance from each other; it is not what keeps strangers out. The README must state this as the deployment model, not as an afterthought.
 
-Login therefore ranks as a **low-priority later stage**, wanted if the project gets that far, and never a reason to bend an early decision. The scheduler and the week view come first.
+The session cookie carries no `Secure` flag, because the supported deployment serves plain HTTP inside the private network and a `Secure` cookie would never be sent. A cookie belongs to the hostname in the address bar, so opening the same instance by its LAN name and by its Tailscale name means logging in twice. That is a known limitation, not a bug.
 
-**Three forward-compatibility constraints, adopted now because they are free and make auth-later a day's work instead of surgery:**
+The first account is created on first start: a fresh install seeds an `admin` with the temporary password `changeme`, which the app forces to be changed at first login. Change it before exposing the instance to anyone.
 
-1. **Flyway migrations from the first commit.** A later `user_id` column is then a routine migration, not schema surgery.
-2. **All endpoints under `/api/v1/`.** A shipped mobile client pins to a version; adding versioning after clients exist is the expensive mistake.
-3. **No "the single user" assumption leaks into the frontend or the API contract.** Absence of an owner is not the same as an owner who is implicit everywhere.
+The forward-compatibility constraints from the single-user era held up and made this a routine migration: Flyway from the first commit (`user_id` columns), everything under `/api/v1/`, and no implicit single owner in the API contract.
 
 Undecided, not to be invented:
 

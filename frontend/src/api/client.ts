@@ -1,4 +1,6 @@
 import type {
+  AuthStatus,
+  AuthUser,
   Block,
   BoardConfig,
   LocalDateTime,
@@ -101,4 +103,26 @@ export const api = {
   /** Replaces the whole configuration and replans the schedule against it. */
   updateConfig: (config: BoardConfig) =>
     request<BoardConfig>('/config', { method: 'PUT', body: JSON.stringify(config) }),
+
+  authStatus: () => request<AuthStatus>('/auth/status'),
+
+  bootstrap: (username: string, password: string) =>
+    request<AuthUser>('/auth/bootstrap', { method: 'POST', body: JSON.stringify({ username, password }) }),
+
+  login: (username: string, password: string) =>
+    request<AuthUser>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+
+  logout: () => request<void>('/auth/logout', { method: 'POST' }),
+
+  me: () => request<AuthUser>('/auth/me'),
+
+  changePassword: (password: string) =>
+    request<AuthUser>('/auth/change-password', { method: 'POST', body: JSON.stringify({ password }) }),
+
+  listUsers: () => request<AuthUser[]>('/users'),
+
+  createUser: (username: string, password: string) =>
+    request<AuthUser>('/users', { method: 'POST', body: JSON.stringify({ username, password }) }),
+
+  deleteUser: (id: number) => request<void>(`/users/${id}`, { method: 'DELETE' }),
 }
