@@ -69,6 +69,23 @@ function Board({ user }: { user: AuthUser }) {
   const logout = useLogout()
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
   const [view, setView] = useState<'week' | 'month'>('week')
+  // A display preference of this browser, per person, so it survives a reload.
+  const weekendKey = `reflowtask-show-weekend-${user.id}`
+  const [showWeekend, setShowWeekend] = useState(() => {
+    try {
+      return localStorage.getItem(weekendKey) === 'true'
+    } catch {
+      return false
+    }
+  })
+  function toggleWeekend() {
+    setShowWeekend(!showWeekend)
+    try {
+      localStorage.setItem(weekendKey, String(!showWeekend))
+    } catch {
+      /* Not remembered, still applied for this visit. */
+    }
+  }
   const [open, setOpen] = useState<Open | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   // null follows the server: the hours panel opens by itself until the owner has saved hours once.
@@ -323,6 +340,16 @@ function Board({ user }: { user: AuthUser }) {
               </label>
             ))}
           </div>
+          {view === 'week' && (
+            <button
+              type="button"
+              className="button button-ghost button-small"
+              aria-pressed={showWeekend}
+              onClick={toggleWeekend}
+            >
+              {t('view.weekend')}
+            </button>
+          )}
         </nav>
 
         <div className="topbar-actions">
@@ -432,6 +459,7 @@ function Board({ user }: { user: AuthUser }) {
           ) : (
           <WeekGrid
             weekStart={weekStart}
+            allDays={showWeekend}
             config={config.data}
             blocks={blocks}
             ghosts={ghosts}

@@ -26,6 +26,8 @@ export interface Draft {
 
 interface WeekGridProps {
   weekStart: Date
+  /** Show all seven days, not only working days and days with something on them. */
+  allDays: boolean
   config: BoardConfig | undefined
   blocks: Block[]
   ghosts: Ghost[]
@@ -70,6 +72,7 @@ interface Drag {
  */
 export function WeekGrid({
   weekStart,
+  allDays,
   config,
   blocks,
   ghosts,
@@ -107,7 +110,7 @@ export function WeekGrid({
     return () => window.clearInterval(timer)
   }, [])
 
-  const days = useMemo(() => boardDays(config, blocks, weekStart), [config, blocks, weekStart])
+  const days = useMemo(() => boardDays(config, blocks, weekStart, allDays), [config, blocks, weekStart, allDays])
   const placed = useMemo(() => {
     const weekEnd = addDays(weekStart, 7)
     const perTask = new Map<number, number>()

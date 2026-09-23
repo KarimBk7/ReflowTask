@@ -23,9 +23,11 @@ export function dayNumber(day: string): number {
 /**
  * Working days in ISO order, so a week with no weekend work shows five columns, not seven.
  * A day outside them still appears when something is fixed on it: a Saturday appointment must
- * not vanish because Saturday is not a working day.
+ * not vanish because Saturday is not a working day. With allDays, every day of the week is shown,
+ * so a weekend can be planned into by hand even with no working hours on it.
  */
-export function boardDays(config: BoardConfig | undefined, blocks: Block[], weekStart: Date): number[] {
+export function boardDays(config: BoardConfig | undefined, blocks: Block[], weekStart: Date, allDays = false): number[] {
+  if (allDays) return [1, 2, 3, 4, 5, 6, 7]
   const days = new Set(
     config && config.workingHours.length > 0
       ? config.workingHours.map((w) => dayNumber(w.day))

@@ -79,6 +79,10 @@ describe('working hours', () => {
     expect(boardDays(config(['MONDAY', 'WEDNESDAY']), [], new Date(2026, 8, 21))).toEqual([1, 3])
   })
 
+  it('shows all seven days when asked, whatever the working hours', () => {
+    expect(boardDays(config(['MONDAY']), [], new Date(2026, 8, 21), true)).toEqual([1, 2, 3, 4, 5, 6, 7])
+  })
+
   it('adds a day off when something is fixed on it', () => {
     const saturday = block(1, '2026-09-26T10:00:00', '2026-09-26T11:00:00')
     expect(boardDays(config(WEEKDAYS), [saturday], new Date(2026, 8, 21))).toEqual([1, 2, 3, 4, 5, 6])

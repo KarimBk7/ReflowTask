@@ -16,6 +16,7 @@ export const en = {
   'view.week': 'Week',
   'view.month': 'Month',
   'view.switch': 'View',
+  'view.weekend': 'Weekend',
   'month.previous': 'Previous month',
   'month.next': 'Next month',
   'month.tasks': 'tasks',
