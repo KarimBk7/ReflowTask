@@ -56,6 +56,7 @@ Set three things in `.env`:
 | --- | --- |
 | `POSTGRES_PASSWORD` | A long random password for the database. Only the app uses it, so you will never type it again. |
 | `TZ` | The timezone your working hours are in, for example `Europe/Berlin` or `America/New_York`. The scheduler works in wall-clock time, and a container defaults to UTC, so leaving this wrong puts every block at the wrong hour. |
+| `REFLOWTASK_PORT` | `8080` | The port the app is reached on |
 | `REFLOWTASK_INITIAL_ADMIN_PASSWORD` | The password for the first account (`admin`), at least 8 characters. Remove the `#` in front of the line. |
 
 If you skip the last one, the admin's password is the well-known `changeme` until you log in and
@@ -70,7 +71,7 @@ docker compose up -d --build
 
 The first run downloads the base images and builds the backend and frontend, and the backend build
 also runs the whole test suite, so a broken build never gets as far as running. Expect a couple of
-minutes on a PC and around ten on a Raspberry Pi 5. Later starts take seconds.
+minutes on a PC and roughly five to ten on a Raspberry Pi 5. Later starts take seconds.
 
 Check that everything is up:
 
@@ -81,8 +82,9 @@ docker compose logs backend  # ends with "Started ReflowtaskApplication"
 
 It is now listening on port **8080**. Open `http://<the machine's address>:8080` from any device
 on your network. On the machine itself that is <http://localhost:8080>. To find its address, run
-`hostname -I` on the machine. To use another port, change `"8080:80"` under `frontend` in
-`docker-compose.yml`.
+`hostname -I` on the machine. To use another port, set `REFLOWTASK_PORT` in `.env` and run
+`docker compose up -d` again. Change settings in `.env`, not in `docker-compose.yml`, so that
+`git pull` keeps working when you update.
 
 ## 4. First login
 
@@ -94,8 +96,10 @@ If you did not set `REFLOWTASK_INITIAL_ADMIN_PASSWORD`, log in with `changeme`; 
 you to choose your own password before it shows anything else.
 
 The first time you log in, a short setup asks for your working hours, breaks and how far ahead to
-plan. ReflowTask only places work inside your working hours, so this matters. You can change all of
-it later from **Hours**.
+plan. ReflowTask only places work inside your working hours, so this matters. Any day can be a
+working day: if you work weekends or shifts, pick **Mon–Sat** or **Every day**, or switch single
+days on. A day you switch on takes the hours of your first working day, which you can then adjust.
+You can change all of it later from **Hours**.
 
 ![First-run setup: working hours, breaks and planning settings](images/first-run.png)
 
@@ -228,6 +232,8 @@ The temporary password works once: the person is made to choose their own straig
 shell on the device is the credential, which is why this needs no login. The same command also
 clears a login lockout.
 
+On Windows, run the script in Git Bash or WSL, or run the command below directly.
+
 The script is a thin wrapper. It runs `docker compose exec -T backend java -jar app.jar` with
 `--spring.main.web-application-type=none --reflowtask.reset-password.username=<name>`, so you can
 run that yourself, or the equivalent against a jar you started without Docker.
@@ -244,8 +250,9 @@ Set these in `.env` (Docker) or as environment variables.
 | `REFLOWTASK_REFLOW_CRON` | `0 0 * * * *` | When the missed-work check runs (Spring cron, six fields). Hourly by default; `-` disables it. |
 | `SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD` | set by `docker-compose.yml` | Database connection, if you run PostgreSQL yourself |
 
-Working hours, breaks, buffer, planning horizon and minimum block size are set per person in the
-app, under **Hours**.
+Working hours (any day of the week, weekends included), breaks, buffer, planning horizon and
+minimum block size are set per person in the app, under **Hours**. The week view hides days
+without working hours; the **Days off** button shows them.
 
 ## Running without Docker
 
@@ -294,8 +301,8 @@ device. Make sure the machine's firewall allows port 8080 (`sudo ufw allow 8080/
 ufw).
 
 **"Bind for 0.0.0.0:8080 failed: port is already allocated".**
-Something else uses port 8080. Change `"8080:80"` in `docker-compose.yml` to, say, `"8090:80"` and
-run `docker compose up -d` again.
+Something else uses port 8080. Set `REFLOWTASK_PORT=8090` (or any free port) in `.env` and run
+`docker compose up -d` again.
 
 **Blocks show up at the wrong hour.**
 `TZ` in `.env` does not match the timezone you think in. Fix it and run `docker compose up -d`.
@@ -317,13 +324,17 @@ one. Either put the old password back in `.env`, or, if you have no data yet, ru
 `docker compose down -v` to start over.
 
 **The build is killed or runs out of memory.**
-On a board with 2 GB of RAM or less, add swap before building:
+On a board with 2 GB of RAM or less, add swap before building. On Raspberry Pi OS versions that
+use `dphys-swapfile` (check with `systemctl status dphys-swapfile`):
 
 ```bash
 sudo dphys-swapfile swapoff
 sudo sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=2048/' /etc/dphys-swapfile
 sudo dphys-swapfile setup && sudo dphys-swapfile swapon
 ```
+
+On other systems, create a swap file with `fallocate`, `mkswap` and `swapon`, as your distribution
+documents.
 
 **I want to see what is going on.**
 `docker compose logs -f backend` follows the backend. The hourly job logs a line whenever it

@@ -29,6 +29,7 @@ services:
       # container defaults to UTC and every block would land at the wrong hour.
       TZ: ${TZ:-Europe/Berlin}
       REFLOWTASK_INITIAL_ADMIN_PASSWORD: ${REFLOWTASK_INITIAL_ADMIN_PASSWORD:-}
+      REFLOWTASK_REFLOW_CRON: ${REFLOWTASK_REFLOW_CRON:-0 0 * * * *}
 
   frontend:
     build: ./frontend
@@ -36,7 +37,8 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080:80"
+      # Set REFLOWTASK_PORT in .env rather than editing this file, so git pull keeps working.
+      - "${REFLOWTASK_PORT:-8080}:80"
 
 volumes:
   postgres-data:
