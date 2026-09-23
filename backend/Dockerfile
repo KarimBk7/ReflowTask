@@ -6,7 +6,8 @@ FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
-RUN ./mvnw -B dependency:go-offline
+# chmod: the wrapper loses its executable bit when the repo comes from a Windows checkout or a zip.
+RUN chmod +x mvnw && ./mvnw -B dependency:go-offline
 COPY src/ src/
 RUN ./mvnw -B clean package
 
