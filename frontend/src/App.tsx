@@ -468,7 +468,7 @@ function Board({ user }: { user: AuthUser }) {
 
       {open?.kind === 'help' && (
         <Popover anchor={open.anchor} placement="below" labelledBy={POPOVER_HEADING} onClose={close}>
-          <HowItWorks config={config.data} onClose={close} headingId={POPOVER_HEADING} />
+          <HowItWorks config={config.data} user={user} onClose={close} headingId={POPOVER_HEADING} />
         </Popover>
       )}
 

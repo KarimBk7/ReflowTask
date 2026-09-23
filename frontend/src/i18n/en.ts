@@ -108,6 +108,9 @@ export const en = {
   'help.missed': 'When a block\'s time passes and the task is not marked done, it counts as missed and is planned again.',
   'help.buffer': 'Time kept free after each task and around fixed ones:',
   'help.activity': 'Every replan is listed under Activity, and a moved block shows where it came from.',
+  'help.month': 'Switch to Month for a read-only overview of the whole month. Click a day to open that week.',
+  'help.private': 'You see only your own tasks, hours and activity. Log out with the arrow icon in the top bar.',
+  'help.household': 'As admin, use Household accounts to add members or remove them. A new member sets their own password at first login.',
 
   'grid.keysHint': 'Alt and arrow keys move this block. Alt, Shift and up or down change its length.',
   'grid.break': 'Break',

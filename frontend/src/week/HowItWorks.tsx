@@ -1,10 +1,11 @@
-import type { BoardConfig } from '../api/types'
+import type { AuthUser, BoardConfig } from '../api/types'
 import { CloseIcon } from '../design/Icon'
 import { t } from '../i18n/en'
 import { describeWorkingHours } from '../lib/board'
 
 interface HowItWorksProps {
   config: BoardConfig | undefined
+  user: AuthUser
   onClose: () => void
   headingId: string
 }
@@ -13,7 +14,7 @@ interface HowItWorksProps {
  * The planning rules in plain words, with the owner's own settings filled in. What "Let
  * ReflowTask place it" will do should not have to be discovered by trying it.
  */
-export function HowItWorks({ config, onClose, headingId }: HowItWorksProps) {
+export function HowItWorks({ config, user, onClose, headingId }: HowItWorksProps) {
   const hours = describeWorkingHours(config)
 
   return (
@@ -43,6 +44,9 @@ export function HowItWorks({ config, onClose, headingId }: HowItWorksProps) {
           </li>
         )}
         <li>{t('help.activity')}</li>
+        <li>{t('help.month')}</li>
+        <li>{t('help.private')}</li>
+        {user.role === 'ADMIN' && <li>{t('help.household')}</li>}
       </ul>
     </div>
   )
