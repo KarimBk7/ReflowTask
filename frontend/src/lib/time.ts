@@ -21,6 +21,18 @@ export function startOfWeek(date: Date): Date {
   return start
 }
 
+export function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+/** Every day of a month grid: whole Monday-to-Sunday weeks, so leading and trailing days of the neighbouring months fill the edges. */
+export function monthGridDays(monthStart: Date): Date[] {
+  const first = startOfWeek(monthStart)
+  const last = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0)
+  const weeks = Math.ceil((isoDay(monthStart) - 1 + last.getDate()) / 7)
+  return Array.from({ length: weeks * 7 }, (_, index) => addDays(first, index))
+}
+
 export function addDays(date: Date, days: number): Date {
   const next = new Date(date)
   next.setDate(next.getDate() + days)

@@ -17,6 +17,7 @@ import {
   useCreateTask,
   useDeleteTask,
   useEvents,
+  useMonthSchedule,
   useMoveBlock,
   useReplan,
   useSchedule,
@@ -27,7 +28,8 @@ import {
   useUpdateTask,
 } from './lib/board'
 import { useAuthStatus, useLogout, useMe } from './lib/auth'
-import { addDays, formatDayTime, startOfWeek, toLocalDateTime } from './lib/time'
+import { addDays, formatDayTime, startOfMonth, startOfWeek, toLocalDateTime } from './lib/time'
+import { MonthGrid } from './month/MonthGrid'
 import { BlockDetails } from './week/BlockDetails'
 import { HoursPanel } from './week/HoursPanel'
 import { HowItWorks } from './week/HowItWorks'
@@ -66,6 +68,7 @@ export default function Root() {
 function Board({ user }: { user: AuthUser }) {
   const logout = useLogout()
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
+  const [view, setView] = useState<'week' | 'month'>('week')
   const [open, setOpen] = useState<Open | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   // null follows the server: the hours panel opens by itself until the owner has saved hours once.
@@ -76,6 +79,9 @@ function Board({ user }: { user: AuthUser }) {
 
   const config = useConfig()
   const schedule = useSchedule(weekStart)
+  // The month is anchored on the week being looked at, so switching views never jumps elsewhere.
+  const monthStart = startOfMonth(addDays(weekStart, 3))
+  const monthSchedule = useMonthSchedule(monthStart)
   const tasks = useTasks()
   const events = useEvents()
 
@@ -181,7 +187,9 @@ function Board({ user }: { user: AuthUser }) {
 
   const lastDay = addDays(weekStart, 6)
   const range =
-    weekStart.getMonth() === lastDay.getMonth()
+    view === 'month'
+      ? monthStart.toLocaleDateString('en', { month: 'long', year: 'numeric' })
+      : weekStart.getMonth() === lastDay.getMonth()
       ? `${weekStart.getDate()} – ${lastDay.getDate()} ${lastDay.toLocaleDateString('en', { month: 'long', year: 'numeric' })}`
       : `${weekStart.toLocaleDateString('en', { day: 'numeric', month: 'short' })} – ${lastDay.toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' })}`
 
@@ -252,6 +260,17 @@ function Board({ user }: { user: AuthUser }) {
     }
   }
 
+  /** Month view moves whole months; week view moves a week. */
+  function step(direction: -1 | 1) {
+    if (view === 'week') {
+      setWeekStart(addDays(weekStart, direction * 7))
+      return
+    }
+    // The view derives its month from the week's Thursday, so land on a week whose Thursday is in the target month.
+    const first = new Date(monthStart.getFullYear(), monthStart.getMonth() + direction, 1)
+    setWeekStart(startOfWeek(addDays(first, 3)))
+  }
+
   const unreachable = config.isError || schedule.isError || tasks.isError
 
   return (
@@ -266,17 +285,25 @@ function Board({ user }: { user: AuthUser }) {
           <button type="button" className="button button-secondary button-small" onClick={() => setWeekStart(startOfWeek(new Date()))}>
             {t('week.today')}
           </button>
-          <button type="button" className="icon-button" onClick={() => setWeekStart(addDays(weekStart, -7))}>
+          <button type="button" className="icon-button" onClick={() => step(-1)}>
             <ChevronIcon direction="left" />
-            <span className="sr-only">{t('week.previous')}</span>
+            <span className="sr-only">{view === 'month' ? t('month.previous') : t('week.previous')}</span>
           </button>
-          <button type="button" className="icon-button" onClick={() => setWeekStart(addDays(weekStart, 7))}>
+          <button type="button" className="icon-button" onClick={() => step(1)}>
             <ChevronIcon direction="right" />
-            <span className="sr-only">{t('week.next')}</span>
+            <span className="sr-only">{view === 'month' ? t('month.next') : t('week.next')}</span>
           </button>
           <p className="week-range" aria-live="polite">
             {range}
           </p>
+          <div className="segmented" role="radiogroup" aria-label={t('view.switch')}>
+            {(['week', 'month'] as const).map((value) => (
+              <label key={value} className="segment" data-selected={view === value || undefined}>
+                <input type="radio" name="view" checked={view === value} onChange={() => setView(value)} />
+                {t(`view.${value}`)}
+              </label>
+            ))}
+          </div>
         </nav>
 
         <div className="topbar-actions">
@@ -366,6 +393,16 @@ function Board({ user }: { user: AuthUser }) {
         </aside>
 
         <main className="calendar">
+          {view === 'month' ? (
+            <MonthGrid
+              monthStart={monthStart}
+              blocks={monthSchedule.data ?? []}
+              onPickDay={(day) => {
+                setWeekStart(startOfWeek(day))
+                setView('week')
+              }}
+            />
+          ) : (
           <WeekGrid
             weekStart={weekStart}
             config={config.data}
@@ -385,6 +422,7 @@ function Board({ user }: { user: AuthUser }) {
             }}
             onMove={move}
           />
+          )}
         </main>
       </div>
 

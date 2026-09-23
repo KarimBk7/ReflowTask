@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '../api/client'
 import type { Block, BoardConfig, ConfigWindow, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
-import { DAY_NAMES, addDays, isoDay, minutesOfDay, parseClock, sameDate, toLocalDateTime } from './time'
+import { DAY_NAMES, addDays, isoDay, minutesOfDay, monthGridDays, parseClock, sameDate, toLocalDateTime } from './time'
 
 export type { BoardConfig, ConfigWindow }
 
@@ -75,6 +75,24 @@ export function useSchedule(weekStart: Date) {
     queryKey: ['schedule', toLocalDateTime(weekStart)],
     queryFn: () => api.schedule(toLocalDateTime(weekStart), toLocalDateTime(addDays(weekStart, 7))),
   })
+}
+
+/** The whole month grid in one request, padded to full weeks. */
+export function useMonthSchedule(monthStart: Date) {
+  const days = monthGridDays(monthStart)
+  const from = toLocalDateTime(days[0])
+  const to = toLocalDateTime(addDays(days[days.length - 1], 1))
+  return useQuery({ queryKey: ['schedule', 'month', from], queryFn: () => api.schedule(from, to) })
+}
+
+/** Blocks grouped by the local day they start on, each day's list in time order. */
+export function blocksByDay(blocks: Block[]): Map<string, Block[]> {
+  const byDay = new Map<string, Block[]>()
+  for (const block of [...blocks].sort((a, b) => a.startAt.localeCompare(b.startAt))) {
+    const day = block.startAt.slice(0, 10)
+    byDay.set(day, [...(byDay.get(day) ?? []), block])
+  }
+  return byDay
 }
 
 export function useTasks() {

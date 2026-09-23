@@ -13,6 +13,14 @@ export const en = {
   'week.next': 'Next week',
   'week.navigation': 'Week',
 
+  'view.week': 'Week',
+  'view.month': 'Month',
+  'view.switch': 'View',
+  'month.previous': 'Previous month',
+  'month.next': 'Next month',
+  'month.tasks': 'tasks',
+  'month.more': 'more',
+
   'action.replan': 'Replan',
   'action.pin': 'Pin',
   'action.unpin': 'Unpin',
