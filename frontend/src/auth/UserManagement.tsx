@@ -1,10 +1,10 @@
 import { useState } from 'react'
 
-import { ApiError } from '../api/client'
-import type { AuthUser } from '../api/types'
+import type { AuthUser, Role } from '../api/types'
 import { CloseIcon } from '../design/Icon'
 import { t } from '../i18n/en'
-import { useCreateUser, useDeleteUser, useUsers } from '../lib/auth'
+import { useCreateUser, useDeleteUser, useResetPassword, useUsers } from '../lib/auth'
+import { describe } from './describe'
 
 interface UserManagementProps {
   currentUser: AuthUser
@@ -12,25 +12,45 @@ interface UserManagementProps {
   headingId: string
 }
 
-/** Admin-only: see every household account, add a member, remove one. */
+/** Admin-only: see every household account, add one, reset a forgotten password, remove one. */
 export function UserManagement({ currentUser, onClose, headingId }: UserManagementProps) {
   const users = useUsers()
   const createUser = useCreateUser()
   const deleteUser = useDeleteUser()
+  const resetPassword = useResetPassword()
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState<Role>('MEMBER')
   const [failure, setFailure] = useState<string | null>(null)
+  const [resetting, setResetting] = useState<AuthUser | null>(null)
+  const [temporary, setTemporary] = useState('')
+  const [removing, setRemoving] = useState<number | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   async function addMember(event: React.FormEvent) {
     event.preventDefault()
     setFailure(null)
     try {
-      await createUser.mutateAsync({ username, password })
+      await createUser.mutateAsync({ username, password, role })
       setUsername('')
       setPassword('')
     } catch (error) {
-      setFailure(error instanceof ApiError ? error.message : t('error.offline'))
+      setFailure(describe(error))
+    }
+  }
+
+  async function submitReset(event: React.FormEvent) {
+    event.preventDefault()
+    if (!resetting) return
+    setFailure(null)
+    try {
+      await resetPassword.mutateAsync({ id: resetting.id, password: temporary })
+      setNotice(`${t('auth.resetDone')} (${resetting.username})`)
+      setResetting(null)
+      setTemporary('')
+    } catch (error) {
+      setFailure(describe(error))
     }
   }
 
@@ -58,16 +78,70 @@ export function UserManagement({ currentUser, onClose, headingId }: UserManageme
                 <button
                   type="button"
                   className="link-button"
-                  onClick={() => deleteUser.mutate(user.id)}
-                  disabled={deleteUser.isPending}
+                  onClick={() => {
+                    setResetting(user)
+                    setTemporary('')
+                    setNotice(null)
+                    setFailure(null)
+                  }}
                 >
-                  {t('action.remove')}
-                </button>
+                  {t('auth.resetPassword')}
+                </button>{' '}
+                {removing === user.id ? (
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => deleteUser.mutate(user.id, { onSettled: () => setRemoving(null) })}
+                    disabled={deleteUser.isPending}
+                  >
+                    {t('auth.confirmRemove')}
+                  </button>
+                ) : (
+                  <button type="button" className="link-button" onClick={() => setRemoving(user.id)}>
+                    {t('action.remove')}
+                  </button>
+                )}
               </>
             )}
           </li>
         ))}
       </ul>
+      {removing !== null && <p className="editor-note">{t('auth.removeHint')}</p>}
+      {notice && (
+        <p className="editor-note" role="status">
+          {notice}
+        </p>
+      )}
+
+      {resetting && (
+        <form className="editor-row" onSubmit={submitReset}>
+          <span className="editor-label">
+            {t('auth.resetFor')} {resetting.username}
+          </span>
+          <input
+            className="editor-description"
+            type="text"
+            value={temporary}
+            onChange={(event) => setTemporary(event.target.value)}
+            placeholder={t('auth.memberPassword')}
+            aria-label={t('auth.memberPassword')}
+            autoComplete="off"
+            maxLength={100}
+            data-autofocus
+            required
+          />
+          <p className="editor-note">{t('auth.resetHint')}</p>
+          <div className="editor-actions">
+            <button type="button" className="button button-ghost" onClick={() => setResetting(null)}>
+              {t('action.cancel')}
+            </button>
+            <span className="editor-actions-spacer" />
+            <button type="submit" className="button button-primary" disabled={resetPassword.isPending}>
+              {t('auth.resetPassword')}
+            </button>
+          </div>
+        </form>
+      )}
 
       <form className="editor-row" onSubmit={addMember}>
         <span className="editor-label">{t('auth.addMember')}</span>
@@ -82,14 +156,24 @@ export function UserManagement({ currentUser, onClose, headingId }: UserManageme
         />
         <input
           className="editor-description"
-          type="password"
+          type="text"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder={t('auth.memberPassword')}
           aria-label={t('auth.memberPassword')}
+          autoComplete="off"
           maxLength={100}
           required
         />
+        <select
+          className="editor-description"
+          value={role}
+          onChange={(event) => setRole(event.target.value as Role)}
+          aria-label={t('auth.role')}
+        >
+          <option value="MEMBER">{t('auth.roleMember')}</option>
+          <option value="ADMIN">{t('auth.roleAdmin')}</option>
+        </select>
         {failure && (
           <p className="form-failure" role="alert">
             {failure}

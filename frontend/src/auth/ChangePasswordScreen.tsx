@@ -12,7 +12,7 @@ export function ChangePasswordScreen() {
       usernameField={false}
       passwordLabel={t('auth.newPassword')}
       submitLabel={t('auth.setPassword')}
-      onSubmit={(_username, password) => changePassword.mutateAsync(password)}
+      onSubmit={(_username, password) => changePassword.mutateAsync({ password })}
     />
   )
 }

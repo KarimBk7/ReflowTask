@@ -28,6 +28,7 @@ services:
       # The scheduler works in wall-clock time ("09:00 means 09:00"); without this a
       # container defaults to UTC and every block would land at the wrong hour.
       TZ: ${TZ:-Europe/Berlin}
+      REFLOWTASK_INITIAL_ADMIN_PASSWORD: ${REFLOWTASK_INITIAL_ADMIN_PASSWORD:-}
 
   frontend:
     build: ./frontend

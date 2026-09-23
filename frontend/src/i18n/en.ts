@@ -171,8 +171,6 @@ export const en = {
 
   'error.offline': 'Cannot reach the server.',
 
-  'auth.bootstrapTitle': 'Set up ReflowTask',
-  'auth.bootstrapIntro': 'Create the first account. It will be the admin for this household.',
   'auth.loginTitle': 'Log in',
   'auth.changePasswordTitle': 'Choose a password',
   'auth.changePasswordIntro': 'This account was created with a temporary password. Choose your own before continuing.',
@@ -180,7 +178,6 @@ export const en = {
   'auth.password': 'Password',
   'auth.newPassword': 'New password',
   'auth.logIn': 'Log in',
-  'auth.createAccount': 'Create account',
   'auth.setPassword': 'Set password',
   'auth.logout': 'Log out',
   'auth.usersTitle': 'Household accounts',
@@ -191,6 +188,21 @@ export const en = {
   'auth.you': 'you',
   'auth.admin': 'Admin',
   'auth.member': 'Member',
+  'auth.forgot': 'Forgot your password? Ask the admin of this household to reset it. If you are the admin, the device owner can do it from the command line (see the setup guide).',
+  'auth.account': 'Account',
+  'auth.signedInAs': 'Signed in as',
+  'auth.changePassword': 'Change password',
+  'auth.currentPassword': 'Current password',
+  'auth.passwordChanged': 'Password changed.',
+  'auth.roleMember': 'Member (own tasks only)',
+  'auth.roleAdmin': 'Admin (can manage accounts)',
+  'auth.role': 'Role',
+  'auth.resetPassword': 'Reset password',
+  'auth.resetFor': 'New temporary password for',
+  'auth.resetHint': 'They must choose their own at next login, and are logged out everywhere.',
+  'auth.resetDone': 'Temporary password set.',
+  'auth.confirmRemove': 'Remove account and all its tasks',
+  'auth.removeHint': 'Removing an account deletes all of its tasks, hours and history.',
 } as const
 
 export type StringKey = keyof typeof en

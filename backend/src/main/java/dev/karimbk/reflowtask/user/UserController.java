@@ -3,9 +3,10 @@ package dev.karimbk.reflowtask.user;
 import java.net.URI;
 import java.util.List;
 
-import dev.karimbk.reflowtask.user.UserPayloads.Credentials;
+import dev.karimbk.reflowtask.user.UserPayloads.LoginRequest;
+import dev.karimbk.reflowtask.user.UserPayloads.NewAccount;
 import dev.karimbk.reflowtask.user.UserPayloads.NewPassword;
-import dev.karimbk.reflowtask.user.UserPayloads.StatusResponse;
+import dev.karimbk.reflowtask.user.UserPayloads.ResetPassword;
 import dev.karimbk.reflowtask.user.UserPayloads.UserResponse;
 import dev.karimbk.reflowtask.user.UserService.LoginResult;
 import jakarta.servlet.http.Cookie;
@@ -32,20 +33,8 @@ class UserController {
 		this.service = service;
 	}
 
-	@GetMapping("/auth/status")
-	StatusResponse status() {
-		return new StatusResponse(this.service.needsBootstrap());
-	}
-
-	@PostMapping("/auth/bootstrap")
-	UserResponse bootstrap(@Valid @RequestBody Credentials credentials, HttpServletResponse response) {
-		LoginResult result = this.service.bootstrap(credentials.username(), credentials.password());
-		response.addCookie(result.cookie());
-		return UserResponse.of(result.user());
-	}
-
 	@PostMapping("/auth/login")
-	UserResponse login(@Valid @RequestBody Credentials credentials, HttpServletResponse response) {
+	UserResponse login(@Valid @RequestBody LoginRequest credentials, HttpServletResponse response) {
 		LoginResult result = this.service.login(credentials.username(), credentials.password());
 		response.addCookie(result.cookie());
 		return UserResponse.of(result.user());
@@ -64,7 +53,7 @@ class UserController {
 
 	@PostMapping("/auth/change-password")
 	UserResponse changePassword(@CurrentUser User user, @Valid @RequestBody NewPassword request) {
-		this.service.changePassword(user, request.password());
+		this.service.changePassword(user, request.currentPassword(), request.password());
 		return UserResponse.of(user);
 	}
 
@@ -75,11 +64,19 @@ class UserController {
 	}
 
 	@PostMapping("/users")
-	ResponseEntity<UserResponse> create(@CurrentUser User user, @Valid @RequestBody Credentials credentials) {
+	ResponseEntity<UserResponse> create(@CurrentUser User user, @Valid @RequestBody NewAccount credentials) {
 		this.service.requireAdmin(user);
 		UserResponse created = UserResponse
-			.of(this.service.createMember(credentials.username(), credentials.password()));
+			.of(this.service.createMember(credentials.username(), credentials.password(), credentials.role()));
 		return ResponseEntity.created(URI.create("/api/v1/users/" + created.id())).body(created);
+	}
+
+	@PostMapping("/users/{id}/reset-password")
+	ResponseEntity<Void> resetPassword(@CurrentUser User user, @PathVariable long id,
+			@Valid @RequestBody ResetPassword request) {
+		this.service.requireAdmin(user);
+		this.service.resetPassword(id, request.password());
+		return ResponseEntity.noContent().build();
 	}
 
 	@DeleteMapping("/users/{id}")

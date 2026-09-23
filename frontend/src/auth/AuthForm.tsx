@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-import { ApiError } from '../api/client'
 import { t } from '../i18n/en'
+import { describe } from './describe'
 
 interface AuthFormProps {
   title: string
@@ -11,13 +11,15 @@ interface AuthFormProps {
   passwordLabel: string
   submitLabel: string
   onSubmit: (username: string, password: string) => Promise<unknown>
+  /** Small print under the form, like where to turn after forgetting a password. */
+  footnote?: string
 }
 
 /**
  * The shared shell for bootstrap, login and change-password: a centered card, since none of
  * these has a board behind it yet to anchor a popover to.
  */
-export function AuthForm({ title, intro, usernameField = true, passwordLabel, submitLabel, onSubmit }: AuthFormProps) {
+export function AuthForm({ title, intro, usernameField = true, passwordLabel, submitLabel, onSubmit, footnote }: AuthFormProps) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [failure, setFailure] = useState<string | null>(null)
@@ -30,7 +32,7 @@ export function AuthForm({ title, intro, usernameField = true, passwordLabel, su
     try {
       await onSubmit(username, password)
     } catch (error) {
-      setFailure(error instanceof ApiError ? error.message : t('error.offline'))
+      setFailure(describe(error))
     } finally {
       setBusy(false)
     }
@@ -89,6 +91,7 @@ export function AuthForm({ title, intro, usernameField = true, passwordLabel, su
             {submitLabel}
           </button>
         </div>
+        {footnote && <p className="editor-note">{footnote}</p>}
       </form>
     </div>
   )

@@ -1,11 +1,11 @@
 import type {
-  AuthStatus,
   AuthUser,
   Block,
   BoardConfig,
   LocalDateTime,
   ProblemDetail,
   RescheduleEvent,
+  Role,
   Task,
   TaskInput,
   TaskStatus,
@@ -104,11 +104,6 @@ export const api = {
   updateConfig: (config: BoardConfig) =>
     request<BoardConfig>('/config', { method: 'PUT', body: JSON.stringify(config) }),
 
-  authStatus: () => request<AuthStatus>('/auth/status'),
-
-  bootstrap: (username: string, password: string) =>
-    request<AuthUser>('/auth/bootstrap', { method: 'POST', body: JSON.stringify({ username, password }) }),
-
   login: (username: string, password: string) =>
     request<AuthUser>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
 
@@ -116,13 +111,20 @@ export const api = {
 
   me: () => request<AuthUser>('/auth/me'),
 
-  changePassword: (password: string) =>
-    request<AuthUser>('/auth/change-password', { method: 'POST', body: JSON.stringify({ password }) }),
+  /** currentPassword is required for a voluntary change, and left out for the forced first one. */
+  changePassword: (password: string, currentPassword?: string) =>
+    request<AuthUser>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ password, currentPassword: currentPassword || null }),
+    }),
 
   listUsers: () => request<AuthUser[]>('/users'),
 
-  createUser: (username: string, password: string) =>
-    request<AuthUser>('/users', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  createUser: (username: string, password: string, role: Role) =>
+    request<AuthUser>('/users', { method: 'POST', body: JSON.stringify({ username, password, role }) }),
+
+  resetPassword: (id: number, password: string) =>
+    request<void>(`/users/${id}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) }),
 
   deleteUser: (id: number) => request<void>(`/users/${id}`, { method: 'DELETE' }),
 }

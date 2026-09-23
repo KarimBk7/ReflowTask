@@ -1,15 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { ApiError, api } from '../api/client'
+import type { Role } from '../api/types'
 
 /**
  * Cookies ride automatically on `fetch`'s default same-origin credentials, so nothing here
  * touches the session token directly - it is only ever read and written by the server.
  */
-export function useAuthStatus() {
-  return useQuery({ queryKey: ['auth', 'status'], queryFn: api.authStatus })
-}
-
 /**
  * 401 while logged out is the expected steady state, so it resolves to null rather than an error:
  * a failed refetch would keep the previous user's data, and the app would stay on the board.
@@ -34,12 +31,6 @@ function useAuthMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TResult>) 
   })
 }
 
-export function useBootstrap() {
-  return useAuthMutation(({ username, password }: { username: string; password: string }) =>
-    api.bootstrap(username, password),
-  )
-}
-
 export function useLogin() {
   return useAuthMutation(({ username, password }: { username: string; password: string }) =>
     api.login(username, password),
@@ -59,7 +50,13 @@ export function useLogout() {
 }
 
 export function useChangePassword() {
-  return useAuthMutation((password: string) => api.changePassword(password))
+  return useAuthMutation(({ password, currentPassword }: { password: string; currentPassword?: string }) =>
+    api.changePassword(password, currentPassword),
+  )
+}
+
+export function useResetPassword() {
+  return useAuthMutation(({ id, password }: { id: number; password: string }) => api.resetPassword(id, password))
 }
 
 export function useUsers() {
@@ -67,8 +64,8 @@ export function useUsers() {
 }
 
 export function useCreateUser() {
-  return useAuthMutation(({ username, password }: { username: string; password: string }) =>
-    api.createUser(username, password),
+  return useAuthMutation(({ username, password, role }: { username: string; password: string; role: Role }) =>
+    api.createUser(username, password, role),
   )
 }
 

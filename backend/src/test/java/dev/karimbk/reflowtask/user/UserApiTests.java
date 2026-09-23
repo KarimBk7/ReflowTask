@@ -46,20 +46,6 @@ class UserApiTests {
 	}
 
 	@Test
-	void bootstrapIsRefusedOnceTheSeededAdminAlreadyExists() throws Exception {
-		this.mvc
-			.perform(post("/api/v1/auth/bootstrap").contentType(MediaType.APPLICATION_JSON)
-					.content("""
-							{"username":"someone","password":"whatever1"}"""))
-			.andExpect(status().isConflict());
-	}
-
-	@Test
-	void statusReportsNoBootstrapNeededOnceAUserExists() throws Exception {
-		this.mvc.perform(get("/api/v1/auth/status")).andExpect(jsonPath("$.needsBootstrap").value(false));
-	}
-
-	@Test
 	void loginWithTheWrongPasswordIsUnauthorized() throws Exception {
 		this.mvc
 			.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
@@ -226,7 +212,7 @@ class UserApiTests {
 		this.users.delete(otherActor); // Exists just long enough to differ from onlyAdmin's id.
 
 		assertThatThrownBy(
-				() -> new UserService(this.users, null, Clock.systemDefaultZone()).deleteMember(otherActor,
+				() -> new UserService(this.users, null, null, Clock.systemDefaultZone()).deleteMember(otherActor,
 						onlyAdmin.getId()))
 			.isInstanceOf(ConflictException.class);
 	}

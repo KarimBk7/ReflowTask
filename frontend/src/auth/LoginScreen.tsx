@@ -10,6 +10,7 @@ export function LoginScreen() {
       title={t('auth.loginTitle')}
       passwordLabel={t('auth.password')}
       submitLabel={t('auth.logIn')}
+      footnote={t('auth.forgot')}
       onSubmit={(username, password) => login.mutateAsync({ username, password })}
     />
   )

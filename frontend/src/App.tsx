@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ApiError, api } from './api/client'
 import type { AuthUser, Block, Task, TaskInput } from './api/types'
-import { BootstrapScreen } from './auth/BootstrapScreen'
 import { ChangePasswordScreen } from './auth/ChangePasswordScreen'
 import { LoginScreen } from './auth/LoginScreen'
+import { AccountPanel } from './auth/AccountPanel'
 import { UserManagement } from './auth/UserManagement'
 import { ChevronIcon, ClockIcon, HelpIcon, LogoutIcon, PlusIcon, ReflowIcon, UsersIcon } from './design/Icon'
 import { t } from './i18n/en'
@@ -27,7 +27,7 @@ import {
   useUpdateConfig,
   useUpdateTask,
 } from './lib/board'
-import { useAuthStatus, useLogout, useMe } from './lib/auth'
+import { useLogout, useMe } from './lib/auth'
 import { addDays, formatDayTime, startOfMonth, startOfWeek, toLocalDateTime } from './lib/time'
 import { MonthGrid } from './month/MonthGrid'
 import { BlockDetails } from './week/BlockDetails'
@@ -46,20 +46,19 @@ type Open =
   | { kind: 'edit'; anchor: DOMRect; taskId: number }
   | { kind: 'help'; anchor: DOMRect }
   | { kind: 'users'; anchor: DOMRect }
+  | { kind: 'account'; anchor: DOMRect }
 
 const POPOVER_HEADING = 'popover-heading'
 const NOTICE_MS = 6000
 
 /**
- * The gate in front of the board: no account yet, no session, a forced password change, or the
+ * The gate in front of the board: no session, a forced password change, or the
  * board itself. Each household member's own copy of the app starts here on every load.
  */
 export default function Root() {
-  const status = useAuthStatus()
   const me = useMe()
 
-  if (status.isLoading || (status.data && !status.data.needsBootstrap && me.isLoading)) return null
-  if (status.data?.needsBootstrap) return <BootstrapScreen />
+  if (me.isLoading) return null
   if (!me.data) return <LoginScreen />
   if (me.data.mustChangePassword) return <ChangePasswordScreen />
   return <Board user={me.data} />
@@ -344,6 +343,14 @@ function Board({ user }: { user: AuthUser }) {
               <span className="sr-only">{t('auth.usersTitle')}</span>
             </button>
           )}
+          <button
+            type="button"
+            className="button button-ghost"
+            onClick={(event) => setOpen({ kind: 'account', anchor: event.currentTarget.getBoundingClientRect() })}
+          >
+            <span className="label-wide">{user.username}</span>
+            <span className="sr-only">{t('auth.account')}</span>
+          </button>
           <button type="button" className="icon-button" onClick={() => logout.mutate()}>
             <LogoutIcon />
             <span className="sr-only">{t('auth.logout')}</span>
@@ -469,6 +476,12 @@ function Board({ user }: { user: AuthUser }) {
       {open?.kind === 'help' && (
         <Popover anchor={open.anchor} placement="below" labelledBy={POPOVER_HEADING} onClose={close}>
           <HowItWorks config={config.data} user={user} onClose={close} headingId={POPOVER_HEADING} />
+        </Popover>
+      )}
+
+      {open?.kind === 'account' && (
+        <Popover anchor={open.anchor} placement="below" labelledBy={POPOVER_HEADING} onClose={close}>
+          <AccountPanel user={user} onClose={close} headingId={POPOVER_HEADING} />
         </Popover>
       )}
 

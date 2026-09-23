@@ -28,6 +28,11 @@ class ApiExceptionHandler {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
 	}
 
+	@ExceptionHandler(TooManyAttemptsException.class)
+	ProblemDetail handleTooMany(TooManyAttemptsException ex) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
+	}
+
 	@ExceptionHandler(UnauthorizedException.class)
 	ProblemDetail handleUnauthorized(UnauthorizedException ex) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
