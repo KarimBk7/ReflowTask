@@ -41,7 +41,7 @@ export function MonthGrid({ monthStart, blocks, onPickDay }: MonthGridProps) {
             >
               <span className="month-date">{day.getDate()}</span>
               {dayBlocks.slice(0, MAX_VISIBLE).map((block) => (
-                <span key={block.id} className="month-item" data-priority={block.priority} data-done={block.status === 'DONE' || undefined}>
+                <span key={block.id} className="month-item" data-priority={block.priority} data-done={block.status === 'DONE' || block.state === 'DONE' || undefined} data-missed={block.state === 'MISSED' || undefined}>
                   <span className="month-time">{formatTime(new Date(block.startAt))}</span> {block.taskTitle}
                 </span>
               ))}

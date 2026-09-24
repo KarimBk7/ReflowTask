@@ -40,8 +40,10 @@ import org.springframework.transaction.annotation.Transactional;
  * Future blocks of a completed task are removed, so finishing early frees the time.</li>
  * <li>A block the user is currently inside is left alone. Moving the thing someone is
  * working on right now would be hostile, pinned or not.</li>
- * <li>A block whose time has passed while its task is unfinished is a miss: it is removed
- * and the task is replanned.</li>
+ * <li>A block whose time has passed while its task is unfinished is a miss: it is kept as a
+ * MISSED record, and the task is replanned. The record lets the person say later that the part
+ * was done after all.</li>
+ * <li>A part marked done counts against the estimate, so only the rest is planned.</li>
  * <li>Future pinned blocks are obstacles. That is what pinning means.</li>
  * <li>Every other future block is rebuilt from scratch. That is what replanning means.</li>
  * </ul>
@@ -115,6 +117,9 @@ public class SchedulerService {
 		if (block.hasEndedBy(now)) {
 			throw new ConflictException("Time that has already passed cannot be moved.");
 		}
+		if (!block.isPlanned()) {
+			throw new ConflictException("A part that is done or missed cannot be moved.");
+		}
 		assertCanFix(userId, start, end, blockId);
 
 		long change = Duration.between(start, end).toMinutes()
@@ -147,6 +152,62 @@ public class SchedulerService {
 		Task demo = this.tasks
 			.save(new Task(userId, "See how this works: I was missed", null, 30, null, false, Priority.MEDIUM, now));
 		this.blocks.save(new TimeBlock(demo, now.minusMinutes(45), now.minusMinutes(15), false));
+	}
+
+	/**
+	 * Marks one part of a task done. Its minutes then count against the estimate, so the replan
+	 * that follows places only what is left; when nothing is left, the task itself is done.
+	 *
+	 * Only a part that has started can be done. A part still ahead has no time of its own to keep
+	 * as a record, and inventing one would put work on the calendar when it never happened; work
+	 * done ahead of plan is the task marked done, or its estimate shortened.
+	 */
+	@Transactional
+	public Optional<RescheduleEvent> completeBlock(long userId, long blockId) {
+		TimeBlock block = ownedBlock(userId, blockId);
+		if (block.getState() == BlockState.DONE) {
+			return Optional.empty();
+		}
+		if (block.getStartAt().isAfter(LocalDateTime.now(this.clock))) {
+			throw new ConflictException(
+					"A part that has not started yet cannot be marked done. Mark the task done, or shorten it.");
+		}
+		block.markDone();
+		this.blocks.flush();
+		Task task = block.getTask();
+		if (task.getStatus() != TaskStatus.DONE && doneMinutes(task) >= task.getEstimatedMinutes()) {
+			task.setStatus(TaskStatus.DONE);
+		}
+		return replan(userId, RescheduleTrigger.TASK_CHANGED);
+	}
+
+	/** Undoes {@link #completeBlock}: the part is open again, and so is its task if it no longer adds up. */
+	@Transactional
+	public Optional<RescheduleEvent> reopenBlock(long userId, long blockId) {
+		TimeBlock block = ownedBlock(userId, blockId);
+		if (block.getState() != BlockState.DONE) {
+			return Optional.empty();
+		}
+		block.reopen();
+		this.blocks.flush();
+		Task task = block.getTask();
+		if (task.getStatus() == TaskStatus.DONE && doneMinutes(task) < task.getEstimatedMinutes()) {
+			task.setStatus(TaskStatus.OPEN);
+		}
+		return replan(userId, RescheduleTrigger.TASK_CHANGED);
+	}
+
+	private TimeBlock ownedBlock(long userId, long blockId) {
+		return this.blocks.findByIdAndTaskUserId(blockId, userId)
+			.orElseThrow(() -> new NotFoundException("Time block", blockId));
+	}
+
+	private long doneMinutes(Task task) {
+		return this.blocks.findByTaskId(task.getId())
+			.stream()
+			.filter((candidate) -> candidate.getState() == BlockState.DONE)
+			.mapToLong((candidate) -> candidate.toSlot().minutes())
+			.sum();
 	}
 
 	/**
@@ -185,7 +246,9 @@ public class SchedulerService {
 		Map<Long, Task> byId = this.tasks.findByUserIdAndStatusNot(userId, TaskStatus.DONE)
 			.stream()
 			.collect(Collectors.toMap(Task::getId, Function.identity()));
-		Map<Long, Long> covered = minutesPerTask(disposition.obstacles());
+		List<TimeBlock> counted = new ArrayList<>(disposition.obstacles());
+		counted.addAll(disposition.doneHistory());
+		Map<Long, Long> covered = minutesPerTask(counted);
 
 		List<SchedulableTask> toPlan = byId.values()
 			.stream()
@@ -206,7 +269,10 @@ public class SchedulerService {
 			this.blocks.save(new TimeBlock(task, block.start(), block.end(), false));
 		}
 
-		Map<Long, List<LocalDateTime>> after = startsAfter(disposition.obstacles(), planned);
+		// Only planned blocks describe where work sits. A part in flight that is already done is
+		// history, and counting it on one side of the comparison only would read as a move.
+		Map<Long, List<LocalDateTime>> after = startsAfter(
+				disposition.obstacles().stream().filter(TimeBlock::isPlanned).toList(), planned);
 		return record(userId, trigger, now, before, after, disposition, byId);
 	}
 
@@ -214,7 +280,9 @@ public class SchedulerService {
 
 	/**
 	 * @param obstacles blocks that keep their time and consume capacity
-	 * @param toRemove blocks being deleted, whether missed, superseded or freed
+	 * @param doneHistory parts marked done whose time is over: they count against the estimate
+	 * but no longer occupy any capacity
+	 * @param toRemove blocks being deleted, superseded or freed
 	 * @param stillPlanned blocks that counted as "the plan" before this run, so a move can
 	 * be detected
 	 * @param missedStarts earliest missed start per task
@@ -223,12 +291,14 @@ public class SchedulerService {
 	 * @param titles every task seen through a block, so the history can name a task whatever
 	 * its status
 	 */
-	private record Disposition(List<TimeBlock> obstacles, List<TimeBlock> toRemove, List<TimeBlock> stillPlanned,
+	private record Disposition(List<TimeBlock> obstacles, List<TimeBlock> doneHistory, List<TimeBlock> toRemove,
+			List<TimeBlock> stillPlanned,
 			Map<Long, LocalDateTime> missedStarts, Set<Long> completedTaskIds, Map<Long, String> titles) {
 	}
 
 	private static Disposition disposeOf(List<TimeBlock> existing, LocalDateTime now) {
 		List<TimeBlock> obstacles = new ArrayList<>();
+		List<TimeBlock> doneHistory = new ArrayList<>();
 		List<TimeBlock> toRemove = new ArrayList<>();
 		List<TimeBlock> stillPlanned = new ArrayList<>();
 		Map<Long, LocalDateTime> missedStarts = new HashMap<>();
@@ -238,13 +308,24 @@ public class SchedulerService {
 		for (TimeBlock block : existing) {
 			titles.put(block.getTask().getId(), block.getTask().getTitle());
 			boolean ended = block.hasEndedBy(now);
+			if (block.getTask().getStatus() == TaskStatus.DONE) {
+				completed.add(block.getTask().getId());
+			}
+			if (block.getState() == BlockState.MISSED) {
+				// Already reported, already replanned: only a record now.
+				continue;
+			}
+			if (block.getState() == BlockState.DONE) {
+				// Still running, it keeps its time like any block in flight; over, it is history.
+				(ended ? doneHistory : obstacles).add(block);
+				continue;
+			}
 			boolean entirelyFuture = block.getStartAt().isAfter(now);
 			if (!ended) {
 				stillPlanned.add(block);
 			}
 
 			if (block.getTask().getStatus() == TaskStatus.DONE) {
-				completed.add(block.getTask().getId());
 				if (entirelyFuture) {
 					// Finishing early gives the time back.
 					toRemove.add(block);
@@ -261,7 +342,7 @@ public class SchedulerService {
 			if (ended) {
 				missedStarts.merge(block.getTask().getId(), block.getStartAt(),
 						(existingStart, candidate) -> candidate.isBefore(existingStart) ? candidate : existingStart);
-				toRemove.add(block);
+				block.markMissed();
 			}
 			else if (!entirelyFuture || block.isPinned()) {
 				// In flight, or pinned. Either way it keeps its time.
@@ -272,15 +353,13 @@ public class SchedulerService {
 			}
 		}
 
-		return new Disposition(obstacles, toRemove, stillPlanned, missedStarts, completed, titles);
+		return new Disposition(obstacles, doneHistory, toRemove, stillPlanned, missedStarts, completed, titles);
 	}
 
 	private static SchedulableTask toSchedulable(Task task, Map<Long, Long> covered) {
 		long alreadyCovered = covered.getOrDefault(task.getId(), 0L);
-		// Minutes from blocks that already elapsed are NOT treated as covered: without time
-		// tracking there is no way to know whether the work actually happened, and the spec
-		// says an unfinished block counts as missed.
-		// ponytail: whole estimate is replanned on a miss; refine once actuals are tracked.
+		// Covered means kept obstacles plus parts marked done. A missed part is not covered: the work
+		// did not happen unless the person marks it done, which they can still do afterwards.
 		int remaining = (int) Math.max(0, task.getEstimatedMinutes() - alreadyCovered);
 		return new SchedulableTask(task.getId(), remaining, task.getDeadline(), task.getPriority());
 	}

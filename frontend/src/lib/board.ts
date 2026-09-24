@@ -150,6 +150,12 @@ export function useSetPinned() {
   )
 }
 
+export function useSetBlockDone() {
+  return useBoardMutation(({ id, done }: { id: number; done: boolean }) =>
+    done ? api.completeBlock(id) : api.reopenBlock(id),
+  )
+}
+
 export function useMoveBlock() {
   return useBoardMutation(({ id, start, end }: { id: number; start: Date; end: Date }) =>
     api.moveBlock(id, toLocalDateTime(start), toLocalDateTime(end)),
@@ -260,7 +266,8 @@ export function workload(config: BoardConfig | undefined, day: number, date: Dat
   let planned = 0
   for (const block of blocks) {
     const blockStart = new Date(block.startAt)
-    if (!sameDate(blockStart, date)) continue
+    // A missed part used no time: the work was planned again elsewhere.
+    if (block.state === 'MISSED' || !sameDate(blockStart, date)) continue
     const from = minutesOfDay(blockStart)
     planned += overlap(from, from + (new Date(block.endAt).getTime() - blockStart.getTime()) / 60_000)
   }

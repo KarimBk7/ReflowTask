@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import dev.karimbk.reflowtask.common.NotFoundException;
+import dev.karimbk.reflowtask.schedule.BlockState;
 import dev.karimbk.reflowtask.schedule.RescheduleTrigger;
 import dev.karimbk.reflowtask.schedule.SchedulerService;
 import dev.karimbk.reflowtask.schedule.TimeBlock;
@@ -120,14 +121,22 @@ public class TaskService {
 	 */
 	private static TaskResponse respond(Task task, List<TimeBlock> placed) {
 		long minutes = 0;
+		long done = 0;
 		boolean atRisk = false;
 		for (TimeBlock block : placed) {
+			// A missed part is a record of time that was not used; the work is planned again elsewhere.
+			if (block.getState() == BlockState.MISSED) {
+				continue;
+			}
 			minutes += block.toSlot().minutes();
-			if (task.getDeadline() != null && block.getEndAt().isAfter(task.getDeadline())) {
+			if (block.getState() == BlockState.DONE) {
+				done += block.toSlot().minutes();
+			}
+			else if (task.getDeadline() != null && block.getEndAt().isAfter(task.getDeadline())) {
 				atRisk = true;
 			}
 		}
-		return TaskResponse.of(task, (int) minutes, atRisk);
+		return TaskResponse.of(task, (int) minutes, (int) done, atRisk);
 	}
 
 	private Task require(long userId, long id) {

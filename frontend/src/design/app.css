@@ -1875,3 +1875,21 @@ input::-webkit-calendar-picker-indicator {
   color: var(--ink-3);
   font-size: 11.5px;
 }
+
+/* A part whose time ran out unfinished: kept as a record, drawn as an outline so it never reads as
+   work still to do. The work itself was planned again elsewhere. */
+.block[data-missed] {
+  --fill: transparent;
+  --edge: color-mix(in srgb, var(--risk) 55%, transparent);
+  --block-ink: var(--ink-3);
+}
+
+.block[data-missed] .block-body {
+  border-style: dashed;
+}
+
+.month-item[data-missed] {
+  background: transparent;
+  color: var(--ink-3);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--risk) 45%, transparent);
+}

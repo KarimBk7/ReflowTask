@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import type { Block, Task } from '../api/types'
 import { CheckIcon, CloseIcon, EditIcon, PinIcon, PriorityIcon, RiskIcon } from '../design/Icon'
 import { t } from '../i18n/en'
@@ -11,6 +13,8 @@ interface BlockDetailsProps {
   /** The task's other blocks in the week on screen. */
   otherParts: Block[]
   onToggleDone: () => void
+  /** Marks this one part done, or undoes that. */
+  onTogglePartDone: () => void
   onTogglePin: () => void
   onEdit: () => void
   onClose: () => void
@@ -26,11 +30,21 @@ const LEVEL = { LOW: 1, MEDIUM: 2, HIGH: 3 } as const
  * here rather than on the block itself, so a block on the calendar only ever carries its title
  * and time and never runs out of room for its controls.
  */
-export function BlockDetails({ block, task, origin, otherParts, onToggleDone, onTogglePin, onEdit, onClose, busy, headingId }: BlockDetailsProps) {
+export function BlockDetails({ block, task, origin, otherParts, onToggleDone, onTogglePartDone, onTogglePin, onEdit, onClose, busy, headingId }: BlockDetailsProps) {
   const start = new Date(block.startAt)
   const end = new Date(block.endAt)
   const minutes = (end.getTime() - start.getTime()) / 60_000
   const done = block.status === 'DONE'
+  const missed = block.state === 'MISSED'
+  const partDone = block.state === 'DONE'
+  // A part that has started, of a larger task, or a part that is already history: then the part
+  // itself gets an action. A part still ahead has no time of its own to record as done, and a task
+  // that is a single block is simply marked done as a whole.
+  // Read once when the popover opens, which is when the choice is being made.
+  const [openedAt] = useState(() => Date.now())
+  const started = start.getTime() <= openedAt
+  const partAction =
+    !done && (missed || partDone || (started && task !== undefined && minutes < task.estimatedMinutes))
 
   return (
     <div className="details">
@@ -66,6 +80,23 @@ export function BlockDetails({ block, task, origin, otherParts, onToggleDone, on
             <RiskIcon size={14} />
             {t('details.atRisk')}
             {task?.deadline && ` ${formatDeadline(task.deadline, task.deadlineHasTime)}`}
+          </li>
+        )}
+        {missed && (
+          <li className="fact fact-risk">
+            <RiskIcon size={14} />
+            {t('details.missedPart')}
+          </li>
+        )}
+        {partDone && !done && (
+          <li className="fact">
+            <CheckIcon size={14} />
+            {t('details.partDone')}
+          </li>
+        )}
+        {task && task.doneMinutes > 0 && task.status !== 'DONE' && (
+          <li className="fact">
+            {formatDuration(task.doneMinutes)} {t('details.of')} {formatDuration(task.estimatedMinutes)} {t('details.doneSoFar')}
           </li>
         )}
         {task && minutes < task.estimatedMinutes && (
@@ -104,15 +135,26 @@ export function BlockDetails({ block, task, origin, otherParts, onToggleDone, on
       {task?.description && <p className="details-description">{task.description}</p>}
 
       <div className="details-actions">
-        <button type="button" className="button button-primary" onClick={onToggleDone} disabled={busy}>
+        {partAction && (
+          <button type="button" className="button button-primary" onClick={onTogglePartDone} disabled={busy}>
+            <CheckIcon size={14} />
+            {partDone ? t('action.partNotDone') : missed ? t('action.didIt') : t('action.partDone')}
+          </button>
+        )}
+        <button
+          type="button"
+          className={partAction ? 'button button-secondary' : 'button button-primary'}
+          onClick={onToggleDone}
+          disabled={busy}
+        >
           <CheckIcon size={14} />
-          {done ? t('action.reopen') : t('action.markDone')}
+          {done ? t('action.reopen') : partAction ? t('action.taskDone') : t('action.markDone')}
         </button>
         <button
           type="button"
           className="button button-secondary"
           onClick={onTogglePin}
-          disabled={busy}
+          disabled={busy || block.state !== 'PLANNED'}
           aria-pressed={block.pinned}
         >
           <PinIcon size={14} />

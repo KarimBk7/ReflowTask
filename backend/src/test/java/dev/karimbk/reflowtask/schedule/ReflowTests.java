@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 
 /**
  * The reflow behaviour end to end: real database, real Flyway schema, real planner, with only
@@ -109,7 +110,7 @@ class ReflowTests {
 	// --- the differentiator ---------------------------------------------------------
 
 	@Test
-	void aMissedBlockIsRemovedAndTheTaskIsReplannedLater() {
+	void aMissedBlockIsKeptAsMissedAndTheTaskIsReplannedLater() {
 		Task task = givenTask("Write docs", 120, null, Priority.MEDIUM);
 		this.scheduler.replan(USER_ID, RescheduleTrigger.TASK_CHANGED);
 		assertThat(blocksOf(task).get(0).getStartAt()).isEqualTo(MONDAY.atTime(9, 0));
@@ -118,8 +119,9 @@ class ReflowTests {
 		this.clock.set(MONDAY.atTime(14, 0));
 		Optional<RescheduleEvent> event = this.scheduler.replan(USER_ID, RescheduleTrigger.SCHEDULED_JOB);
 
-		assertThat(blocksOf(task)).singleElement()
-			.satisfies((block) -> assertThat(block.getStartAt()).isEqualTo(MONDAY.atTime(14, 0)));
+		assertThat(blocksOf(task)).extracting(TimeBlock::getState, TimeBlock::getStartAt)
+			.containsExactly(tuple(BlockState.MISSED, MONDAY.atTime(9, 0)),
+					tuple(BlockState.PLANNED, MONDAY.atTime(14, 0)));
 		assertThat(event).isPresent();
 		RescheduleEventItem item = event.get().getItems().get(0);
 		assertThat(item.getKind()).isEqualTo(RescheduleItemKind.MISSED);

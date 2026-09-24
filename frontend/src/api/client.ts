@@ -96,6 +96,11 @@ export const api = {
 
   unpinBlock: (id: number) => request<Block>(`/schedule/blocks/${id}/unpin`, { method: 'POST' }),
 
+  /** Marks one part done; only what is left of the task is planned again. */
+  completeBlock: (id: number) => request<Block>(`/schedule/blocks/${id}/done`, { method: 'POST' }),
+
+  reopenBlock: (id: number) => request<Block>(`/schedule/blocks/${id}/undone`, { method: 'POST' }),
+
   rescheduleEvents: () => request<RescheduleEvent[]>('/reschedule-events'),
 
   config: () => request<BoardConfig>('/config'),

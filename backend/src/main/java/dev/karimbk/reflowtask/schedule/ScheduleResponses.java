@@ -17,14 +17,14 @@ final class ScheduleResponses {
 	 * stored, so it cannot disagree with the deadline it describes.
 	 */
 	record BlockView(Long id, Long taskId, String taskTitle, LocalDateTime startAt, LocalDateTime endAt,
-			boolean pinned, boolean atRisk, Priority priority, TaskStatus status) {
+			boolean pinned, boolean atRisk, Priority priority, TaskStatus status, BlockState state) {
 
 		static BlockView of(TimeBlock block) {
 			LocalDateTime deadline = block.getTask().getDeadline();
-			boolean atRisk = deadline != null && block.getEndAt().isAfter(deadline);
+			boolean atRisk = block.isPlanned() && deadline != null && block.getEndAt().isAfter(deadline);
 			return new BlockView(block.getId(), block.getTask().getId(), block.getTask().getTitle(),
 					block.getStartAt(), block.getEndAt(), block.isPinned(), atRisk, block.getTask().getPriority(),
-					block.getTask().getStatus());
+					block.getTask().getStatus(), block.getState());
 		}
 
 	}

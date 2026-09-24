@@ -26,6 +26,8 @@ export interface Task {
    * displayed week, which reports anything placed outside that week as unscheduled.
    */
   scheduledMinutes: number
+  /** Minutes of the estimate marked done, part by part. */
+  doneMinutes: number
   /** Some of the task's work is placed after its deadline. */
   atRisk: boolean
 }
@@ -54,7 +56,11 @@ export interface Block {
   atRisk: boolean
   priority: Priority
   status: TaskStatus
+  /** PLANNED can move; DONE and MISSED are history. A missed part can still be marked done. */
+  state: BlockState
 }
+
+export type BlockState = 'PLANNED' | 'DONE' | 'MISSED'
 
 export type RescheduleTrigger = 'TASK_CHANGED' | 'SCHEDULED_JOB' | 'MANUAL' | 'CONFIG_CHANGED'
 

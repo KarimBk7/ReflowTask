@@ -68,6 +68,8 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
 - Drag a block to move it (it is pinned where you drop it), or drag its bottom edge to resize it
   (the task's estimate follows). Alt + arrow keys do the same from the keyboard.
 - Pin any block so replans leave it alone. The block you are inside right now is never moved.
+- Mark a single part of split work done, or a missed part "I did this": only what is really left
+  is planned again.
 - A workload meter per day: planned time against available working time.
 
 | Week view | Month view |
@@ -141,7 +143,12 @@ belongs to and how long the whole task is.
 sides of fixed blocks. It defaults to zero.
 
 **A missed block triggers a replan.** A job runs every hour. Any block whose time has passed
-while its task is unfinished is removed, and the task is placed again.
+while unfinished is marked missed and the work is placed again. The missed block stays on the
+calendar as a record, so if you did it after all you can still say so.
+
+**Progress counts.** Long work is split into parts, and each part that has started can be marked
+done on its own. Parts marked done count against the estimate, so only the rest is planned; when
+every part is done, so is the task.
 
 **Some blocks are never moved.** A replan keeps:
 
@@ -244,6 +251,8 @@ API, so a mobile client could use the same endpoints.
 | `PATCH` | `/schedule/blocks/{id}` | Move or resize a block (`startAt`, `endAt`); pins it, adjusts the estimate, replans |
 | `POST` | `/schedule/blocks/{id}/pin` | Pin a block so replans leave it in place |
 | `POST` | `/schedule/blocks/{id}/unpin` | Unpin a block |
+| `POST` | `/schedule/blocks/{id}/done` | Mark one part done (it must have started); only the rest is planned |
+| `POST` | `/schedule/blocks/{id}/undone` | Undo that |
 | `GET` | `/reschedule-events` | Your recent replans and what they moved |
 | `GET` `PUT` | `/config` | Your working hours, breaks, buffer and planning settings; `PUT` replaces them and replans |
 

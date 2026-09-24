@@ -38,6 +38,7 @@ export function HowItWorks({ config, user, onClose, headingId }: HowItWorksProps
         </li>
         <li>{t('help.fixed')}</li>
         <li>{t('help.missed')}</li>
+        <li>{t('help.parts')}</li>
         {config && config.bufferMinutes > 0 && (
           <li>
             {t('help.buffer')} {config.bufferMinutes} {t('unit.min')}.

@@ -33,6 +33,7 @@ const block = (id: number, startAt: string, endAt: string, extra: Partial<Block>
   atRisk: false,
   priority: 'MEDIUM',
   status: 'OPEN',
+  state: 'PLANNED',
   ...extra,
 })
 
@@ -47,6 +48,7 @@ const task = (id: number, extra: Partial<Task> = {}): Task => ({
   status: 'OPEN',
   createdAt: '2026-09-21T08:00:00',
   scheduledMinutes: 60,
+  doneMinutes: 0,
   atRisk: false,
   ...extra,
 })
@@ -106,6 +108,14 @@ describe('workload', () => {
     const blocks = [block(1, '2026-09-21T09:00:00', '2026-09-21T11:00:00'), block(2, '2026-09-21T19:00:00', '2026-09-21T20:00:00')]
 
     expect(workload(withLunch, 1, new Date(2026, 8, 21), blocks)).toEqual({ planned: 120, available: 480 })
+  })
+
+  it('does not count a missed part as planned time', () => {
+    const blocks = [
+      block(1, '2026-09-21T09:00:00', '2026-09-21T10:00:00', { state: 'MISSED' }),
+      block(2, '2026-09-21T11:00:00', '2026-09-21T12:00:00', { state: 'DONE' }),
+    ]
+    expect(workload(config(WEEKDAYS), 1, new Date(2026, 8, 21), blocks).planned).toBe(60)
   })
 
   it('is zero on a day off', () => {

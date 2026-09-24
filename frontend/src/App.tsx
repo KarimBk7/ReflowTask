@@ -23,6 +23,7 @@ import {
   useMoveBlock,
   useReplan,
   useSchedule,
+  useSetBlockDone,
   useSetPinned,
   useSetStatus,
   useTasks,
@@ -106,6 +107,7 @@ function Board({ user }: { user: AuthUser }) {
   const replan = useReplan()
   const setStatus = useSetStatus()
   const setPinned = useSetPinned()
+  const setBlockDone = useSetBlockDone()
   const moveBlock = useMoveBlock()
   const deleteTask = useDeleteTask()
   const createTask = useCreateTask()
@@ -117,6 +119,7 @@ function Board({ user }: { user: AuthUser }) {
     replan.isPending ||
     setStatus.isPending ||
     setPinned.isPending ||
+    setBlockDone.isPending ||
     moveBlock.isPending ||
     deleteTask.isPending ||
     createTask.isPending ||
@@ -513,6 +516,10 @@ function Board({ user }: { user: AuthUser }) {
                 { id: openBlock.taskId, status: openBlock.status === 'DONE' ? 'OPEN' : 'DONE' },
                 { onError: fail },
               )
+              setOpen(null)
+            }}
+            onTogglePartDone={() => {
+              setBlockDone.mutate({ id: openBlock.id, done: openBlock.state !== 'DONE' }, { onError: fail })
               setOpen(null)
             }}
             onTogglePin={() => setPinned.mutate({ id: openBlock.id, pinned: !openBlock.pinned }, { onError: fail })}

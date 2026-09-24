@@ -88,6 +88,21 @@ class ScheduleController {
 		return setPinned(user, id, false);
 	}
 
+	/** Marks one part of a task done; only what is left of the task is planned again. */
+	@PostMapping("/schedule/blocks/{id}/done")
+	@Transactional
+	BlockView complete(@CurrentUser User user, @PathVariable long id) {
+		this.scheduler.completeBlock(user.getId(), id);
+		return BlockView.of(this.blocks.findByIdAndTaskUserId(id, user.getId()).orElseThrow());
+	}
+
+	@PostMapping("/schedule/blocks/{id}/undone")
+	@Transactional
+	BlockView reopen(@CurrentUser User user, @PathVariable long id) {
+		this.scheduler.reopenBlock(user.getId(), id);
+		return BlockView.of(this.blocks.findByIdAndTaskUserId(id, user.getId()).orElseThrow());
+	}
+
 	/** Visible history, so a schedule that rearranged itself can be explained. */
 	@GetMapping("/reschedule-events")
 	@Transactional(readOnly = true)

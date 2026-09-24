@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import dev.karimbk.reflowtask.task.Task;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,6 +37,10 @@ public class TimeBlock {
 	/** Immovable: replanning treats it as an obstacle instead of rescheduling it. */
 	@Column(nullable = false)
 	private boolean pinned;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private BlockState state = BlockState.PLANNED;
 
 	protected TimeBlock() {
 		// for JPA
@@ -76,6 +82,27 @@ public class TimeBlock {
 		this.startAt = startAt;
 		this.endAt = endAt;
 		this.pinned = true;
+	}
+
+	public BlockState getState() {
+		return this.state;
+	}
+
+	public boolean isPlanned() {
+		return this.state == BlockState.PLANNED;
+	}
+
+	public void markMissed() {
+		this.state = BlockState.MISSED;
+	}
+
+	public void markDone() {
+		this.state = BlockState.DONE;
+	}
+
+	/** Undoes {@link #markDone}. The next replan decides whether it is still ahead or now missed. */
+	public void reopen() {
+		this.state = BlockState.PLANNED;
 	}
 
 	public TimeSlot toSlot() {

@@ -42,7 +42,8 @@ export function BlockCard({ item, origin, selected, taskMinutes, related, flash,
   const { block, start, end } = item
   const minutes = end - start
   const visible = Math.min(end, 24 * 60) - start
-  const done = block.status === 'DONE'
+  const done = block.status === 'DONE' || block.state === 'DONE'
+  const wasMissed = block.state === 'MISSED'
   const size = visible < 30 ? 'xs' : visible < 45 ? 'sm' : visible < 80 ? 'md' : 'lg'
   const missed = origin?.kind === 'MISSED'
   const change = origin && `${t(missed ? 'state.missedAt' : 'state.movedFrom')} ${formatDayTime(origin.from)}`
@@ -58,6 +59,7 @@ export function BlockCard({ item, origin, selected, taskMinutes, related, flash,
     block.pinned && t('state.pinned'),
     block.atRisk && t('state.atRisk'),
     done && t('status.DONE'),
+    wasMissed && t('state.missedPart'),
     change,
   ]
     .filter(Boolean)
@@ -71,6 +73,7 @@ export function BlockCard({ item, origin, selected, taskMinutes, related, flash,
       data-priority={block.priority}
       data-risk={block.atRisk || undefined}
       data-done={done || undefined}
+      data-missed={wasMissed || undefined}
       data-pinned={block.pinned || undefined}
       data-moved={origin ? true : undefined}
       data-dragging={item.dragging || undefined}
@@ -108,7 +111,7 @@ export function BlockCard({ item, origin, selected, taskMinutes, related, flash,
 
         {(size === 'md' || size === 'lg') && (
           <span className="block-meta" aria-hidden="true">
-            {range}
+            {wasMissed ? `${range} · ${t('state.missedPart')}` : range}
             {size === 'md' && shortChange && (
               <span className="block-from">
                 {' · '}

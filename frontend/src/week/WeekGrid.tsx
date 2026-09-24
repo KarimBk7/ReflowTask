@@ -180,7 +180,7 @@ export function WeekGrid({
   }, [placed, preview, weekStart])
 
   function editable(block: Block) {
-    return !busy && block.status !== 'DONE' && new Date(block.endAt) > now
+    return !busy && block.status !== 'DONE' && block.state === 'PLANNED' && new Date(block.endAt) > now
   }
 
   function columnAt(clientX: number): number {
@@ -319,7 +319,8 @@ export function WeekGrid({
                 config={config}
                 now={now}
                 items={placed.filter((item) => item.dayIndex === dayIndex)}
-                ghosts={ghosts.filter((ghost) => sameDate(ghost.from, date))}
+                // A missed part now stays on the grid itself, so only moves need an outline.
+                ghosts={ghosts.filter((ghost) => ghost.kind === 'MOVED' && sameDate(ghost.from, date))}
                 draft={draft && sameDate(draft.start, date) ? draft : null}
                 renderBlock={(item) => (
                   <BlockCard
