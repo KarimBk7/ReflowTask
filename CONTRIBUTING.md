@@ -48,7 +48,7 @@ fix a bug, write the failing test first and check it fails for the reason you th
 | The database | a **new** `backend/src/main/resources/db/migration/V<n>__name.sql`. Never edit a migration that has shipped. |
 | An endpoint | its controller, plus a test in the matching `*ApiTests` |
 | The week or month views | `frontend/src/week/`, `frontend/src/month/` |
-| Text shown to people | `frontend/src/i18n/en.ts`, the one file for every string |
+| Text shown to people | `frontend/src/i18n/en.ts`, with the German in `de.ts`; the build fails until a new string is in both |
 | Colours, spacing, type | `frontend/src/design/tokens.css` (see [DESIGN.md](DESIGN.md)) |
 
 Read [PRODUCT.md](PRODUCT.md) first if you are unsure whether an idea fits: it records who this is

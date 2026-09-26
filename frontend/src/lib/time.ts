@@ -7,7 +7,20 @@
  * here converts between zones.
  */
 
-export const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
+import { LANGUAGE } from '../i18n/en'
+
+export const DAY_NAMES =
+  LANGUAGE === 'de' ? ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+/** '22' in English, '22.' in German, where a day of the month is an ordinal. */
+export function dayOfMonth(date: Date): string {
+  return LANGUAGE === 'de' ? `${date.getDate()}.` : String(date.getDate())
+}
+
+/** 'Sep', 'Okt': the plain language, since en-GB would say 'Sept'. */
+export function shortMonth(date: Date): string {
+  return date.toLocaleDateString(LANGUAGE, { month: 'short' })
+}
 
 /** ISO weekday, 1 = Monday, matching the backend's day_of_week column. */
 export function isoDay(date: Date): number {
@@ -93,13 +106,13 @@ export function formatDuration(totalMinutes: number): string {
  * and a replan routinely moves work into the next one.
  */
 export function formatDayTime(date: Date): string {
-  return `${DAY_NAMES[isoDay(date) - 1]} ${date.getDate()}, ${formatTime(date)}`
+  return `${DAY_NAMES[isoDay(date) - 1]} ${dayOfMonth(date)}, ${formatTime(date)}`
 }
 
 /** 'Fri 18 Sep', or 'Fri 18 Sep 14:00' when the user gave an explicit time. */
 export function formatDeadline(value: string, hasTime: boolean): string {
   const date = new Date(value)
   const day = DAY_NAMES[isoDay(date) - 1]
-  const stamp = `${day} ${date.getDate()} ${date.toLocaleDateString('en', { month: 'short' })}`
+  const stamp = `${day} ${dayOfMonth(date)} ${shortMonth(date)}`
   return hasTime ? `${stamp} ${formatTime(date)}` : stamp
 }

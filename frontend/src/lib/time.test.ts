@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   addDays,
@@ -100,5 +100,20 @@ describe('formatting', () => {
   it('shows a deadline with its time only when the user gave one', () => {
     expect(formatDeadline('2026-09-18T23:59:00', false)).toBe('Fri 18 Sep')
     expect(formatDeadline('2026-09-18T14:00:00', true)).toBe('Fri 18 Sep 14:00')
+  })
+})
+
+describe('in German', () => {
+  it('writes the day of the month as an ordinal and uses German day names', async () => {
+    vi.resetModules()
+    vi.stubGlobal('navigator', { language: 'de-DE' })
+    try {
+      const german = await import('./time')
+      expect(german.formatDeadline('2026-09-18T14:00:00', true)).toBe('Fr 18. Sep 14:00')
+      expect(german.formatDayTime(new Date(2026, 8, 22, 10, 0))).toBe('Di 22., 10:00')
+    } finally {
+      vi.stubGlobal('navigator', { language: 'en-GB' })
+      vi.resetModules()
+    }
   })
 })

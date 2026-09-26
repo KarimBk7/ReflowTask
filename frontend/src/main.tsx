@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 
 import { ApiError } from './api/client'
 import App from './App'
+import { LANGUAGE } from './i18n/en'
 import './index.css'
 
 /**
@@ -30,6 +31,8 @@ const queryClient: QueryClient = new QueryClient({
     },
   },
 })
+
+document.documentElement.lang = LANGUAGE
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -3,7 +3,7 @@ import { useId, useState } from 'react'
 import { ApiError } from '../api/client'
 import type { Priority, Task, TaskInput } from '../api/types'
 import { t } from '../i18n/en'
-import { DAY_NAMES, addDays, formatDayTime, formatDuration, isoDay, toLocalDateTime } from '../lib/time'
+import { DAY_NAMES, addDays, dayOfMonth, formatDayTime, formatDuration, isoDay, toLocalDateTime } from '../lib/time'
 
 interface TaskEditorProps {
   /** The task being edited, or null for a new one. */
@@ -44,7 +44,7 @@ function deadlineDates() {
     today: dateOnly(today),
     tomorrow: dateOnly(addDays(today, 1)),
     friday: dateOnly(friday),
-    fridayLabel: `${DAY_NAMES[4]} ${friday.getDate()}`,
+    fridayLabel: `${DAY_NAMES[4]} ${dayOfMonth(friday)}`,
   }
 }
 

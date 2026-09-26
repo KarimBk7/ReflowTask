@@ -90,6 +90,8 @@ The **month view** is a read-only overview of the whole month; click a day to op
 - Working hours per weekday, breaks such as lunch, a buffer between tasks, how far ahead to plan
   and the smallest piece a long task may be split into. Changing them replans immediately.
 - Light and dark themes that follow your operating system.
+- English and German. The browser's language decides, and anyone can switch under their name in
+  the top bar. A new language is one file: copy `frontend/src/i18n/de.ts`.
 
 | New task | Block details | Hours and planning |
 | --- | --- | --- |
@@ -397,8 +399,8 @@ Known limitations:
 - The outline of a moved block's old slot is a fixed 30-minute marker, because the replan record
   keeps only start times.
 - Dragging blocks works with a mouse or pen; on a touch screen a block is tapped to open it.
-- The interface is English only, though every string lives in one file
-  (`frontend/src/i18n/en.ts`) so a translation is a data change.
+- Messages that come from the server (validation errors, a calendar that cannot be read) and the
+  example task for new accounts are English in the German interface too.
 - Login lockout is kept in memory, so it resets when the server restarts.
 
 - Calendar sync is by `.ics` subscription, not CalDAV: other apps see the plan but cannot edit it,

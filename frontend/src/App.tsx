@@ -9,7 +9,7 @@ import { AccountPanel } from './auth/AccountPanel'
 import { CalendarPanel } from './auth/CalendarPanel'
 import { UserManagement } from './auth/UserManagement'
 import { CalendarIcon, ChevronIcon, ClockIcon, HelpIcon, LogoutIcon, PlusIcon, ReflowIcon, UsersIcon } from './design/Icon'
-import { t } from './i18n/en'
+import { LOCALE, t } from './i18n/en'
 import {
   boardDays,
   describeWorkingHours,
@@ -232,10 +232,10 @@ function Board({ user }: { user: AuthUser }) {
   const lastDay = addDays(weekStart, 6)
   const range =
     view === 'month'
-      ? monthStart.toLocaleDateString('en', { month: 'long', year: 'numeric' })
+      ? monthStart.toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' })
       : weekStart.getMonth() === lastDay.getMonth()
-      ? `${weekStart.getDate()} – ${lastDay.getDate()} ${lastDay.toLocaleDateString('en', { month: 'long', year: 'numeric' })}`
-      : `${weekStart.toLocaleDateString('en', { day: 'numeric', month: 'short' })} – ${lastDay.toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' })}`
+      ? new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }).formatRange(weekStart, lastDay)
+      : new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }).formatRange(weekStart, lastDay)
 
   // A replan recreates blocks, so the one a popover was showing can vanish; its popover then simply
   // does not render.

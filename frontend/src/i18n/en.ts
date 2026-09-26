@@ -1,9 +1,11 @@
+import { de } from './de'
+
 /**
- * Every user-facing string, in one place.
+ * Every user-facing string, in one place, with German in de.ts.
  *
- * PRODUCT.md commits to English kept i18n-ready: a flat dictionary behind a lookup is enough for
- * that, and it makes adding German later a data change rather than a refactor. No i18n library
- * until there is a second language to justify one.
+ * A flat dictionary behind a lookup: two languages do not justify an i18n library. The language is
+ * picked once at load (a saved choice, else the browser's), and changing it reloads the page, so
+ * nothing needs to re-render on a switch.
  */
 export const en = {
   'app.name': 'ReflowTask',
@@ -100,7 +102,9 @@ export const en = {
   'details.atRisk': 'Ends after its deadline,',
   'details.pinned': 'Pinned. Replans leave it here.',
   'details.done': 'Done',
-  'details.priority': 'priority',
+  'details.priority.LOW': 'Low priority',
+  'details.priority.MEDIUM': 'Medium priority',
+  'details.priority.HIGH': 'High priority',
   'details.due': 'Due',
   'details.partOf': 'One part of a',
   'details.partTask': 'task.',
@@ -242,11 +246,42 @@ export const en = {
   'auth.resetDone': 'Temporary password set.',
   'auth.confirmRemove': 'Remove account and all its tasks',
   'auth.removeHint': 'Removing an account deletes all of its tasks, hours and history.',
+  'auth.language': 'Language',
 } as const
 
 export type StringKey = keyof typeof en
 
+export type Language = 'en' | 'de'
+
+const LANGUAGE_KEY = 'reflowtask-language'
+
+function detectLanguage(): Language {
+  try {
+    const saved = localStorage.getItem(LANGUAGE_KEY)
+    if (saved === 'en' || saved === 'de') return saved
+  } catch {
+    /* No storage (private window, tests): fall through to the browser's language. */
+  }
+  return typeof navigator !== 'undefined' && navigator.language?.toLowerCase().startsWith('de') ? 'de' : 'en'
+}
+
+export const LANGUAGE: Language = detectLanguage()
+
+/** For dates: British English keeps "21 September", day before month, like the German order. */
+export const LOCALE = LANGUAGE === 'de' ? 'de-DE' : 'en-GB'
+
+const strings: Record<StringKey, string> = LANGUAGE === 'de' ? de : en
+
 /** Lookup with the key as its own fallback, so a missing string is visible, not blank. */
 export function t(key: StringKey): string {
-  return en[key] ?? key
+  return strings[key] ?? key
+}
+
+export function setLanguage(language: Language) {
+  try {
+    localStorage.setItem(LANGUAGE_KEY, language)
+  } catch {
+    return
+  }
+  window.location.reload()
 }

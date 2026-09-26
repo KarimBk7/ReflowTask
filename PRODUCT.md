@@ -73,7 +73,7 @@ The forward-compatibility constraints from the single-user era held up and made 
 
 Undecided, not to be invented:
 
-- Interface language is **English, kept i18n-ready**: strings live in a translatable structure so German can be added later without refactoring. The existing spec being in German does not make German the UI language.
+- Interface language is **English and German**: English is the reference (`en.ts`), German (`de.ts`) must cover every key, and the browser's language picks one until a person chooses under their account.
 - Exact scheduler heuristic beyond the greedy MVP pass.
 
 ## Brand Commitments

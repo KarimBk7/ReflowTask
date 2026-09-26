@@ -1,5 +1,5 @@
 import type { Block } from '../api/types'
-import { t } from '../i18n/en'
+import { LOCALE, t } from '../i18n/en'
 import { blocksByDay, isToday } from '../lib/board'
 import { DAY_NAMES, formatTime, monthGridDays, toLocalDateTime } from '../lib/time'
 
@@ -37,7 +37,7 @@ export function MonthGrid({ monthStart, blocks, onPickDay }: MonthGridProps) {
               data-outside={day.getMonth() !== monthStart.getMonth() || undefined}
               data-today={isToday(day) || undefined}
               onClick={() => onPickDay(day)}
-              aria-label={`${day.toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long' })}, ${dayBlocks.length} ${t('month.tasks')}`}
+              aria-label={`${day.toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })}, ${dayBlocks.length} ${t('month.tasks')}`}
             >
               <span className="month-date">{day.getDate()}</span>
               {dayBlocks.slice(0, MAX_VISIBLE).map((block) => (

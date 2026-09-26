@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import type { AuthUser } from '../api/types'
 import { CloseIcon } from '../design/Icon'
-import { t } from '../i18n/en'
+import { LANGUAGE, setLanguage, t } from '../i18n/en'
 import { useChangePassword } from '../lib/auth'
 import { describe } from './describe'
 
@@ -12,7 +12,7 @@ interface AccountPanelProps {
   headingId: string
 }
 
-/** Your own account: who you are signed in as, and changing your own password. */
+/** Your own account: who you are signed in as, the language, and changing your own password. */
 export function AccountPanel({ user, onClose, headingId }: AccountPanelProps) {
   const changePassword = useChangePassword()
   const [current, setCurrent] = useState('')
@@ -48,6 +48,17 @@ export function AccountPanel({ user, onClose, headingId }: AccountPanelProps) {
       <p className="editor-note">
         {t('auth.signedInAs')} <strong>{user.username}</strong> ({user.role === 'ADMIN' ? t('auth.admin') : t('auth.member')})
       </p>
+      <div className="editor-row">
+        <span className="editor-label">{t('auth.language')}</span>
+        <div className="segmented" role="radiogroup" aria-label={t('auth.language')}>
+          {([['en', 'English'], ['de', 'Deutsch']] as const).map(([value, name]) => (
+            <label key={value} className="segment" data-selected={LANGUAGE === value || undefined}>
+              <input type="radio" name="language" checked={LANGUAGE === value} onChange={() => setLanguage(value)} />
+              {name}
+            </label>
+          ))}
+        </div>
+      </div>
       <form className="editor-row" onSubmit={submit}>
         <span className="editor-label">{t('auth.changePassword')}</span>
         <input

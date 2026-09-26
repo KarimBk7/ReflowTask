@@ -4,7 +4,7 @@ import type { Block, Task } from '../api/types'
 import { CheckIcon, CloseIcon, EditIcon, PinIcon, PriorityIcon, RiskIcon } from '../design/Icon'
 import { t } from '../i18n/en'
 import type { Ghost } from '../lib/board'
-import { DAY_NAMES, formatDayTime, formatDeadline, formatDuration, formatTime, isoDay } from '../lib/time'
+import { DAY_NAMES, dayOfMonth, formatDayTime, formatDeadline, formatDuration, formatTime, isoDay, shortMonth } from '../lib/time'
 
 interface BlockDetailsProps {
   block: Block
@@ -59,7 +59,7 @@ export function BlockDetails({ block, task, origin, otherParts, onToggleDone, on
       </div>
 
       <p className="details-when">
-        {DAY_NAMES[isoDay(start) - 1]} {start.getDate()} {start.toLocaleDateString('en', { month: 'short' })}
+        {DAY_NAMES[isoDay(start) - 1]} {dayOfMonth(start)} {shortMonth(start)}
         <span className="dot" aria-hidden="true" />
         <span className="numeric">
           {formatTime(start)} – {formatTime(end)}
@@ -123,7 +123,7 @@ export function BlockDetails({ block, task, origin, otherParts, onToggleDone, on
         )}
         <li className="fact">
           <PriorityIcon size={14} level={LEVEL[block.priority]} />
-          {t(`priority.${block.priority}`)} {t('details.priority')}
+          {t(`details.priority.${block.priority}`)}
         </li>
         {!block.atRisk && task?.deadline && (
           <li className="fact">
