@@ -184,29 +184,44 @@ Docker volume and survives rebuilds.
 
 ## Backing up and restoring
 
-Everything, accounts included, is in the PostgreSQL database.
-
-**Back up** (safe while it runs):
+Everything, accounts included, is in the PostgreSQL database. `scripts/backup.sh` dumps it,
+compresses it, checks that the dump is complete, and deletes backups older than 14 days. It is
+safe while the app runs. From the folder with `docker-compose.yml`:
 
 ```bash
-docker compose exec -T postgres pg_dump -U reflowtask reflowtask > reflowtask-$(date +%F).sql
+./scripts/backup.sh                          # into ~/backups/reflowtask
+./scripts/backup.sh /mnt/usb/reflowtask 30   # another folder, keeping 30 days
 ```
 
-Copy that file somewhere else. A nightly cron entry is enough for a household:
+If the dump is incomplete (the database was down, the disk is full), the script leaves no file
+behind and exits with an error, so an existing backup is never replaced by a broken one.
+
+**Every night.** Run `crontab -e` and add, with your own path:
 
 ```
-0 3 * * *  cd /home/pi/ReflowTask && docker compose exec -T postgres pg_dump -U reflowtask reflowtask > /home/pi/backups/reflowtask-$(date +\%F).sql
+0 3 * * *  cd /home/pi/ReflowTask && ./scripts/backup.sh >> /home/pi/backups/reflowtask/backup.log 2>&1
 ```
 
-**Restore** into a fresh or existing install:
+Check `backup.log` now and then: a line ending in `backup ok` means that night worked.
+
+**Keep a copy off the machine.** A backup on the same disk does not survive that disk failing.
+Copy the folder to a USB drive, another computer or a cloud folder that syncs, for example a
+Nextcloud or Syncthing folder.
+
+**Restore** into a fresh or existing install. This replaces everything in the database:
 
 ```bash
 docker compose stop backend
 docker compose exec -T postgres psql -U reflowtask -d postgres \
   -c "DROP DATABASE reflowtask" -c "CREATE DATABASE reflowtask OWNER reflowtask"
-docker compose exec -T postgres psql -U reflowtask reflowtask < reflowtask-2026-09-23.sql
+gunzip -c ~/backups/reflowtask/reflowtask-2026-09-26-0300.sql.gz \
+  | docker compose exec -T postgres psql -q -U reflowtask reflowtask
 docker compose start backend
 ```
+
+For an uncompressed `.sql` file, replace `gunzip -c file |` with `< file` at the end of the
+`psql` line. Try a restore once, into a spare install, before you need it: a backup nobody has
+restored is a hope, not a backup.
 
 ## Forgot a password?
 

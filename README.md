@@ -299,7 +299,7 @@ frontend/
   src/week/      the week calendar, popovers, sidebar and hours panel
   src/month/     the month overview
   src/design/    design tokens and styles
-scripts/         reset-password.sh
+scripts/         reset-password.sh, backup.sh
 docs/            setup guide and screenshots
 docker-compose.yml, backend/Dockerfile, frontend/Dockerfile   deployment
 ```
