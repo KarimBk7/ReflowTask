@@ -2,6 +2,9 @@ import type {
   AuthUser,
   Block,
   BoardConfig,
+  BusyPeriod,
+  CalendarSource,
+  FeedInfo,
   LocalDateTime,
   ProblemDetail,
   RescheduleEvent,
@@ -132,4 +135,24 @@ export const api = {
     request<void>(`/users/${id}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) }),
 
   deleteUser: (id: number) => request<void>(`/users/${id}`, { method: 'DELETE' }),
+
+  calendarFeed: () => request<FeedInfo>('/calendar/feed'),
+
+  /** Creates the subscribe link, or replaces it: the old link stops working. */
+  renewCalendarFeed: () => request<FeedInfo>('/calendar/feed', { method: 'POST' }),
+
+  disableCalendarFeed: () => request<void>('/calendar/feed', { method: 'DELETE' }),
+
+  calendarSources: () => request<CalendarSource[]>('/calendar/sources'),
+
+  /** The server reads the calendar once before saving it, so a wrong address fails here. */
+  addCalendarSource: (name: string, url: string) =>
+    request<CalendarSource>('/calendar/sources', { method: 'POST', body: JSON.stringify({ name, url }) }),
+
+  removeCalendarSource: (id: number) => request<void>(`/calendar/sources/${id}`, { method: 'DELETE' }),
+
+  refreshCalendarSources: () => request<CalendarSource[]>('/calendar/sources/refresh', { method: 'POST' }),
+
+  busy: (from: LocalDateTime, to: LocalDateTime) =>
+    request<BusyPeriod[]>(`/calendar/busy?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
 }

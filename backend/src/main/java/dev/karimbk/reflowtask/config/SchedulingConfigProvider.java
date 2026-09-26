@@ -36,6 +36,9 @@ public class SchedulingConfigProvider {
 			.stream()
 			.map((hours) -> new DailyWindow(hours.getDay(), hours.getStartTime(), hours.getEndTime()))
 			.toList();
+		if (DefaultHours.apply(current, !working.isEmpty())) {
+			working = DefaultHours.WEEKDAYS;
+		}
 		List<DailyWindow> blocked = this.blockedPeriods.findByUserId(userId)
 			.stream()
 			.map((period) -> new DailyWindow(period.getDay(), period.getStartTime(), period.getEndTime()))

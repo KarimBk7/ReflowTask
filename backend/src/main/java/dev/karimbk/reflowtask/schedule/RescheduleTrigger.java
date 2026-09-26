@@ -9,6 +9,9 @@ public enum RescheduleTrigger {
 	/** The periodic job found missed work. */
 	SCHEDULED_JOB,
 
+	/** Another calendar's busy time was added, removed or read again. */
+	CALENDAR_SYNCED,
+
 	/** The user asked for a replan explicitly. */
 	MANUAL,
 

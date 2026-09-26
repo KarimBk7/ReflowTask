@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import dev.karimbk.reflowtask.calendar.ExternalBusy;
+import dev.karimbk.reflowtask.calendar.ExternalBusyRepository;
 import dev.karimbk.reflowtask.common.ConflictException;
 import dev.karimbk.reflowtask.common.NotFoundException;
 import dev.karimbk.reflowtask.config.SchedulingConfigProvider;
@@ -62,14 +64,17 @@ public class SchedulerService {
 
 	private final SchedulingConfigProvider config;
 
+	private final ExternalBusyRepository busy;
+
 	private final Clock clock;
 
 	SchedulerService(TaskRepository tasks, TimeBlockRepository blocks, RescheduleEventRepository events,
-			SchedulingConfigProvider config, Clock clock) {
+			SchedulingConfigProvider config, ExternalBusyRepository busy, Clock clock) {
 		this.tasks = tasks;
 		this.blocks = blocks;
 		this.events = events;
 		this.config = config;
+		this.busy = busy;
 		this.clock = clock;
 	}
 
@@ -259,8 +264,13 @@ public class SchedulerService {
 		Map<Long, List<LocalDateTime>> before = new HashMap<>(startsPerTask(disposition.stillPlanned()));
 		before.putAll(manualBeforeOverrides);
 
-		List<PlannedBlock> planned = SchedulePlanner.plan(toPlan, slotsOf(disposition.obstacles()),
-				this.config.current(userId), now);
+		SchedulingConfig settings = this.config.current(userId);
+		// Busy time read from other calendars is an obstacle like a pinned block, buffer included.
+		List<TimeSlot> taken = new ArrayList<>(slotsOf(disposition.obstacles()));
+		for (ExternalBusy external : this.busy.findOverlapping(userId, now, now.plusDays(settings.horizonDays() + 1))) {
+			taken.add(new TimeSlot(external.getStartAt(), external.getEndAt()));
+		}
+		List<PlannedBlock> planned = SchedulePlanner.plan(toPlan, taken, settings, now);
 
 		this.blocks.deleteAll(disposition.toRemove());
 		this.blocks.flush();

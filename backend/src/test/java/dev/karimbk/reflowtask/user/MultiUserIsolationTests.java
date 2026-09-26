@@ -136,4 +136,20 @@ class MultiUserIsolationTests {
 			.andExpect(jsonPath("$.workingHours", hasSize(5)));
 	}
 
+	/**
+	 * Regression: the setup screen showed Monday to Friday for a new member while the scheduler
+	 * planned against no working hours at all, so their tasks were never placed until they saved.
+	 */
+	@Test
+	void aNewMembersTasksArePlacedBeforeTheyHaveSavedHours() throws Exception {
+		Cookie member = new AuthTestSupport(this.mvc).memberSession(adminCookie(), "fresh");
+
+		this.mvc.perform(post("/api/v1/tasks").cookie(member)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"title":"First task","estimatedMinutes":60,"priority":"MEDIUM"}"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.scheduledMinutes").value(60));
+	}
+
 }

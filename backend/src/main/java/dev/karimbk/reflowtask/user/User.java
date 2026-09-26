@@ -36,6 +36,9 @@ public class User {
 	@Column(nullable = false)
 	private LocalDateTime createdAt;
 
+	/** The secret in this person's calendar subscription link; null while it is turned off. */
+	private String calendarToken;
+
 	protected User() {
 		// for JPA
 	}
@@ -83,6 +86,14 @@ public class User {
 
 	public LocalDateTime getCreatedAt() {
 		return this.createdAt;
+	}
+
+	public String getCalendarToken() {
+		return this.calendarToken;
+	}
+
+	public void setCalendarToken(String calendarToken) {
+		this.calendarToken = calendarToken;
 	}
 
 }

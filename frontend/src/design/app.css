@@ -1893,3 +1893,30 @@ input::-webkit-calendar-picker-indicator {
   color: var(--ink-3);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--risk) 45%, transparent);
 }
+
+/* An appointment from a subscribed calendar: like a break, but tinted so the two read apart. */
+.appointment {
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in oklab, var(--accent) 6%, transparent) 0 5px,
+    color-mix(in oklab, var(--accent) 16%, transparent) 5px 6px
+  );
+  border-block-color: color-mix(in oklab, var(--accent) 35%, transparent);
+}
+
+.calendar-panel a.button {
+  text-decoration: none;
+}
+
+.calendar-sources {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar-sources li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}

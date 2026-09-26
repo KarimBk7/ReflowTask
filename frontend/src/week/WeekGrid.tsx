@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
-import type { Block } from '../api/types'
+import type { Block, BusyPeriod } from '../api/types'
 import { t } from '../i18n/en'
-import type { BoardConfig, Ghost } from '../lib/board'
-import { blockedOn, boardDays, firstWorkingMinute, isToday, originFor, workingOn, workload } from '../lib/board'
+import type { Appointment, BoardConfig, Ghost } from '../lib/board'
+import { appointmentsOn, blockedOn, boardDays, firstWorkingMinute, isToday, originFor, workingOn, workload } from '../lib/board'
 import {
   DAY_NAMES,
   addDays,
@@ -30,6 +30,8 @@ interface WeekGridProps {
   allDays: boolean
   config: BoardConfig | undefined
   blocks: Block[]
+  /** Appointments from subscribed calendars; the scheduler already plans around them. */
+  appointments: BusyPeriod[]
   ghosts: Ghost[]
   draft: Draft | null
   selectedBlockId: number | null
@@ -75,6 +77,7 @@ export function WeekGrid({
   allDays,
   config,
   blocks,
+  appointments,
   ghosts,
   draft,
   selectedBlockId,
@@ -290,7 +293,16 @@ export function WeekGrid({
         <div className="grid-corner" />
         {days.map((day) => {
           const date = addDays(weekStart, day - 1)
-          return <DayHead key={day} day={day} date={date} config={config} blocks={blocks} />
+          return (
+            <DayHead
+              key={day}
+              day={day}
+              date={date}
+              config={config}
+              blocks={blocks}
+              appointments={appointmentsOn(appointments, date)}
+            />
+          )
         })}
       </div>
 
@@ -317,6 +329,7 @@ export function WeekGrid({
                 day={day}
                 date={date}
                 config={config}
+                appointments={appointmentsOn(appointments, date)}
                 now={now}
                 items={placed.filter((item) => item.dayIndex === dayIndex)}
                 // A missed part now stays on the grid itself, so only moves need an outline.
@@ -350,8 +363,16 @@ export function WeekGrid({
   )
 }
 
-function DayHead({ day, date, config, blocks }: { day: number; date: Date; config: BoardConfig | undefined; blocks: Block[] }) {
-  const { planned, available } = workload(config, day, date, blocks)
+interface DayHeadProps {
+  day: number
+  date: Date
+  config: BoardConfig | undefined
+  blocks: Block[]
+  appointments: Appointment[]
+}
+
+function DayHead({ day, date, config, blocks, appointments }: DayHeadProps) {
+  const { planned, available } = workload(config, day, date, blocks, appointments)
   const over = planned > available
   const today = isToday(date)
   const summary =
@@ -387,6 +408,7 @@ interface DayColumnProps {
   day: number
   date: Date
   config: BoardConfig | undefined
+  appointments: Appointment[]
   now: Date
   items: Placed[]
   ghosts: Ghost[]
@@ -395,7 +417,7 @@ interface DayColumnProps {
   onCreateAt: (start: Date, anchor: DOMRect) => void
 }
 
-function DayColumn({ day, date, config, now, items, ghosts, draft, renderBlock, onCreateAt }: DayColumnProps) {
+function DayColumn({ day, date, config, appointments, now, items, ghosts, draft, renderBlock, onCreateAt }: DayColumnProps) {
   const hoverRef = useRef<HTMLDivElement>(null)
   const working = workingOn(config, day)
   const today = sameDate(date, now)
@@ -461,6 +483,19 @@ function DayColumn({ day, date, config, now, items, ghosts, draft, renderBlock, 
           }}
         >
           <span className="break-label">{period.label || t('grid.break')}</span>
+        </div>
+      ))}
+
+      {appointments.map((appointment) => (
+        <div
+          key={`${appointment.from}-${appointment.to}-${appointment.title}`}
+          className="break appointment"
+          style={{
+            top: `calc(${appointment.from} * var(--px-per-min))`,
+            height: `calc(${appointment.to - appointment.from} * var(--px-per-min))`,
+          }}
+        >
+          <span className="break-label">{appointment.title || t('grid.appointment')}</span>
         </div>
       ))}
 

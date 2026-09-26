@@ -155,6 +155,12 @@ calendar.
 A session cookie belongs to one hostname, so opening the same server by its home address and by its
 Tailscale name means logging in once for each.
 
+**Your plan in the phone's calendar app:** open ReflowTask by the address that works everywhere
+(usually the Tailscale one), click the calendar icon in the top bar and create a subscribe link.
+The phone refreshes it only while it can reach ReflowTask. The app-by-app steps, and how to make
+ReflowTask plan around your other calendars, are in the README under
+[Calendar sync](../README.md#calendar-sync).
+
 ## HTTPS
 
 Not required inside a private network, but a reverse proxy adds it. With

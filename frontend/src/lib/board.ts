@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '../api/client'
-import type { Block, BoardConfig, ConfigWindow, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
+import type { Block, BoardConfig, BusyPeriod, ConfigWindow, RescheduleEvent, Task, TaskInput, TaskStatus } from '../api/types'
 import { DAY_NAMES, addDays, isoDay, minutesOfDay, monthGridDays, parseClock, sameDate, toLocalDateTime } from './time'
 
 export type { BoardConfig, ConfigWindow }
@@ -246,22 +246,56 @@ export function workingOn(config: BoardConfig | undefined, day: number): ConfigW
   return (config?.workingHours ?? []).find((window) => dayNumber(window.day) === day)
 }
 
+/** One appointment from another calendar, as minutes of one day: an overnight one is cut at midnight. */
+export interface Appointment {
+  from: number
+  to: number
+  title: string | null
+}
+
+export function appointmentsOn(busy: BusyPeriod[], date: Date): Appointment[] {
+  const midnight = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+  const result: Appointment[] = []
+  for (const period of busy) {
+    const from = (new Date(period.startAt).getTime() - midnight) / 60_000
+    const to = (new Date(period.endAt).getTime() - midnight) / 60_000
+    if (to > 0 && from < 24 * 60) result.push({ from: Math.max(from, 0), to: Math.min(to, 24 * 60), title: period.title })
+  }
+  return result
+}
+
 /**
  * Planned against available time for one day. Available is the working window minus the breaks
- * inside it; planned is the part of each block on that date that falls inside the working window,
- * so an evening appointment does not read as a fuller working day. The scheduler never overfills
- * a day by itself, so "over" only happens when fixed or dragged work exceeds the day.
+ * and calendar appointments inside it (counted once where they overlap); planned is the part of
+ * each block on that date that falls inside the working window, so an evening appointment does
+ * not read as a fuller working day. The scheduler never overfills a day by itself, so "over" only
+ * happens when fixed or dragged work exceeds the day.
  */
-export function workload(config: BoardConfig | undefined, day: number, date: Date, blocks: Block[]) {
+export function workload(
+  config: BoardConfig | undefined,
+  day: number,
+  date: Date,
+  blocks: Block[],
+  appointments: Appointment[] = [],
+) {
   const working = workingOn(config, day)
   if (!working) return { planned: 0, available: 0 }
   const start = parseClock(working.startTime)
   const end = parseClock(working.endTime)
   const overlap = (from: number, to: number) => Math.max(0, Math.min(end, to) - Math.max(start, from))
 
+  const taken = [
+    ...blockedOn(config, day).map((period) => [parseClock(period.startTime), parseClock(period.endTime)]),
+    ...appointments.map((appointment) => [appointment.from, appointment.to]),
+  ]
+    .map(([from, to]) => [Math.max(from, start), Math.min(to, end)])
+    .filter(([from, to]) => to > from)
+    .sort((a, b) => a[0] - b[0])
   let available = end - start
-  for (const period of blockedOn(config, day)) {
-    available -= overlap(parseClock(period.startTime), parseClock(period.endTime))
+  let reached = start
+  for (const [from, to] of taken) {
+    available -= Math.max(0, to - Math.max(from, reached))
+    reached = Math.max(reached, to)
   }
   let planned = 0
   for (const block of blocks) {

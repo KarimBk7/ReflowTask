@@ -62,7 +62,7 @@ export interface Block {
 
 export type BlockState = 'PLANNED' | 'DONE' | 'MISSED'
 
-export type RescheduleTrigger = 'TASK_CHANGED' | 'SCHEDULED_JOB' | 'MANUAL' | 'CONFIG_CHANGED'
+export type RescheduleTrigger = 'TASK_CHANGED' | 'SCHEDULED_JOB' | 'MANUAL' | 'CONFIG_CHANGED' | 'CALENDAR_SYNCED'
 
 export type RescheduleItemKind = 'MISSED' | 'MOVED' | 'PLACED' | 'UNPLACED'
 
@@ -121,4 +121,27 @@ export interface BoardConfig {
   bufferMinutes: number
   /** Read-only: true once the configuration has been saved. The server ignores what is sent. */
   onboarded?: boolean
+}
+
+/** The subscribe link for your plan. path is null while the link is turned off. */
+export interface FeedInfo {
+  path: string | null
+}
+
+/** Another calendar whose appointments the scheduler plans around. */
+export interface CalendarSource {
+  id: number
+  name: string
+  url: string
+  lastFetchedAt: LocalDateTime | null
+  /** Why the last read failed; the busy times from the last good read are kept meanwhile. */
+  lastError: string | null
+}
+
+/** One appointment from another calendar, in local time. */
+export interface BusyPeriod {
+  startAt: LocalDateTime
+  endAt: LocalDateTime
+  title: string | null
+  sourceId: number
 }

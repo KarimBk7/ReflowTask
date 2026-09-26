@@ -15,6 +15,16 @@ What is in place:
 - Every task, block, replan record and setting is scoped to its owner, and another user's id
   answers `404`. This is covered by tests that try every id-taking endpoint as a second user.
 - Recovery needs a shell on the machine. There is no reset link that could be intercepted.
+- A calendar subscribe link carries a random 256-bit token and is the one endpoint that answers
+  without a session. It shows that one person's blocks, read-only; making a new link or turning it
+  off invalidates the old token at once.
+- Adding another calendar makes the server fetch a URL the member typed. Only `http`, `https` and
+  `webcal` are accepted, with a 10-second connect and 20-second overall timeout and a 5 MB limit,
+  and the response is only ever parsed as a calendar: its content and headers are never shown
+  back, only its HTTP status or that it was not a calendar. Private addresses are allowed on purpose, because a calendar on the same home
+  network (a Nextcloud, say) is the main use. The server can therefore be asked to send GET
+  requests into its own network by any logged-in member, which is acceptable for a household and
+  another reason not to expose ReflowTask publicly.
 
 Known limits, on purpose: no `Secure` cookie flag (plain HTTP is the supported private deployment),
 no CSRF tokens (`SameSite=Lax` covers a same-origin single-page app), no per-address rate limiting,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { Block, BoardConfig, RescheduleEvent, Task } from '../api/types'
 import {
+  appointmentsOn,
   blocksByDay,
   boardDays,
   describeWorkingHours,
@@ -116,6 +117,22 @@ describe('workload', () => {
       block(2, '2026-09-21T11:00:00', '2026-09-21T12:00:00', { state: 'DONE' }),
     ]
     expect(workload(config(WEEKDAYS), 1, new Date(2026, 8, 21), blocks).planned).toBe(60)
+  })
+
+  it('subtracts calendar appointments once, even where they overlap a break', () => {
+    const withLunch = config(WEEKDAYS, [{ day: 'MONDAY', startTime: '12:00:00', endTime: '13:00:00', label: 'Lunch' }] as never)
+    const busy = [
+      { startAt: '2026-09-21T12:30:00', endAt: '2026-09-21T14:00:00', title: 'Dentist', sourceId: 1 },
+      { startAt: '2026-09-20T22:00:00', endAt: '2026-09-21T10:00:00', title: 'Night shift', sourceId: 1 },
+    ]
+    const appointments = appointmentsOn(busy, new Date(2026, 8, 21))
+
+    expect(appointments).toEqual([
+      { from: 750, to: 840, title: 'Dentist' },
+      { from: 0, to: 600, title: 'Night shift' },
+    ])
+    // 9 hours, minus 12:00-14:00 (lunch and dentist together), minus 09:00-10:00.
+    expect(workload(withLunch, 1, new Date(2026, 8, 21), [], appointments).available).toBe(360)
   })
 
   it('is zero on a day off', () => {

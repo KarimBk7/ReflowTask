@@ -6,8 +6,9 @@ import type { AuthUser, Block, Task, TaskInput } from './api/types'
 import { ChangePasswordScreen } from './auth/ChangePasswordScreen'
 import { LoginScreen } from './auth/LoginScreen'
 import { AccountPanel } from './auth/AccountPanel'
+import { CalendarPanel } from './auth/CalendarPanel'
 import { UserManagement } from './auth/UserManagement'
-import { ChevronIcon, ClockIcon, HelpIcon, LogoutIcon, PlusIcon, ReflowIcon, UsersIcon } from './design/Icon'
+import { CalendarIcon, ChevronIcon, ClockIcon, HelpIcon, LogoutIcon, PlusIcon, ReflowIcon, UsersIcon } from './design/Icon'
 import { t } from './i18n/en'
 import {
   boardDays,
@@ -30,6 +31,7 @@ import {
   useUpdateConfig,
   useUpdateTask,
 } from './lib/board'
+import { useBusy } from './lib/calendar'
 import { useLogout, useMe } from './lib/auth'
 import { addDays, formatDayTime, startOfMonth, startOfWeek, toLocalDateTime } from './lib/time'
 import { MonthGrid } from './month/MonthGrid'
@@ -50,6 +52,7 @@ type Open =
   | { kind: 'help'; anchor: DOMRect }
   | { kind: 'users'; anchor: DOMRect }
   | { kind: 'account'; anchor: DOMRect }
+  | { kind: 'calendar'; anchor: DOMRect }
 
 const POPOVER_HEADING = 'popover-heading'
 const NOTICE_MS = 6000
@@ -98,6 +101,7 @@ function Board({ user }: { user: AuthUser }) {
 
   const config = useConfig()
   const schedule = useSchedule(weekStart)
+  const busyTimes = useBusy(weekStart)
   // The month is anchored on the week being looked at, so switching views never jumps elsewhere.
   const monthStart = startOfMonth(addDays(weekStart, 3))
   const monthSchedule = useMonthSchedule(monthStart)
@@ -385,6 +389,14 @@ function Board({ user }: { user: AuthUser }) {
             <ClockIcon />
             <span className="label-wide">{t('hours.open')}</span>
           </button>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={(event) => setOpen({ kind: 'calendar', anchor: event.currentTarget.getBoundingClientRect() })}
+          >
+            <CalendarIcon />
+            <span className="sr-only">{t('calendar.title')}</span>
+          </button>
           {user.role === 'ADMIN' && (
             <button
               type="button"
@@ -467,6 +479,7 @@ function Board({ user }: { user: AuthUser }) {
             allDays={showWeekend}
             config={config.data}
             blocks={blocks}
+            appointments={busyTimes.data ?? []}
             ghosts={ghosts}
             draft={draft}
             selectedBlockId={open?.kind === 'block' ? open.blockId : null}
@@ -539,6 +552,12 @@ function Board({ user }: { user: AuthUser }) {
       {open?.kind === 'account' && (
         <Popover anchor={open.anchor} placement="below" labelledBy={POPOVER_HEADING} onClose={close}>
           <AccountPanel user={user} onClose={close} headingId={POPOVER_HEADING} />
+        </Popover>
+      )}
+
+      {open?.kind === 'calendar' && (
+        <Popover anchor={open.anchor} placement="below" labelledBy={POPOVER_HEADING} onClose={close}>
+          <CalendarPanel onClose={close} headingId={POPOVER_HEADING} />
         </Popover>
       )}
 

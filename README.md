@@ -72,6 +72,13 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
   is planned again.
 - A workload meter per day: planned time against available working time.
 
+**Calendar sync**
+
+- Subscribe to your plan from your phone's or desktop's calendar app.
+- Add other calendars (work, family, Nextcloud, Google, Outlook) by their `.ics` address. Their
+  appointments block time, show on the week view, and tasks are planned around them. See
+  [Calendar sync](#calendar-sync).
+
 | Week view | Month view |
 | --- | --- |
 | ![Week](docs/images/week.png) | ![Month](docs/images/month.png) |
@@ -170,6 +177,69 @@ its deadline quietly moved.
 All times are wall-clock times: 09:00 means 09:00, and daylight-saving changes don't shift your
 working hours.
 
+## Calendar sync
+
+Open the **calendar icon** in the top bar. Sync works in both directions, and both directions are
+one-way subscriptions: nothing you change in another app is written back.
+
+### Your plan in your calendar app
+
+Choose **Create subscribe link**. The link is an `.ics` feed of your blocks from the last 30 days
+onward, with a 10-minute reminder on each block that is still ahead. Done parts show with a ✓;
+missed parts are left out.
+
+| App | How to subscribe |
+| --- | --- |
+| Apple Calendar on iPhone, iPad or Mac | **Open in calendar app** on that device, or: Settings → Apps → Calendar → Calendar Accounts → Add Account → Other → Add Subscribed Calendar (on a Mac: File → New Calendar Subscription), then paste the link |
+| Android | Install [ICSx⁵](https://icsx5.bitfire.at) (free), tap +, paste the link. The plan then appears in Google Calendar, Samsung Calendar or any other calendar app on the phone |
+| Thunderbird | Calendar → New Calendar → On the Network, paste the link |
+| Outlook (desktop) | Add calendar → From internet, paste the link |
+| Google Calendar on the web | Only works if Google's servers can reach your ReflowTask, which a private install should not allow. Use ICSx⁵ on the phone instead |
+
+Things worth knowing:
+
+- **The phone must be able to reach ReflowTask** to refresh the plan. The link uses the address
+  you opened ReflowTask with, so on the go that means your VPN (Tailscale, WireGuard) is on. Create
+  the link from the address that works everywhere, usually the VPN one.
+- **Your calendar app decides how often it refreshes.** ReflowTask asks for every 15 minutes;
+  Apple lets you choose (Settings → Calendar → Accounts → Fetch), ICSx⁵ has its own setting.
+  A replan can take that long to show up on the phone.
+- **The link is a password.** Anyone who has it can read your plan (not change it). If it got out,
+  choose **New link**: the old one stops working and you subscribe again with the new one.
+  **Turn off** disables the feed completely.
+- Apple Calendar may drop the reminders of subscribed calendars unless "Remove Alerts" is off in
+  the subscription's settings.
+
+### Plan around your other calendars
+
+Paste the `.ics` (or `webcal://`) address of a calendar and give it a name. ReflowTask reads it
+once right away (a wrong address is refused then), shows its appointments as tinted strips on the
+week view, and replans so no task overlaps them. Buffer time applies around them just like around
+breaks.
+
+Where to find the address:
+
+| Calendar | Where the `.ics` address is |
+| --- | --- |
+| Nextcloud | Calendar app → ⋯ next to the calendar → Share → Share link → ⋯ → Copy subscription link |
+| Google Calendar | Settings → the calendar → Integrate calendar → **Secret address in iCal format** |
+| Outlook / Microsoft 365 | Settings → Calendar → Shared calendars → Publish a calendar → ICS link |
+| iCloud | Calendar app → share the calendar as a **Public Calendar** and copy the link |
+| Anything else | Look for "subscribe", "export", "publish" or "iCal link" |
+
+Rules:
+
+- **Only appointments that take time count.** All-day events (birthdays, holidays) and events
+  marked "free" or "available" do not block anything, and cancelled ones are ignored.
+- Repeating appointments are expanded, including exceptions.
+- **Other calendars are read again every hour**, together with the hourly replan, or immediately
+  with **Read now**. If a calendar cannot be read (offline, wrong address), the panel says why and
+  ReflowTask keeps planning around what it read last time instead of forgetting it.
+- The ReflowTask server fetches the address, not your browser. A calendar on your own network,
+  such as a Nextcloud on the same machine, works as long as the server can reach it.
+- Each person's calendars are their own; nobody else in the household sees them.
+- Subscribing ReflowTask to its own feed does nothing: its own blocks are recognised and skipped.
+
 ## Households: accounts and privacy
 
 ReflowTask has a **household login**, not an internet-grade account system. Each person has their
@@ -210,6 +280,10 @@ instance from each other; it is not what keeps strangers out.
 - A cookie belongs to one hostname: opening the same server by its LAN name and by its Tailscale
   name means logging in twice. That is a known limitation, not a bug.
 - There is no email, no password-reset link and no OAuth. Recovery is a command on the device.
+- A calendar subscribe link works without logging in: its secret token is the only protection.
+  Make a new one if it leaks. Adding another calendar makes the server fetch that address, which
+  can be on your network; only logged-in members can do that, and they see only whether it worked,
+  never what came back.
 
 Found a vulnerability? See [SECURITY.md](SECURITY.md).
 
@@ -255,12 +329,18 @@ API, so a mobile client could use the same endpoints.
 | `POST` | `/schedule/blocks/{id}/undone` | Undo that |
 | `GET` | `/reschedule-events` | Your recent replans and what they moved |
 | `GET` `PUT` | `/config` | Your working hours, breaks, buffer and planning settings; `PUT` replaces them and replans |
+| `GET` `POST` `DELETE` | `/calendar/feed` | Your subscribe link's path (`null` when off); `POST` creates or replaces it, `DELETE` turns it off |
+| `GET` | `/calendar/feed/{token}.ics` | The subscribe feed itself. No login; the token is the secret |
+| `GET` `POST` | `/calendar/sources` | Your other calendars; add one (`name`, `url`), which reads it and replans |
+| `DELETE` | `/calendar/sources/{id}` | Remove a calendar and replan |
+| `POST` | `/calendar/sources/refresh` | Read every calendar again now and replan |
+| `GET` | `/calendar/busy?from=…&to=…` | Appointments from your other calendars in a date-time range |
 
 ## Tech stack
 
 | Part | Technology |
 | --- | --- |
-| Backend | Java 25, Spring Boot 4.1, Spring Data JPA, Bean Validation, spring-security-crypto (bcrypt only) |
+| Backend | Java 25, Spring Boot 4.1, Spring Data JPA, Bean Validation, spring-security-crypto (bcrypt only), ical4j (reading calendars) |
 | Database | PostgreSQL in production, H2 in development; schema managed by Flyway |
 | Frontend | React 19, TypeScript, Vite 8, TanStack Query |
 | API | REST, versioned under `/api/v1` |
@@ -307,8 +387,8 @@ docker-compose.yml, backend/Dockerfile, frontend/Dockerfile   deployment
 ## Status
 
 Working and in daily use, including on a Raspberry Pi 5: task management, automatic placement,
-replanning, pinning, the week and month calendars, per-person accounts, configuration, and Docker
-Compose deployment with PostgreSQL.
+replanning, pinning, the week and month calendars, calendar sync, per-person accounts,
+configuration, and Docker Compose deployment with PostgreSQL.
 
 Known limitations:
 
@@ -321,7 +401,10 @@ Known limitations:
   (`frontend/src/i18n/en.ts`) so a translation is a data change.
 - Login lockout is kept in memory, so it resets when the server restarts.
 
-Ideas for later: calendar sync (CalDAV), recurring tasks, task dependencies, and a mobile client.
+- Calendar sync is by `.ics` subscription, not CalDAV: other apps see the plan but cannot edit it,
+  and changes reach them at the speed their app refreshes.
+
+Ideas for later: recurring tasks, task dependencies, and a mobile client.
 Pull requests are welcome.
 
 ## Contributing and forking

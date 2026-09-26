@@ -10,6 +10,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByUsername(String username);
 
+	Optional<User> findByCalendarToken(String calendarToken);
+
 	boolean existsByUsername(String username);
 
 	List<User> findAllByOrderByUsername();

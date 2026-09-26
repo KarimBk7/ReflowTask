@@ -1,10 +1,7 @@
 package dev.karimbk.reflowtask.config;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 import dev.karimbk.reflowtask.config.ConfigPayloads.Config;
 import dev.karimbk.reflowtask.config.ConfigPayloads.Window;
@@ -50,13 +47,11 @@ public class ConfigService {
 					period.getLabel()))
 			.sorted(BY_DAY_THEN_START)
 			.toList();
-		if (!current.isOnboarded() && working.isEmpty()) {
-			// A new member has no rows yet (only the first admin's were seeded by migration): offer
-			// the same Monday-to-Friday default for the setup screen to start from.
-			working = Stream
-				.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-						DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)
-				.map((day) -> new Window(day, LocalTime.of(9, 0), LocalTime.of(18, 0), null))
+		if (DefaultHours.apply(current, !working.isEmpty())) {
+			// A new member has no rows yet (only the first admin's were seeded by migration): show
+			// the default the scheduler is planning against until they save their own.
+			working = DefaultHours.WEEKDAYS.stream()
+				.map((window) -> new Window(window.day(), window.start(), window.end(), null))
 				.toList();
 		}
 		return new Config(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes(),

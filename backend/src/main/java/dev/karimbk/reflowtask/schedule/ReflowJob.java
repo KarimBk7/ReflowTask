@@ -1,5 +1,6 @@
 package dev.karimbk.reflowtask.schedule;
 
+import dev.karimbk.reflowtask.calendar.CalendarService;
 import dev.karimbk.reflowtask.user.UserRepository;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,9 +24,12 @@ class ReflowJob {
 
 	private final UserRepository users;
 
-	ReflowJob(SchedulerService scheduler, UserRepository users) {
+	private final CalendarService calendars;
+
+	ReflowJob(SchedulerService scheduler, UserRepository users, CalendarService calendars) {
 		this.scheduler = scheduler;
 		this.users = users;
+		this.calendars = calendars;
 	}
 
 	@Scheduled(cron = "${reflowtask.reflow.cron}")
@@ -33,6 +37,8 @@ class ReflowJob {
 		// ponytail: sequential loop over users, fine for a household-sized user count.
 		for (long userId : this.users.findAllIds()) {
 			try {
+				// Other calendars first, so the replan sees today's appointments, not yesterday's.
+				this.calendars.refresh(userId);
 				this.scheduler.replan(userId, RescheduleTrigger.SCHEDULED_JOB)
 					.ifPresent((recorded) -> logger.info("Schedule reflowed for user " + userId + ": "
 							+ recorded.getSummary()));

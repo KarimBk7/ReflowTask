@@ -128,6 +128,18 @@ export function ReflowIcon(props: IconProps) {
   )
 }
 
+/** Calendar sync: the subscribe link and other calendars. */
+export function CalendarIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <rect x="2" y="3" width="12" height="11" rx="1.5" />
+      <path d="M2 6.5h12" />
+      <path d="M5.5 1.75v2.5" />
+      <path d="M10.5 1.75v2.5" />
+    </Frame>
+  )
+}
+
 /** Household accounts, admin-only. */
 export function UsersIcon(props: IconProps) {
   return (
