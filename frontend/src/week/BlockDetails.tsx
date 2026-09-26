@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import type { Block, Task } from '../api/types'
-import { CheckIcon, CloseIcon, EditIcon, PinIcon, PriorityIcon, RiskIcon } from '../design/Icon'
+import { CheckIcon, CloseIcon, EditIcon, PinIcon, PriorityIcon, ReflowIcon, RiskIcon } from '../design/Icon'
 import { t } from '../i18n/en'
 import type { Ghost } from '../lib/board'
 import { DAY_NAMES, dayOfMonth, formatDayTime, formatDeadline, formatDuration, formatTime, isoDay, shortMonth } from '../lib/time'
@@ -128,6 +128,12 @@ export function BlockDetails({ block, task, origin, otherParts, onToggleDone, on
         {!block.atRisk && task?.deadline && (
           <li className="fact">
             {t('details.due')} {formatDeadline(task.deadline, task.deadlineHasTime)}
+          </li>
+        )}
+        {task?.recurrence && (
+          <li className="fact">
+            <ReflowIcon size={14} />
+            {t('details.repeats')} {t(`repeat.${task.recurrence}`).toLowerCase()}
           </li>
         )}
       </ul>

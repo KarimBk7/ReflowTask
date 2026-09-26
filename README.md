@@ -60,6 +60,8 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
   task was unfinished and places the task again.
 - Work that cannot finish before its deadline is still scheduled and flagged **at risk**, never
   silently dropped or given a moved deadline.
+- **Repeating tasks**: daily (every working day), weekly, every two weeks or monthly. Finish one
+  and the next appears, due one step later.
 - **Nothing moves silently.** Every replan is recorded with the reason and what moved where.
 
 **Editing the calendar**
@@ -171,6 +173,15 @@ Everything else in the future is rebuilt. Finishing a task early hands its remai
 **Nothing moves silently.** Every replan that changes something is recorded with the reason and
 what moved where. The calendar marks a moved block with where it came from, outlines its old
 slot, and lets the rest of the week glide to its new place.
+
+**Repeating tasks come one at a time.** A repeating task needs a deadline, and only its current
+occurrence exists. When it is done (as a whole, or part by part), the next one is created, due one
+step after the last deadline and never planned before it, so next week's review is not done this
+week. Daily means every working day. A period that went by is skipped, not owed: a daily task
+finished three days late comes back tomorrow, not three times today. An occurrence left undone
+stays, at risk, until it is done. To stop a series, set Repeats to Never, or delete the task. A
+task fixed at a time cannot repeat: repeating appointments belong in a calendar that ReflowTask
+reads (see [Calendar sync](#calendar-sync)).
 
 **Impossible deadlines are flagged, not hidden.** Work that can't fit before its deadline is
 still scheduled at the earliest possible time and marked at risk, rather than dropped or having
@@ -318,7 +329,7 @@ API, so a mobile client could use the same endpoints.
 | `DELETE` | `/users/{id}` | Admin: remove an account and everything it owns |
 | `GET` | `/tasks` | List your tasks, each with its scheduled minutes and at-risk state |
 | `GET` | `/tasks/{id}` | Get one task |
-| `POST` | `/tasks` | Create a task and replan; an optional `fixedStart` pins it at that time |
+| `POST` | `/tasks` | Create a task and replan; an optional `fixedStart` pins it at that time, an optional `recurrence` (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`) makes it repeat |
 | `PUT` | `/tasks/{id}` | Update everything except status, and replan |
 | `PATCH` | `/tasks/{id}/status` | Change status, for example to mark it done, and replan |
 | `DELETE` | `/tasks/{id}` | Delete a task and replan |
@@ -406,7 +417,7 @@ Known limitations:
 - Calendar sync is by `.ics` subscription, not CalDAV: other apps see the plan but cannot edit it,
   and changes reach them at the speed their app refreshes.
 
-Ideas for later: recurring tasks, task dependencies, and a mobile client.
+Ideas for later: task dependencies, and a mobile client.
 Pull requests are welcome.
 
 ## Contributing and forking

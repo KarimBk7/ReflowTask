@@ -51,6 +51,8 @@ const task = (id: number, extra: Partial<Task> = {}): Task => ({
   scheduledMinutes: 60,
   doneMinutes: 0,
   atRisk: false,
+  recurrence: null,
+  notBefore: null,
   ...extra,
 })
 

@@ -54,6 +54,13 @@ public class Task {
 	@Column(nullable = false)
 	private long userId;
 
+	/** Null for a one-off task. Only the current occurrence of a series carries the rule. */
+	@Enumerated(EnumType.STRING)
+	private Recurrence recurrence;
+
+	/** Work is not planned before this; null means any time from now. */
+	private LocalDateTime notBefore;
+
 	protected Task() {
 		// for JPA
 	}
@@ -145,6 +152,44 @@ public class Task {
 
 	public long getUserId() {
 		return this.userId;
+	}
+
+	public Recurrence getRecurrence() {
+		return this.recurrence;
+	}
+
+	public void setRecurrence(Recurrence recurrence) {
+		this.recurrence = recurrence;
+	}
+
+	public LocalDateTime getNotBefore() {
+		return this.notBefore;
+	}
+
+	/**
+	 * The occurrence after this one: same work, due one step later, and not planned before this
+	 * one was due. The rule moves to the new occurrence, which leaves this one as plain history.
+	 *
+	 * @param deadline when the next one is due, worked out by the caller, which knows which days
+	 * are working days and that a period already gone by is skipped rather than owed
+	 */
+	public Task nextOccurrence(LocalDateTime deadline, LocalDateTime now) {
+		Task next = new Task(this.userId, this.title, this.description, this.estimatedMinutes, deadline,
+				this.deadlineHasTime, this.priority, now);
+		next.recurrence = this.recurrence;
+		next.notBefore = previousDeadline(deadline);
+		this.recurrence = null;
+		return next;
+	}
+
+	/** Where the period before {@code deadline} ended: the next occurrence's earliest start. */
+	private LocalDateTime previousDeadline(LocalDateTime deadline) {
+		LocalDateTime previous = this.deadline;
+		for (LocalDateTime step = this.recurrence.next(previous); step.isBefore(deadline); step = this.recurrence
+			.next(step)) {
+			previous = step;
+		}
+		return previous;
 	}
 
 }

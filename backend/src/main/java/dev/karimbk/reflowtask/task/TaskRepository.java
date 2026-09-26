@@ -17,6 +17,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
 	List<Task> findByUserIdOrderByCreatedAtDesc(long userId);
 
+	/** Finished occurrences whose series has not moved on to the next one yet. */
+	List<Task> findByUserIdAndStatusAndRecurrenceNotNull(long userId, TaskStatus status);
+
 	Optional<Task> findByIdAndUserId(long id, long userId);
 
 }

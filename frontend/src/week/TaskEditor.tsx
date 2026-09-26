@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 
 import { ApiError } from '../api/client'
-import type { Priority, Task, TaskInput } from '../api/types'
+import type { Priority, Recurrence, Task, TaskInput } from '../api/types'
 import { t } from '../i18n/en'
 import { DAY_NAMES, addDays, dayOfMonth, formatDayTime, formatDuration, isoDay, toLocalDateTime } from '../lib/time'
 
@@ -24,6 +24,7 @@ interface TaskEditorProps {
 
 const PRIORITIES: Priority[] = ['LOW', 'MEDIUM', 'HIGH']
 const DURATIONS = [15, 30, 45, 60, 90, 120]
+const REPEATS: (Recurrence | null)[] = [null, 'DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY']
 
 type DeadlineChoice = 'none' | 'today' | 'tomorrow' | 'friday' | 'custom'
 
@@ -87,6 +88,8 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
     return 'custom'
   })
 
+  const [recurrence, setRecurrence] = useState<Recurrence | null>(task?.recurrence ?? null)
+
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [failure, setFailure] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -103,12 +106,24 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
 
   function chooseDeadline(choice: DeadlineChoice) {
     setDeadlineChoice(choice)
-    if (choice === 'none') setDeadlineDate('')
+    if (choice === 'none') {
+      setDeadlineDate('')
+      // Occurrences are due one step apart, counted from the deadline: none, nothing to count from.
+      setRecurrence(null)
+    }
     if (choice === 'today') setDeadlineDate(dates.today)
     if (choice === 'tomorrow') setDeadlineDate(dates.tomorrow)
     if (choice === 'friday') setDeadlineDate(dates.friday)
     if (choice !== 'custom') setDeadlineTime('')
   }
+
+  function chooseRecurrence(value: Recurrence | null) {
+    setRecurrence(value)
+    if (value && !deadlineDate) chooseDeadline('today')
+  }
+
+  // A fixed time that repeats is an appointment, which belongs in a calendar ReflowTask reads.
+  const fixedAtSlot = !task && slot !== null && fixed
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -122,7 +137,8 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
         deadlineDate: deadlineDate || null,
         deadlineTime: deadlineDate && deadlineTime ? `${deadlineTime}:00` : null,
         priority,
-        fixedStart: !task && slot && fixed ? toLocalDateTime(slot) : null,
+        fixedStart: fixedAtSlot ? toLocalDateTime(slot) : null,
+        recurrence: fixedAtSlot ? null : recurrence,
       })
     } catch (error) {
       if (error instanceof ApiError) {
@@ -296,6 +312,27 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
           </div>
         )}
       </fieldset>
+
+      {!fixedAtSlot && (
+        <fieldset className="editor-row">
+          <legend className="editor-label">{t('task.repeat')}</legend>
+          <div className="chips">
+            {REPEATS.map((value) => (
+              <label key={value ?? 'never'} className="chip" data-selected={recurrence === value || undefined}>
+                <input
+                  type="radio"
+                  name={`${id}-repeat`}
+                  checked={recurrence === value}
+                  onChange={() => chooseRecurrence(value)}
+                />
+                {t(`repeat.${value ?? 'NEVER'}`)}
+              </label>
+            ))}
+          </div>
+          {recurrence && <p className="editor-note">{t('task.repeatHint')}</p>}
+          {errors.recurrenceAnchored && <p className="field-error">{errors.recurrenceAnchored}</p>}
+        </fieldset>
+      )}
 
       {showDescription ? (
         <textarea

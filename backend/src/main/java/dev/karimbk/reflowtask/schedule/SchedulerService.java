@@ -20,6 +20,7 @@ import dev.karimbk.reflowtask.common.ConflictException;
 import dev.karimbk.reflowtask.common.NotFoundException;
 import dev.karimbk.reflowtask.config.SchedulingConfigProvider;
 import dev.karimbk.reflowtask.task.Priority;
+import dev.karimbk.reflowtask.task.Recurrence;
 import dev.karimbk.reflowtask.task.Task;
 import dev.karimbk.reflowtask.task.TaskRepository;
 import dev.karimbk.reflowtask.task.TaskStatus;
@@ -246,6 +247,8 @@ public class SchedulerService {
 	private Optional<RescheduleEvent> replan(long userId, RescheduleTrigger trigger,
 			Map<Long, List<LocalDateTime>> manualBeforeOverrides) {
 		LocalDateTime now = LocalDateTime.now(this.clock);
+		SchedulingConfig settings = this.config.current(userId);
+		continueSeries(userId, settings, now);
 		Disposition disposition = disposeOf(this.blocks.findAllWithTaskByUserId(userId), now);
 
 		Map<Long, Task> byId = this.tasks.findByUserIdAndStatusNot(userId, TaskStatus.DONE)
@@ -264,7 +267,6 @@ public class SchedulerService {
 		Map<Long, List<LocalDateTime>> before = new HashMap<>(startsPerTask(disposition.stillPlanned()));
 		before.putAll(manualBeforeOverrides);
 
-		SchedulingConfig settings = this.config.current(userId);
 		// Busy time read from other calendars is an obstacle like a pinned block, buffer included.
 		List<TimeSlot> taken = new ArrayList<>(slotsOf(disposition.obstacles()));
 		for (ExternalBusy external : this.busy.findOverlapping(userId, now, now.plusDays(settings.horizonDays() + 1))) {
@@ -284,6 +286,31 @@ public class SchedulerService {
 		Map<Long, List<LocalDateTime>> after = startsAfter(
 				disposition.obstacles().stream().filter(TimeBlock::isPlanned).toList(), planned);
 		return record(userId, trigger, now, before, after, disposition, byId);
+	}
+
+	/**
+	 * Creates the next occurrence of every repeating task that was finished, however it was
+	 * finished: marked done, or done part by part. Doing it here, where every change ends up,
+	 * means no path to "done" can forget it.
+	 *
+	 * The next one is due one step after the last. Steps that are already over are skipped, not
+	 * owed: a daily task finished three days late comes back tomorrow, not three times today. A
+	 * daily task also skips days without working hours, so it is not due on a day off.
+	 */
+	private void continueSeries(long userId, SchedulingConfig settings, LocalDateTime now) {
+		for (Task finished : this.tasks.findByUserIdAndStatusAndRecurrenceNotNull(userId, TaskStatus.DONE)) {
+			Recurrence rule = finished.getRecurrence();
+			LocalDateTime deadline = rule.next(finished.getDeadline());
+			while (!deadline.isAfter(now) || (rule == Recurrence.DAILY && isDayOff(settings, deadline))) {
+				deadline = rule.next(deadline);
+			}
+			this.tasks.save(finished.nextOccurrence(deadline, now));
+		}
+	}
+
+	/** A day with no working hours, unless no day has any, when nothing would ever be due. */
+	private static boolean isDayOff(SchedulingConfig settings, LocalDateTime date) {
+		return settings.workingHoursOn(date.getDayOfWeek()).isEmpty() && !settings.workingHours().isEmpty();
 	}
 
 	// --- deciding what survives ------------------------------------------------------
@@ -371,7 +398,8 @@ public class SchedulerService {
 		// Covered means kept obstacles plus parts marked done. A missed part is not covered: the work
 		// did not happen unless the person marks it done, which they can still do afterwards.
 		int remaining = (int) Math.max(0, task.getEstimatedMinutes() - alreadyCovered);
-		return new SchedulableTask(task.getId(), remaining, task.getDeadline(), task.getPriority());
+		return new SchedulableTask(task.getId(), remaining, task.getDeadline(), task.getPriority(),
+				task.getNotBefore());
 	}
 
 	private static Map<Long, Long> minutesPerTask(List<TimeBlock> blocks) {

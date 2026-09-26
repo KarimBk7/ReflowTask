@@ -63,6 +63,15 @@ export const de: Record<StringKey, string> = {
   'task.deadlineTime': 'Frist (Uhrzeit, optional)',
   'task.description': 'Notizen',
   'task.addDescription': 'Notizen hinzufügen',
+  'task.repeat': 'Wiederholen',
+  'task.repeatHint': 'Ist diese erledigt, erscheint die nächste: fällig einen Schritt nach dieser Frist und nicht davor eingeplant. Täglich heißt an jedem Arbeitstag.',
+
+  'repeat.NEVER': 'Nie',
+  'repeat.DAILY': 'Täglich',
+  'repeat.WEEKLY': 'Wöchentlich',
+  'repeat.BIWEEKLY': 'Alle 2 Wochen',
+  'repeat.MONTHLY': 'Monatlich',
+  'details.repeats': 'Wiederholt sich',
 
   'unit.min': 'Min.',
 
@@ -115,6 +124,7 @@ export const de: Record<StringKey, string> = {
   'help.whole': 'Eine Aufgabe bleibt ein Block, wenn eine Lücke reicht. Längere Arbeit wird in Teile aufgeteilt, keiner kürzer als',
   'help.fixed': 'Aufgaben mit fester Zeit, verschobene und angeheftete Blöcke bleiben, wo sie sind. Alles andere wird drumherum geplant.',
   'help.missed': 'Ist die Zeit eines Blocks vorbei und er nicht erledigt, gilt er als verpasst und wird neu eingeplant. Der verpasste Block bleibt im Kalender; hast du es doch gemacht, öffne ihn und wähle „Hab ich gemacht“.',
+  'help.repeat': 'Eine wiederkehrende Aufgabe zeigt immer nur ein Vorkommen. Ist es erledigt, erscheint das nächste, einen Schritt später fällig; ein unerledigtes bleibt, bis es erledigt ist, und verpasste Perioden werden übersprungen statt angehäuft.',
   'help.parts': 'Lange Arbeit wird in Teile aufgeteilt. Markierst du einen Teil als erledigt, wird nur der Rest geplant; sind alle Teile erledigt, ist es die Aufgabe auch.',
   'help.buffer': 'Freie Zeit nach jeder Aufgabe und um feste Termine:',
   'help.activity': 'Jede Neuplanung steht unter Aktivität, und ein verschobener Block zeigt, woher er kam.',

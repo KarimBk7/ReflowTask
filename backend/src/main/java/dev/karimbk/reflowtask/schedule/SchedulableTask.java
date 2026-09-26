@@ -11,6 +11,13 @@ import dev.karimbk.reflowtask.task.Priority;
  * @param minutesToPlace effort still needing a slot. Minutes already covered by pinned
  * blocks are subtracted before planning, so a partly pinned task only gets its remainder
  * scheduled.
+ * @param notBefore nothing of the task is placed before this; null for any time
  */
-public record SchedulableTask(long id, int minutesToPlace, LocalDateTime deadline, Priority priority) {
+public record SchedulableTask(long id, int minutesToPlace, LocalDateTime deadline, Priority priority,
+		LocalDateTime notBefore) {
+
+	public SchedulableTask(long id, int minutesToPlace, LocalDateTime deadline, Priority priority) {
+		this(id, minutesToPlace, deadline, priority, null);
+	}
+
 }

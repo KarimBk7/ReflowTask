@@ -38,11 +38,26 @@ public record TaskRequest(
 		// Create only, and optional: when set, the task is fixed at this time as a pinned block
 		// instead of being placed by the scheduler. Ignored on update, where moving a block is
 		// what changes its time.
-		LocalDateTime fixedStart) {
+		LocalDateTime fixedStart,
+
+		// Optional. Each occurrence is due one step after the last, so a rule needs a deadline.
+		Recurrence recurrence) {
 
 	@AssertTrue(message = "deadlineTime requires deadlineDate")
 	public boolean isDeadlineConsistent() {
 		return this.deadlineDate != null || this.deadlineTime == null;
+	}
+
+	@AssertTrue(message = "a repeating task needs a deadline to count from")
+	public boolean isRecurrenceAnchored() {
+		return this.recurrence == null || this.deadlineDate != null;
+	}
+
+	// A fixed time that repeats is an appointment: it belongs in a calendar, which ReflowTask can
+	// read, rather than in a series whose later occurrences the scheduler would place freely.
+	@AssertTrue(message = "a task fixed at a time cannot repeat; add repeating appointments to a calendar instead")
+	public boolean isRecurrenceUnfixed() {
+		return this.recurrence == null || this.fixedStart == null;
 	}
 
 }

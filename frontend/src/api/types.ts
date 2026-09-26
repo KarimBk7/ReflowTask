@@ -5,6 +5,9 @@ export type Priority = 'LOW' | 'MEDIUM' | 'HIGH'
 
 export type TaskStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE'
 
+/** How often a task comes back; DAILY means every working day. */
+export type Recurrence = 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'
+
 /** Local date-times as the API sends them: 'YYYY-MM-DDTHH:mm:ss', no zone. */
 export type LocalDateTime = string
 
@@ -30,6 +33,10 @@ export interface Task {
   doneMinutes: number
   /** Some of the task's work is placed after its deadline. */
   atRisk: boolean
+  /** null for a one-off. When a repeating task is done, the next one appears, due one step later. */
+  recurrence: Recurrence | null
+  /** Work is not planned before this; set on the next occurrence of a repeating task. */
+  notBefore: LocalDateTime | null
 }
 
 export interface TaskInput {
@@ -43,6 +50,8 @@ export interface TaskInput {
   priority: Priority
   /** Create only: fix the task at this time as a pinned block instead of letting the scheduler place it. */
   fixedStart?: LocalDateTime | null
+  /** Requires deadlineDate, and cannot be combined with fixedStart. */
+  recurrence?: Recurrence | null
 }
 
 export interface Block {

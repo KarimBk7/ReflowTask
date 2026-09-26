@@ -124,12 +124,14 @@ public final class SchedulePlanner {
 	private static void place(SchedulableTask task, List<TimeSlot> free, int minChunkMinutes, int bufferMinutes,
 			List<PlannedBlock> planned) {
 		long remaining = task.minutesToPlace();
-		List<PlannedBlock> split = fill(task.id(), remaining, new ArrayList<>(free), minChunkMinutes, bufferMinutes);
+		int first = firstUsable(free, task.notBefore());
+		List<PlannedBlock> split = fill(task.id(), remaining, new ArrayList<>(free), first, minChunkMinutes,
+				bufferMinutes);
 
 		if (split.size() > 1) {
 			PlannedBlock last = split.get(split.size() - 1);
 			boolean splitMeetsDeadline = task.deadline() == null || !last.end().isAfter(task.deadline());
-			for (int index = 0; index < free.size(); index++) {
+			for (int index = first; index < free.size(); index++) {
 				TimeSlot slot = free.get(index);
 				if (slot.start().isAfter(last.start())) {
 					break;
@@ -144,7 +146,34 @@ public final class SchedulePlanner {
 			}
 		}
 
-		planned.addAll(fill(task.id(), remaining, free, minChunkMinutes, bufferMinutes));
+		planned.addAll(fill(task.id(), remaining, free, first, minChunkMinutes, bufferMinutes));
+	}
+
+	/**
+	 * The index of the first free slot a task may use when it must not start before
+	 * {@code notBefore}. A slot straddling that moment is cut in two there, so the part after it
+	 * is usable on its own.
+	 */
+	// ponytail: the cut stays for the tasks planned after this one, so a later task could split at
+	// that seam. Occurrences start where the previous one was due, usually 23:59, outside working
+	// hours, so the cut practically never lands inside a slot.
+	static int firstUsable(List<TimeSlot> free, LocalDateTime notBefore) {
+		if (notBefore == null) {
+			return 0;
+		}
+		for (int index = 0; index < free.size(); index++) {
+			TimeSlot slot = free.get(index);
+			if (!slot.end().isAfter(notBefore)) {
+				continue;
+			}
+			if (slot.start().isBefore(notBefore)) {
+				free.set(index, new TimeSlot(slot.start(), notBefore));
+				free.add(index + 1, new TimeSlot(notBefore, slot.end()));
+				return index + 1;
+			}
+			return index;
+		}
+		return free.size();
 	}
 
 	/**
@@ -152,11 +181,11 @@ public final class SchedulePlanner {
 	 * Stops when the minutes are placed or the horizon runs out; a shortfall is reported by the
 	 * caller comparing placed minutes against the estimate, not by failing.
 	 */
-	private static List<PlannedBlock> fill(long taskId, long minutes, List<TimeSlot> free, int minChunkMinutes,
-			int bufferMinutes) {
+	private static List<PlannedBlock> fill(long taskId, long minutes, List<TimeSlot> free, int firstIndex,
+			int minChunkMinutes, int bufferMinutes) {
 		List<PlannedBlock> pieces = new ArrayList<>();
 		long remaining = minutes;
-		int index = 0;
+		int index = firstIndex;
 
 		while (remaining > 0 && index < free.size()) {
 			TimeSlot slot = free.get(index);

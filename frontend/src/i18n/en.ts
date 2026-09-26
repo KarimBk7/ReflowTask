@@ -69,6 +69,15 @@ export const en = {
   'task.deadlineTime': 'Deadline time (optional)',
   'task.description': 'Notes',
   'task.addDescription': 'Add notes',
+  'task.repeat': 'Repeats',
+  'task.repeatHint': 'When this one is done, the next appears, due one step after this deadline and not planned before it. Daily means every working day.',
+
+  'repeat.NEVER': 'Never',
+  'repeat.DAILY': 'Daily',
+  'repeat.WEEKLY': 'Weekly',
+  'repeat.BIWEEKLY': 'Every 2 weeks',
+  'repeat.MONTHLY': 'Monthly',
+  'details.repeats': 'Repeats',
 
   'unit.min': 'min',
 
@@ -121,6 +130,7 @@ export const en = {
   'help.whole': 'A task stays in one block when a free gap fits it. Longer work is split into parts, none shorter than',
   'help.fixed': 'Tasks created at a fixed time, blocks you drag and pinned blocks stay where they are. Everything else is planned around them.',
   'help.missed': 'When a block\'s time passes and it is not marked done, it counts as missed and is planned again. The missed block stays on the calendar; if you did it after all, open it and choose "I did this".',
+  'help.repeat': 'A repeating task shows one occurrence at a time. Finish it and the next appears, due one step later; one that was left undone stays until it is done, and missed periods are skipped rather than piled up.',
   'help.parts': 'Long work is split into parts. Mark a single part done and only the rest is planned; when every part is done, so is the task.',
   'help.buffer': 'Time kept free after each task and around fixed ones:',
   'help.activity': 'Every replan is listed under Activity, and a moved block shows where it came from.',

@@ -74,6 +74,19 @@ class SchedulePlannerTests {
 	}
 
 	@Test
+	void nothingIsPlacedBeforeATasksEarliestStart() {
+		SchedulableTask nextWeeks = new SchedulableTask(1, 60, at(MONDAY.plusDays(4), 23, 59), Priority.HIGH,
+				at(MONDAY.plusDays(2), 14, 30));
+		SchedulableTask anyTime = task(2, 60, null, Priority.LOW);
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(nextWeeks, anyTime), List.of(), defaultConfig(),
+				at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY.plusDays(2), 14, 30), at(MONDAY.plusDays(2), 15, 30)),
+				new PlannedBlock(2, at(MONDAY, 9, 0), at(MONDAY, 10, 0)));
+	}
+
+	@Test
 	void placesNothingWhenThereIsNothingToPlace() {
 		assertThat(SchedulePlanner.plan(List.of(), List.of(), defaultConfig(), at(MONDAY, 9, 0))).isEmpty();
 	}
