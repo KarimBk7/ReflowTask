@@ -37,6 +37,8 @@ export interface Task {
   recurrence: Recurrence | null
   /** Work is not planned before this; set on the next occurrence of a repeating task. */
   notBefore: LocalDateTime | null
+  /** When the next planned part starts, or the one running now; null when nothing is planned ahead. */
+  nextStartAt: LocalDateTime | null
 }
 
 export interface TaskInput {

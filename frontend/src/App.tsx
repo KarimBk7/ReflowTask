@@ -34,6 +34,7 @@ import {
 import { useBusy } from './lib/calendar'
 import { useLogout, useMe } from './lib/auth'
 import { addDays, formatDayTime, startOfMonth, startOfWeek, toLocalDateTime } from './lib/time'
+import { TaskList } from './list/TaskList'
 import { MonthGrid } from './month/MonthGrid'
 import { BlockDetails } from './week/BlockDetails'
 import { HoursPanel } from './week/HoursPanel'
@@ -73,7 +74,7 @@ export default function Root() {
 function Board({ user }: { user: AuthUser }) {
   const logout = useLogout()
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
-  const [view, setView] = useState<'week' | 'month'>('week')
+  const [view, setView] = useState<'week' | 'month' | 'list'>('week')
   // A display preference of this browser, per person, so it survives a reload.
   const weekendKey = `reflowtask-show-days-off-${user.id}`
   const [showWeekend, setShowWeekend] = useState(() => {
@@ -326,6 +327,8 @@ function Board({ user }: { user: AuthUser }) {
         </h1>
 
         <nav className="week-nav" aria-label={t('week.navigation')}>
+          {view !== 'list' && (
+            <>
           <button type="button" className="button button-secondary button-small" onClick={() => setWeekStart(startOfWeek(new Date()))}>
             {t('week.today')}
           </button>
@@ -340,8 +343,10 @@ function Board({ user }: { user: AuthUser }) {
           <p className="week-range" aria-live="polite">
             {range}
           </p>
+            </>
+          )}
           <div className="segmented" role="radiogroup" aria-label={t('view.switch')}>
-            {(['week', 'month'] as const).map((value) => (
+            {(['week', 'month', 'list'] as const).map((value) => (
               <label key={value} className="segment" data-selected={view === value || undefined}>
                 <input type="radio" name="view" checked={view === value} onChange={() => setView(value)} />
                 {t(`view.${value}`)}
@@ -464,7 +469,21 @@ function Board({ user }: { user: AuthUser }) {
         </aside>
 
         <main className="calendar">
-          {view === 'month' ? (
+          {view === 'list' ? (
+            <TaskList
+              tasks={tasks.data ?? []}
+              busy={busy}
+              onOpen={(task, anchor) => setOpen({ kind: 'edit', anchor, taskId: task.id })}
+              onToggleDone={(task) =>
+                setStatus.mutate({ id: task.id, status: task.status === 'DONE' ? 'OPEN' : 'DONE' }, { onError: fail })
+              }
+              onShow={(task) => {
+                if (!task.nextStartAt) return
+                setWeekStart(startOfWeek(new Date(task.nextStartAt)))
+                setView('week')
+              }}
+            />
+          ) : view === 'month' ? (
             <MonthGrid
               monthStart={monthStart}
               blocks={monthSchedule.data ?? []}

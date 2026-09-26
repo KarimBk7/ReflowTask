@@ -308,6 +308,37 @@ export function workload(
   return { planned, available: Math.max(available, 0) }
 }
 
+export type TaskFilter = 'open' | 'done' | 'all'
+
+/** Lower case without accents, so "cafe" finds "Café" and "uber" finds "Über". */
+const fold = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+
+/**
+ * The task list: tasks matching every word of the search in their title or notes. Open work comes
+ * first, soonest deadline first and undated last; finished work follows, newest first.
+ */
+// ponytail: filters in the browser over every task the app already loaded; fine for one person's
+// tasks, move it to the server if a list ever runs into the tens of thousands.
+export function listTasks(tasks: Task[], query: string, filter: TaskFilter): Task[] {
+  const words = fold(query).split(/\s+/).filter(Boolean)
+  const open = (task: Task) => task.status !== 'DONE'
+  return tasks
+    .filter((task) => filter === 'all' || (filter === 'open') === open(task))
+    .filter((task) => {
+      const text = fold(`${task.title} ${task.description ?? ''}`)
+      return words.every((word) => text.includes(word))
+    })
+    .sort((a, b) => {
+      if (open(a) !== open(b)) return open(a) ? -1 : 1
+      if (open(a) && a.deadline !== b.deadline) {
+        if (!a.deadline) return 1
+        if (!b.deadline) return -1
+        return a.deadline.localeCompare(b.deadline)
+      }
+      return b.createdAt.localeCompare(a.createdAt)
+    })
+}
+
 export function isToday(date: Date): boolean {
   return sameDate(date, new Date())
 }

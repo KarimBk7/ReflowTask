@@ -85,7 +85,9 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
 | --- | --- |
 | ![Week](docs/images/week.png) | ![Month](docs/images/month.png) |
 
-The **month view** is a read-only overview of the whole month; click a day to open that week.
+The **month view** is a read-only overview of the whole month; click a day to open that week. The
+**list view** shows every task, planned or not: search titles and notes, filter open or done, tick
+one off, or click its next time to jump to that week.
 
 **Your week, your rules**
 
@@ -327,7 +329,7 @@ API, so a mobile client could use the same endpoints.
 | `GET` `POST` | `/users` | Admin: list accounts; create one (`username`, `password`, optional `role`) |
 | `POST` | `/users/{id}/reset-password` | Admin: set a new temporary password |
 | `DELETE` | `/users/{id}` | Admin: remove an account and everything it owns |
-| `GET` | `/tasks` | List your tasks, each with its scheduled minutes and at-risk state |
+| `GET` | `/tasks` | List your tasks, each with its scheduled minutes, at-risk state and next planned start |
 | `GET` | `/tasks/{id}` | Get one task |
 | `POST` | `/tasks` | Create a task and replan; an optional `fixedStart` pins it at that time, an optional `recurrence` (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`) makes it repeat |
 | `PUT` | `/tasks/{id}` | Update everything except status, and replan |

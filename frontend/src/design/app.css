@@ -1920,3 +1920,119 @@ input::-webkit-calendar-picker-indicator {
   gap: 6px;
   flex-wrap: wrap;
 }
+
+/* ── Task list ────────────────────────────────────────────────────────────── */
+
+.task-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+}
+
+.task-list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.task-list-search {
+  flex: 1 1 240px;
+  max-width: 420px;
+}
+
+.task-list-rows {
+  flex: 1;
+  margin: 0;
+  padding: var(--space-2);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.task-list-empty {
+  padding: var(--space-4);
+}
+
+.task-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius);
+}
+
+.task-list-row:hover {
+  background: var(--surface-hover);
+}
+
+.task-list-check {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.task-list-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.task-list-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-weight: 560;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-list-title svg {
+  flex: none;
+  color: var(--ink-3);
+}
+
+.task-list-row[data-done] .task-list-title {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.task-list-facts {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 12px;
+  row-gap: 2px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.task-list-risk {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--risk);
+}
+
+.task-list-next {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}

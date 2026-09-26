@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Block, BoardConfig, RescheduleEvent, Task } from '../api/types'
 import {
   appointmentsOn,
+  listTasks,
   blocksByDay,
   boardDays,
   describeWorkingHours,
@@ -53,6 +54,7 @@ const task = (id: number, extra: Partial<Task> = {}): Task => ({
   atRisk: false,
   recurrence: null,
   notBefore: null,
+  nextStartAt: null,
   ...extra,
 })
 
@@ -190,5 +192,29 @@ describe('ghosts from the last replan', () => {
     const ghosts = ghostsFrom([event])
     expect(originFor(block(1, '2026-09-22T11:00:00', '2026-09-22T12:00:00', { taskId: 1 }), ghosts)?.kind).toBe('MOVED')
     expect(originFor(block(1, '2026-09-22T15:00:00', '2026-09-22T16:00:00', { taskId: 1 }), ghosts)).toBeNull()
+  })
+})
+
+describe('listTasks', () => {
+  const tasks = [
+    task(1, { title: 'Café receipts', deadline: '2026-09-25T23:59:00' }),
+    task(2, { title: 'Write report', description: 'quarterly numbers', deadline: '2026-09-22T12:00:00' }),
+    task(3, { title: 'Read book' }),
+    task(4, { title: 'Old report', status: 'DONE', createdAt: '2026-09-01T08:00:00' }),
+    task(5, { title: 'Done report', status: 'DONE', createdAt: '2026-09-10T08:00:00' }),
+  ]
+  const ids = (found: Task[]) => found.map((found) => found.id)
+
+  it('lists open work by deadline, undated last, and finished work newest first', () => {
+    expect(ids(listTasks(tasks, '', 'open'))).toEqual([2, 1, 3])
+    expect(ids(listTasks(tasks, '', 'done'))).toEqual([5, 4])
+    expect(ids(listTasks(tasks, '', 'all'))).toEqual([2, 1, 3, 5, 4])
+  })
+
+  it('matches every word in the title or notes, ignoring case and accents', () => {
+    expect(ids(listTasks(tasks, 'cafe', 'all'))).toEqual([1])
+    expect(ids(listTasks(tasks, 'REPORT', 'all'))).toEqual([2, 5, 4])
+    expect(ids(listTasks(tasks, 'report quarterly', 'all'))).toEqual([2])
+    expect(ids(listTasks(tasks, '  ', 'open'))).toEqual([2, 1, 3])
   })
 })

@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -124,6 +125,9 @@ class RecurringTaskTests {
 		List<TimeBlock> placed = this.blocks.findByTaskId(following.getId());
 		assertThat(placed).isNotEmpty()
 			.allSatisfy((block) -> assertThat(block.getStartAt()).isAfterOrEqualTo(FRIDAY.plusDays(3).atStartOfDay()));
+		// The task list says when that is, without the client fetching next week's schedule.
+		this.mvc.perform(get("/api/v1/tasks/" + following.getId()).cookie(this.cookie))
+			.andExpect(jsonPath("$.nextStartAt").value(placed.get(0).getStartAt().toString() + ":00"));
 	}
 
 	@Test

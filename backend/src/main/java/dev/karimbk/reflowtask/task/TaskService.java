@@ -42,9 +42,10 @@ public class TaskService {
 		for (TimeBlock block : this.blocks.findAllWithTaskByUserId(userId)) {
 			byTask.computeIfAbsent(block.getTask().getId(), (id) -> new ArrayList<>()).add(block);
 		}
+		LocalDateTime now = LocalDateTime.now(this.clock);
 		return this.tasks.findByUserIdOrderByCreatedAtDesc(userId)
 			.stream()
-			.map((task) -> respond(task, byTask.getOrDefault(task.getId(), List.of())))
+			.map((task) -> respond(task, byTask.getOrDefault(task.getId(), List.of()), now))
 			.toList();
 	}
 
@@ -113,7 +114,7 @@ public class TaskService {
 	}
 
 	private TaskResponse respond(Task task) {
-		return respond(task, this.blocks.findByTaskId(task.getId()));
+		return respond(task, this.blocks.findByTaskId(task.getId()), LocalDateTime.now(this.clock));
 	}
 
 	/**
@@ -121,11 +122,15 @@ public class TaskService {
 	 * that derived it from the blocks it happened to be displaying would report any task placed
 	 * outside that range as unscheduled.
 	 */
-	private static TaskResponse respond(Task task, List<TimeBlock> placed) {
+	private static TaskResponse respond(Task task, List<TimeBlock> placed, LocalDateTime now) {
 		long minutes = 0;
 		long done = 0;
 		boolean atRisk = false;
+		LocalDateTime next = null;
 		for (TimeBlock block : placed) {
+			if (block.isPlanned() && !block.hasEndedBy(now) && (next == null || block.getStartAt().isBefore(next))) {
+				next = block.getStartAt();
+			}
 			// A missed part is a record of time that was not used; the work is planned again elsewhere.
 			if (block.getState() == BlockState.MISSED) {
 				continue;
@@ -138,7 +143,7 @@ public class TaskService {
 				atRisk = true;
 			}
 		}
-		return TaskResponse.of(task, (int) minutes, (int) done, atRisk);
+		return TaskResponse.of(task, (int) minutes, (int) done, atRisk, next);
 	}
 
 	private Task require(long userId, long id) {

@@ -47,6 +47,7 @@ export function HowItWorks({ config, user, onClose, headingId }: HowItWorksProps
         )}
         <li>{t('help.activity')}</li>
         <li>{t('help.month')}</li>
+        <li>{t('help.list')}</li>
         <li>{t('help.calendar')}</li>
         <li>{t('help.private')}</li>
         {user.role === 'ADMIN' && <li>{t('help.household')}</li>}

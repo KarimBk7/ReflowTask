@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
  * @param atRisk some of the task's work is placed after its deadline
  * @param recurrence how often it comes back, or null for a one-off
  * @param notBefore work is not planned before this, or null
+ * @param nextStartAt when the next planned part starts (or the one running now), or null when
+ * nothing is planned ahead
  */
 public record TaskResponse(
 		Long id,
@@ -25,13 +27,15 @@ public record TaskResponse(
 		int doneMinutes,
 		boolean atRisk,
 		Recurrence recurrence,
-		LocalDateTime notBefore) {
+		LocalDateTime notBefore,
+		LocalDateTime nextStartAt) {
 
-	static TaskResponse of(Task task, int scheduledMinutes, int doneMinutes, boolean atRisk) {
+	static TaskResponse of(Task task, int scheduledMinutes, int doneMinutes, boolean atRisk,
+			LocalDateTime nextStartAt) {
 		return new TaskResponse(task.getId(), task.getTitle(), task.getDescription(),
 				task.getEstimatedMinutes(), task.getDeadline(), task.isDeadlineHasTime(),
 				task.getPriority(), task.getStatus(), task.getCreatedAt(), scheduledMinutes, doneMinutes, atRisk,
-				task.getRecurrence(), task.getNotBefore());
+				task.getRecurrence(), task.getNotBefore(), nextStartAt);
 	}
 
 }
