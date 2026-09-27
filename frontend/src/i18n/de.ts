@@ -288,4 +288,8 @@ export const de: Record<StringKey, string> = {
   'auth.confirmRemove': 'Konto und alle Aufgaben entfernen',
   'auth.removeHint': 'Wird ein Konto entfernt, werden alle seine Aufgaben, Zeiten und Verläufe gelöscht.',
   'auth.language': 'Sprache',
+  'auth.exportTitle': 'Deine Daten',
+  'auth.exportHint': 'Alles, was du hier hast, als eine Datei, oder deine Aufgaben für eine Tabelle.',
+  'auth.exportJson': 'Alles (JSON)',
+  'auth.exportCsv': 'Aufgaben (CSV)',
 }

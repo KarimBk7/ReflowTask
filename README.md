@@ -117,6 +117,9 @@ one off, or click its next time to jump to that week.
 - An admin adds and removes accounts and can reset a forgotten password.
 - Whoever owns the device can recover any account from its command line, even the admin's.
 - A short built-in guide explains how planning works, with your own hours filled in.
+- Anyone can download their own data under their name in the top bar: everything as JSON, or the
+  task list as CSV for a spreadsheet. The JSON includes the addresses of your other calendars,
+  which are often secret links, so keep the file private.
 
 ![Household accounts](docs/images/accounts.png)
 
@@ -371,6 +374,8 @@ API, so a mobile client could use the same endpoints.
 | `POST` | `/schedule/blocks/{id}/done` | Mark one part done (it must have started); only the rest is planned |
 | `POST` | `/schedule/blocks/{id}/undone` | Undo that |
 | `GET` | `/reschedule-events` | Your recent replans and what they moved |
+| `GET` | `/export` | Everything of yours as one JSON file: settings, tasks, blocks, calendars, replan history |
+| `GET` | `/export/tasks.csv` | Your tasks as CSV (UTF-8 with BOM, so Excel shows umlauts) |
 | `GET` `PUT` | `/config` | Your working hours, personal time (`personalHours`), breaks, buffer, freeze window (`freezeMinutes`) and planning settings; `PUT` replaces them and replans |
 | `GET` `POST` `DELETE` | `/calendar/feed` | Your subscribe link's path (`null` when off); `POST` creates or replaces it, `DELETE` turns it off |
 | `GET` | `/calendar/feed/{token}.ics` | The subscribe feed itself. No login; the token is the secret |

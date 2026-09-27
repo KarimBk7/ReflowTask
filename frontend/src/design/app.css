@@ -1904,7 +1904,7 @@ input::-webkit-calendar-picker-indicator {
   border-block-color: color-mix(in oklab, var(--accent) 35%, transparent);
 }
 
-.calendar-panel a.button {
+a.button {
   text-decoration: none;
 }
 

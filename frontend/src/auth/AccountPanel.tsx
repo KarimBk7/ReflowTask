@@ -59,6 +59,18 @@ export function AccountPanel({ user, onClose, headingId }: AccountPanelProps) {
           ))}
         </div>
       </div>
+      <div className="editor-row">
+        <span className="editor-label">{t('auth.exportTitle')}</span>
+        <p className="editor-note">{t('auth.exportHint')}</p>
+        <div className="chips">
+          <a className="button button-secondary button-small" href="/api/v1/export" download>
+            {t('auth.exportJson')}
+          </a>
+          <a className="button button-secondary button-small" href="/api/v1/export/tasks.csv" download>
+            {t('auth.exportCsv')}
+          </a>
+        </div>
+      </div>
       <form className="editor-row" onSubmit={submit}>
         <span className="editor-label">{t('auth.changePassword')}</span>
         <input

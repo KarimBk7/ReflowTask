@@ -18,13 +18,13 @@ import jakarta.validation.constraints.Size;
  * Wire shapes for the configuration endpoints. Reads and writes share one shape, so a client
  * can fetch the configuration, change a field and send it straight back.
  */
-final class ConfigPayloads {
+public final class ConfigPayloads {
 
 	private ConfigPayloads() {
 	}
 
 	/** A recurring weekly window. The label is only meaningful on a blocked period. */
-	record Window(@NotNull DayOfWeek day, @NotNull LocalTime startTime, @NotNull LocalTime endTime,
+	public record Window(@NotNull DayOfWeek day, @NotNull LocalTime startTime, @NotNull LocalTime endTime,
 			@Size(max = 100) String label) {
 
 		@JsonIgnore
@@ -43,7 +43,7 @@ final class ConfigPayloads {
 	 * how many days every replan walks, so an unbounded one would let a single request make
 	 * scheduling arbitrarily slow.
 	 */
-	record Config(@NotNull @Valid List<Window> workingHours,
+	public record Config(@NotNull @Valid List<Window> workingHours,
 			// Optional: when personal tasks are planned. Absent or empty means in working hours.
 			@Valid List<Window> personalHours, @NotNull @Valid List<Window> blockedPeriods,
 			@NotNull @Min(1) @Max(366) Integer horizonDays, @NotNull @Min(1) @Max(1440) Integer minChunkMinutes,

@@ -294,6 +294,10 @@ export const en = {
   'auth.confirmRemove': 'Remove account and all its tasks',
   'auth.removeHint': 'Removing an account deletes all of its tasks, hours and history.',
   'auth.language': 'Language',
+  'auth.exportTitle': 'Your data',
+  'auth.exportHint': 'Everything you have here as one file, or your tasks for a spreadsheet.',
+  'auth.exportJson': 'Everything (JSON)',
+  'auth.exportCsv': 'Tasks (CSV)',
 } as const
 
 export type StringKey = keyof typeof en
