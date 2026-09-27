@@ -3,9 +3,8 @@ import { useState } from 'react'
 import type { AuthUser, Role } from '../api/types'
 import { CloseIcon } from '../design/Icon'
 import { t } from '../i18n/en'
-import { useCreateUser, useDeleteUser, useResetPassword, useUsers } from '../lib/auth'
+import { initial, useCreateUser, useDeleteUser, useResetPassword, useUsers } from '../lib/auth'
 import { describe } from './describe'
-import { initial } from './MainMenu'
 
 interface UserManagementProps {
   currentUser: AuthUser

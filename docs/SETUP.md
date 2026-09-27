@@ -25,7 +25,7 @@ recovering a forgotten password.
 | | |
 | --- | --- |
 | A machine that stays on | A Raspberry Pi 4 or 5 (64-bit Raspberry Pi OS), a home server, a NAS that runs Docker, or an old laptop. Windows and macOS with Docker Desktop work too. |
-| Memory | About 1 GB free while it runs. Building the image needs more: on a board with 2 GB or less, add swap first (see [Troubleshooting](#the-build-is-killed-or-runs-out-of-memory)). |
+| Memory | About 1 GB free while it runs. Building the image needs more: on a board with 2 GB or less, add swap first (see [Troubleshooting](#troubleshooting)). |
 | Software | Docker with the Compose plugin, and Git. |
 | Network | Your devices reach the machine on your home network. Nothing has to be opened to the internet, and it should not be. |
 
@@ -183,15 +183,30 @@ working behind HTTPS. If you use a proxy, no application setting needs to change
 
 ## Updating
 
+Take a [backup](#backing-up-and-restoring) first, then read what changed in
+[CHANGELOG.md](../CHANGELOG.md).
+
+To follow the releases (recommended), switch to the newest version tag:
+
 ```bash
 cd ReflowTask
+git fetch --tags
+git checkout v1.0.0          # the version you want, from the changelog or the Releases page
+docker compose up -d --build
+```
+
+To follow the newest code instead, stay on `main`:
+
+```bash
+cd ReflowTask
+git checkout main
 git pull
 docker compose up -d --build
 ```
 
-Database changes are applied automatically at startup by Flyway. Take a [backup](#backing-up-and-restoring)
-first, especially before an update that adds migrations. Your data lives in the `postgres-data`
-Docker volume and survives rebuilds.
+Database changes are applied automatically at startup by Flyway, so there is nothing else to run.
+Your data lives in the `postgres-data` Docker volume and survives rebuilds. Your settings live in
+`.env`, which git never touches.
 
 ## Backing up and restoring
 

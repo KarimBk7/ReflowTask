@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>dev.karimbk</groupId>
 	<artifactId>reflowtask</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>reflowtask</name>
 	<description>Selfhosted task manager with automatic rescheduling</description>
 	<properties>

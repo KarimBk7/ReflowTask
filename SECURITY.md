@@ -38,6 +38,13 @@ no two-factor login and no audit log of logins.
   does not).
 - Keep backups off the machine.
 
+## Supported versions
+
+Security fixes go into the newest release, which is listed in [CHANGELOG.md](CHANGELOG.md) and on the
+repository's Releases page. Updating is `git fetch --tags`, checking out the new tag and
+`docker compose up -d --build` (see [docs/SETUP.md](docs/SETUP.md#updating)); older releases are not
+patched separately.
+
 ## Reporting a vulnerability
 
 Please report it privately using GitHub's "Report a vulnerability" on the repository's Security

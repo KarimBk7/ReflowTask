@@ -8,7 +8,7 @@ import { LoginScreen } from './auth/LoginScreen'
 import { AccountPanel } from './auth/AccountPanel'
 import { CalendarPanel } from './auth/CalendarPanel'
 import { UserManagement } from './auth/UserManagement'
-import { MainMenu, type MenuTarget, initial } from './auth/MainMenu'
+import { MainMenu, type MenuTarget } from './auth/MainMenu'
 import { ActivityIcon, ChevronIcon, DayIcon, ListIcon, MonthIcon, PlusIcon } from './design/Icon'
 import { LOCALE, t } from './i18n/en'
 import {
@@ -34,7 +34,7 @@ import {
   useUpdateTask,
 } from './lib/board'
 import { useBusy } from './lib/calendar'
-import { useLogout, useMe } from './lib/auth'
+import { initial, useLogout, useMe } from './lib/auth'
 import { PHONE_QUERY, useMediaQuery } from './lib/media'
 import { addDays, formatDayTime, isoDay, startOfMonth, startOfWeek, toLocalDateTime } from './lib/time'
 import { TaskList } from './list/TaskList'

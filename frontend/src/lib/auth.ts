@@ -72,3 +72,8 @@ export function useCreateUser() {
 export function useDeleteUser() {
   return useAuthMutation((id: number) => api.deleteUser(id))
 }
+
+/** The first letter of a username, as the avatar shows it. */
+export function initial(username: string): string {
+  return username.charAt(0).toLocaleUpperCase()
+}

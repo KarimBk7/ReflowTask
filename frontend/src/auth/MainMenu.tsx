@@ -1,6 +1,7 @@
 import type { AuthUser } from '../api/types'
 import { CalendarIcon, ClockIcon, HelpIcon, LogoutIcon, ReflowIcon, UserIcon, UsersIcon } from '../design/Icon'
 import { t } from '../i18n/en'
+import { initial } from '../lib/auth'
 
 export type MenuTarget = 'hours' | 'calendar' | 'users' | 'account' | 'help'
 
@@ -95,9 +96,4 @@ export function MainMenu({ user, daysOff, busy, onOpen, onReplan, onToggleDaysOf
       </ul>
     </div>
   )
-}
-
-/** The first letter of a username, as the avatar shows it. */
-export function initial(username: string): string {
-  return username.charAt(0).toLocaleUpperCase()
 }

@@ -43,11 +43,15 @@ fix a bug, write the failing test first and check it fails for the reason you th
 | --- | --- |
 | How work is placed | `backend/.../schedule/SchedulePlanner.java`: a pure function, no database. Rules are tested in `SchedulePlannerTests`. |
 | What survives a replan, and what is recorded | `backend/.../schedule/SchedulerService.java` |
-| Working hours and planning settings | `backend/.../config/` |
+| Repeating tasks, earliest start, waiting for another task | `backend/.../task/` and `SchedulerService` |
+| Working hours, personal time and planning settings | `backend/.../config/` |
+| Calendar feed and reading other calendars | `backend/.../calendar/` |
 | Accounts, sessions, recovery | `backend/.../user/` |
+| Data export | `backend/.../dataexport/` |
 | The database | a **new** `backend/src/main/resources/db/migration/V<n>__name.sql`. Never edit a migration that has shipped. |
 | An endpoint | its controller, plus a test in the matching `*ApiTests` |
-| The week or month views | `frontend/src/week/`, `frontend/src/month/` |
+| The week, month or list views | `frontend/src/week/`, `frontend/src/month/`, `frontend/src/list/` |
+| The top bar, menu and phone layout | `frontend/src/App.tsx`, `frontend/src/auth/MainMenu.tsx`, `frontend/src/week/DayStrip.tsx`; the phone rules are the `.app[data-phone]` block in `frontend/src/design/app.css` |
 | Text shown to people | `frontend/src/i18n/en.ts`, with the German in `de.ts`; the build fails until a new string is in both |
 | Colours, spacing, type | `frontend/src/design/tokens.css` (see [DESIGN.md](DESIGN.md)) |
 
@@ -80,7 +84,19 @@ Nothing ties the project to one host: the Compose file and Dockerfiles work for 
 [docs/SETUP.md](docs/SETUP.md) for deployment. If you keep the login, remember to keep
 `AdminAccountRunner` so device owners can still recover accounts.
 
+## Releasing
+
+1. Make sure `main` is green in CI.
+2. Set the version in `backend/pom.xml` and `frontend/package.json` (`npm version <x.y.z>
+   --no-git-tag-version` in `frontend/` updates the lockfile too).
+3. Move the changes into a new section of [CHANGELOG.md](CHANGELOG.md) with today's date.
+4. Commit, tag it `v<x.y.z>` and push the tag, then create a GitHub release from the tag with that
+   changelog section as its notes.
+
+Versions follow semantic versioning: a major version means updating needs more than checking out
+the tag and `docker compose up -d --build`.
+
 ## Reporting bugs and vulnerabilities
 
-Bugs: open an issue with what you did, what you expected, what happened, and the version (`git
-rev-parse --short HEAD`). Security problems: see [SECURITY.md](SECURITY.md), not a public issue.
+Bugs: open an issue with what you did, what you expected, what happened, and the version (the
+release tag, or `git rev-parse --short HEAD` on `main`). Security problems: see [SECURITY.md](SECURITY.md), not a public issue.
