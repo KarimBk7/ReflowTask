@@ -104,6 +104,16 @@ The **month view** is a read-only overview of the whole month; click a day to op
 **list view** shows every task, planned or not: search titles and notes, filter open or done, tick
 one off, or click its next time to jump to that week.
 
+| List view | The menu behind your initial |
+| --- | --- |
+| ![List](docs/images/list.png) | ![Menu](docs/images/menu.png) |
+
+On a phone, the same app as one day at a time, with the views as tabs:
+
+| Day | List |
+| --- | --- |
+| <img src="docs/images/phone-day.png" alt="Phone: one day, with the week as a strip above it" width="280"> | <img src="docs/images/phone-list.png" alt="Phone: the task list" width="280"> |
+
 **Your week, your rules**
 
 - Working hours per weekday, breaks such as lunch, a buffer between tasks, how far ahead to plan

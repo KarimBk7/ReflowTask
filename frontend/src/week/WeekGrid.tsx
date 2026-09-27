@@ -178,7 +178,9 @@ export function WeekGrid({
    */
   const positions = useRef<{ week: string; at: Map<string, { dayIndex: number; start: number }> } | null>(null)
   useLayoutEffect(() => {
-    const week = toLocalDateTime(weekStart)
+    // Positions are column indexes, so they only compare while the same days are shown: switching
+    // the day on a phone or showing days off is not a replan, and nothing should glide.
+    const week = `${toLocalDateTime(weekStart)}|${days.join()}`
     const previous = positions.current?.week === week ? positions.current.at : null
     const next = new Map<string, { dayIndex: number; start: number }>()
     const root = columnsRef.current
@@ -202,7 +204,7 @@ export function WeekGrid({
     }
     positions.current = { week, at: next }
     if (!preview) dropped.current = null
-  }, [placed, preview, weekStart])
+  }, [placed, preview, weekStart, days])
 
   function editable(block: Block) {
     return !busy && block.status !== 'DONE' && block.state === 'PLANNED' && new Date(block.endAt) > now

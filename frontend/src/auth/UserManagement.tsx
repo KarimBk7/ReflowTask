@@ -5,6 +5,7 @@ import { CloseIcon } from '../design/Icon'
 import { t } from '../i18n/en'
 import { useCreateUser, useDeleteUser, useResetPassword, useUsers } from '../lib/auth'
 import { describe } from './describe'
+import { initial } from './MainMenu'
 
 interface UserManagementProps {
   currentUser: AuthUser
@@ -66,18 +67,27 @@ export function UserManagement({ currentUser, onClose, headingId }: UserManageme
         </button>
       </div>
 
-      <ul className="help-list">
+      <ul className="people">
         {(users.data ?? []).map((user) => (
-          <li key={user.id}>
-            <strong>{user.username}</strong> — {user.role === 'ADMIN' ? t('auth.admin') : t('auth.member')}
-            {user.id === currentUser.id && ` (${t('auth.you')})`}
-            {user.mustChangePassword && ` · ${t('auth.mustChangePassword')}`}
+          <li key={user.id} className="person">
+            <span className="avatar" aria-hidden="true">
+              {initial(user.username)}
+            </span>
+            <span className="person-who">
+              <strong>
+                {user.username}
+                {user.id === currentUser.id && <span className="person-you"> ({t('auth.you')})</span>}
+              </strong>
+              <span className="person-meta">
+                {user.role === 'ADMIN' ? t('auth.admin') : t('auth.member')}
+                {user.mustChangePassword && ` · ${t('auth.mustChangePassword')}`}
+              </span>
+            </span>
             {user.id !== currentUser.id && (
-              <>
-                {' '}
+              <span className="person-actions">
                 <button
                   type="button"
-                  className="link-button"
+                  className="button button-ghost button-small"
                   onClick={() => {
                     setResetting(user)
                     setTemporary('')
@@ -86,22 +96,22 @@ export function UserManagement({ currentUser, onClose, headingId }: UserManageme
                   }}
                 >
                   {t('auth.resetPassword')}
-                </button>{' '}
+                </button>
                 {removing === user.id ? (
                   <button
                     type="button"
-                    className="link-button"
+                    className="button button-danger button-small"
                     onClick={() => deleteUser.mutate(user.id, { onSettled: () => setRemoving(null) })}
                     disabled={deleteUser.isPending}
                   >
                     {t('auth.confirmRemove')}
                   </button>
                 ) : (
-                  <button type="button" className="link-button" onClick={() => setRemoving(user.id)}>
+                  <button type="button" className="button button-quiet-danger button-small" onClick={() => setRemoving(user.id)}>
                     {t('action.remove')}
                   </button>
                 )}
-              </>
+              </span>
             )}
           </li>
         ))}
