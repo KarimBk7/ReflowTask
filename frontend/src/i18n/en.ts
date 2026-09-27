@@ -156,6 +156,7 @@ export const en = {
   'help.repeat': 'A repeating task shows one occurrence at a time. Finish it and the next appears, due one step later; one that was left undone stays until it is done, and missed periods are skipped rather than piled up.',
   'help.profiles': 'Mark a task Personal to plan it in your personal time (set under Hours) instead of working hours. Either way, nothing is ever planned twice at the same time.',
   'help.after': 'A task can wait for another ("Wait for another task" in the editor): it is planned only after that one is over, and an urgent task pulls what it waits for forward.',
+  'help.undo': 'Moved a block or marked something done by mistake? Press Undo in the message at the bottom, or Ctrl+Z.',
   'help.parts': 'Long work is split into parts. Mark a single part done and only the rest is planned; when every part is done, so is the task.',
   'help.freeze': 'What starts soon stays put: a replan moves no block that begins within',
   'help.buffer': 'Time kept free after each task and around fixed ones:',
@@ -254,6 +255,11 @@ export const en = {
   'hours.rejected': 'The server rejected these settings. Check the hours and planning values.',
 
   'error.offline': 'Cannot reach the server.',
+
+  'undo.action': 'Undo',
+  'undo.moved': 'Block moved and pinned there.',
+  'undo.done': 'Task marked done.',
+  'undo.partDone': 'Part marked done.',
 
   'auth.loginTitle': 'Log in',
   'auth.changePasswordTitle': 'Choose a password',

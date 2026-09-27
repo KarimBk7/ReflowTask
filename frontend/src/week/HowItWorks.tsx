@@ -42,6 +42,7 @@ export function HowItWorks({ config, user, onClose, headingId }: HowItWorksProps
         <li>{t('help.repeat')}</li>
         <li>{t('help.profiles')}</li>
         <li>{t('help.after')}</li>
+        <li>{t('help.undo')}</li>
         {config && config.freezeMinutes > 0 && (
           <li>
             {t('help.freeze')} {config.freezeMinutes} {t('unit.min')}.

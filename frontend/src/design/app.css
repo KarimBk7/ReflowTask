@@ -2046,3 +2046,18 @@ input::-webkit-calendar-picker-indicator {
   border-inline-start: 2px solid color-mix(in oklab, var(--accent) 25%, transparent);
   pointer-events: none;
 }
+
+.notice-undo {
+  margin-inline-start: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notice-undo:hover {
+  text-decoration: underline;
+}

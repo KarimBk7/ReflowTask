@@ -79,6 +79,8 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
 - Mark a single part of split work done, or a missed part "I did this": only what is really left
   is planned again.
 - A workload meter per day: planned time against available working time.
+- **Undo** a move, a resize or marking something done, from the message that follows or with
+  Ctrl+Z.
 
 **Calendar sync**
 

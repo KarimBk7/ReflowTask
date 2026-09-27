@@ -58,6 +58,8 @@ type Open =
 
 const POPOVER_HEADING = 'popover-heading'
 const NOTICE_MS = 6000
+/** Long enough to notice a drag went wrong and reach for Undo. */
+const UNDO_MS = 10000
 
 /**
  * The gate in front of the board: no session, a forced password change, or the
@@ -97,7 +99,12 @@ function Board({ user }: { user: AuthUser }) {
   const [draft, setDraft] = useState<Draft | null>(null)
   // null follows the server: the hours panel opens by itself until the owner has saved hours once.
   const [hoursChoice, setHoursChoice] = useState<boolean | null>(null)
-  const [notice, setNotice] = useState<{ text: string; kind: 'error' | 'info' | 'changed' } | null>(null)
+  const [notice, setNotice] = useState<{
+    text: string
+    kind: 'error' | 'info' | 'changed'
+    /** The opposite action, offered as Undo (and Ctrl+Z) while the notice shows. */
+    undo?: () => Promise<unknown>
+  } | null>(null)
   const [flashBlockId, setFlashBlockId] = useState<number | null>(null)
   const helpButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -147,9 +154,35 @@ function Board({ user }: { user: AuthUser }) {
 
   useEffect(() => {
     if (!notice) return
-    const timer = window.setTimeout(() => setNotice(null), NOTICE_MS)
+    const timer = window.setTimeout(() => setNotice(null), notice.undo ? UNDO_MS : NOTICE_MS)
     return () => window.clearTimeout(timer)
   }, [notice])
+
+  const undo = notice?.undo
+  async function runUndo() {
+    if (!undo) return
+    setNotice(null)
+    try {
+      await undo()
+    } catch (error) {
+      fail(error)
+    }
+  }
+
+  // Ctrl+Z (Cmd+Z) while an Undo is on offer, unless the keys belong to a text field.
+  useEffect(() => {
+    if (!undo) return
+    function onKey(event: KeyboardEvent) {
+      const target = event.target as HTMLElement
+      if (target.closest('input, textarea, select, [contenteditable="true"]')) return
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') {
+        event.preventDefault()
+        void runUndo()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   /*
    * Reflow's whole point - a missed deadline repairs itself - happens silently otherwise: the
@@ -298,13 +331,46 @@ function Board({ user }: { user: AuthUser }) {
     }
   }
 
+  /**
+   * Undo of a move is the move back, then unpinning if it was not pinned before. The planner is
+   * deterministic, so everything else settles where it was.
+   */
   async function move(block: Block, start: Date, end: Date) {
+    const before = { start: new Date(block.startAt), end: new Date(block.endAt), pinned: block.pinned }
     try {
       await moveBlock.mutateAsync({ id: block.id, start, end })
+      setNotice({
+        kind: 'info',
+        text: t('undo.moved'),
+        undo: async () => {
+          await moveBlock.mutateAsync({ id: block.id, start: before.start, end: before.end })
+          if (!before.pinned) await setPinned.mutateAsync({ id: block.id, pinned: false })
+        },
+      })
     } catch (error) {
       fail(error)
       throw error
     }
+  }
+
+  /**
+   * Marks a task done or open again. Finishing one offers Undo, except for a repeating task, whose
+   * next occurrence already exists once this one is done.
+   */
+  function toggleTaskDone(taskId: number, status: Task['status']) {
+    const next = status === 'DONE' ? 'OPEN' : 'DONE'
+    const repeating = tasks.data?.find((task) => task.id === taskId)?.recurrence
+    setStatus.mutate(
+      { id: taskId, status: next },
+      {
+        onError: fail,
+        onSuccess: () => {
+          if (next === 'DONE' && !repeating) {
+            setNotice({ kind: 'info', text: t('undo.done'), undo: () => setStatus.mutateAsync({ id: taskId, status }) })
+          }
+        },
+      },
+    )
   }
 
   /** Month view moves whole months; week view moves a week. */
@@ -440,13 +506,18 @@ function Board({ user }: { user: AuthUser }) {
       </header>
 
       {(unreachable || notice) && (
-        <p
+        <div
           className="notice"
           data-kind={unreachable ? 'error' : notice?.kind}
           role={unreachable || notice?.kind === 'error' ? 'alert' : 'status'}
         >
           {unreachable ? t('error.offline') : notice?.text}
-        </p>
+          {!unreachable && undo && (
+            <button type="button" className="notice-undo" onClick={runUndo} disabled={busy}>
+              {t('undo.action')}
+            </button>
+          )}
+        </div>
       )}
 
       <div className="app-body">
@@ -476,9 +547,7 @@ function Board({ user }: { user: AuthUser }) {
               tasks={tasks.data ?? []}
               busy={busy}
               onOpen={(task, anchor) => setOpen({ kind: 'edit', anchor, taskId: task.id })}
-              onToggleDone={(task) =>
-                setStatus.mutate({ id: task.id, status: task.status === 'DONE' ? 'OPEN' : 'DONE' }, { onError: fail })
-              }
+              onToggleDone={(task) => toggleTaskDone(task.id, task.status)}
               onShow={(task) => {
                 if (!task.nextStartAt) return
                 setWeekStart(startOfWeek(new Date(task.nextStartAt)))
@@ -549,14 +618,28 @@ function Board({ user }: { user: AuthUser }) {
             tasks={tasks.data ?? []}
             otherParts={blocks.filter((block) => block.taskId === openBlock.taskId && block.id !== openBlock.id)}
             onToggleDone={() => {
-              setStatus.mutate(
-                { id: openBlock.taskId, status: openBlock.status === 'DONE' ? 'OPEN' : 'DONE' },
-                { onError: fail },
-              )
+              toggleTaskDone(openBlock.taskId, openBlock.status)
               setOpen(null)
             }}
             onTogglePartDone={() => {
-              setBlockDone.mutate({ id: openBlock.id, done: openBlock.state !== 'DONE' }, { onError: fail })
+              const id = openBlock.id
+              const done = openBlock.state !== 'DONE'
+              const repeating = tasks.data?.find((task) => task.id === openBlock.taskId)?.recurrence
+              setBlockDone.mutate(
+                { id, done },
+                {
+                  onError: fail,
+                  onSuccess: () => {
+                    if (done && !repeating) {
+                      setNotice({
+                        kind: 'info',
+                        text: t('undo.partDone'),
+                        undo: () => setBlockDone.mutateAsync({ id, done: false }),
+                      })
+                    }
+                  },
+                },
+              )
               setOpen(null)
             }}
             onTogglePin={() => setPinned.mutate({ id: openBlock.id, pinned: !openBlock.pinned }, { onError: fail })}

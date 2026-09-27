@@ -150,6 +150,7 @@ export const de: Record<StringKey, string> = {
   'help.repeat': 'Eine wiederkehrende Aufgabe zeigt immer nur ein Vorkommen. Ist es erledigt, erscheint das nächste, einen Schritt später fällig; ein unerledigtes bleibt, bis es erledigt ist, und verpasste Perioden werden übersprungen statt angehäuft.',
   'help.profiles': 'Markiere eine Aufgabe als Privat, damit sie in deiner privaten Zeit (unter Zeiten) geplant wird statt in der Arbeitszeit. So oder so wird nie etwas doppelt zur selben Zeit geplant.',
   'help.after': 'Eine Aufgabe kann auf eine andere warten („Auf eine andere Aufgabe warten“ im Editor): Sie wird erst danach geplant, und eine dringende Aufgabe zieht die, auf die sie wartet, nach vorn.',
+  'help.undo': 'Versehentlich verschoben oder abgehakt? Unten in der Meldung auf Rückgängig tippen, oder Strg+Z.',
   'help.parts': 'Lange Arbeit wird in Teile aufgeteilt. Markierst du einen Teil als erledigt, wird nur der Rest geplant; sind alle Teile erledigt, ist es die Aufgabe auch.',
   'help.freeze': 'Was bald beginnt, bleibt liegen. Zeitraum, in dem eine Neuplanung keinen Block verschiebt:',
   'help.buffer': 'Freie Zeit nach jeder Aufgabe und um feste Termine:',
@@ -248,6 +249,11 @@ export const de: Record<StringKey, string> = {
   'hours.rejected': 'Der Server hat diese Einstellungen abgelehnt. Prüfe Zeiten und Planungswerte.',
 
   'error.offline': 'Server nicht erreichbar.',
+
+  'undo.action': 'Rückgängig',
+  'undo.moved': 'Block verschoben und dort angeheftet.',
+  'undo.done': 'Aufgabe erledigt.',
+  'undo.partDone': 'Teil erledigt.',
 
   'auth.loginTitle': 'Anmelden',
   'auth.changePasswordTitle': 'Passwort wählen',
