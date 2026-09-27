@@ -8,7 +8,8 @@ import { LoginScreen } from './auth/LoginScreen'
 import { AccountPanel } from './auth/AccountPanel'
 import { CalendarPanel } from './auth/CalendarPanel'
 import { UserManagement } from './auth/UserManagement'
-import { CalendarIcon, ChevronIcon, ClockIcon, HelpIcon, LogoutIcon, PlusIcon, ReflowIcon, UsersIcon } from './design/Icon'
+import { MainMenu, type MenuTarget, initial } from './auth/MainMenu'
+import { ActivityIcon, ChevronIcon, DayIcon, ListIcon, MonthIcon, PlusIcon } from './design/Icon'
 import { LOCALE, t } from './i18n/en'
 import {
   boardDays,
@@ -34,10 +35,12 @@ import {
 } from './lib/board'
 import { useBusy } from './lib/calendar'
 import { useLogout, useMe } from './lib/auth'
-import { addDays, formatDayTime, startOfMonth, startOfWeek, toLocalDateTime } from './lib/time'
+import { PHONE_QUERY, useMediaQuery } from './lib/media'
+import { addDays, formatDayTime, isoDay, startOfMonth, startOfWeek, toLocalDateTime } from './lib/time'
 import { TaskList } from './list/TaskList'
 import { MonthGrid } from './month/MonthGrid'
 import { BlockDetails } from './week/BlockDetails'
+import { DayStrip } from './week/DayStrip'
 import { HoursPanel } from './week/HoursPanel'
 import { HowItWorks } from './week/HowItWorks'
 import { Popover } from './week/Popover'
@@ -55,6 +58,7 @@ type Open =
   | { kind: 'users'; anchor: DOMRect }
   | { kind: 'account'; anchor: DOMRect }
   | { kind: 'calendar'; anchor: DOMRect }
+  | { kind: 'menu'; anchor: DOMRect }
 
 const POPOVER_HEADING = 'popover-heading'
 const NOTICE_MS = 6000
@@ -77,7 +81,12 @@ export default function Root() {
 function Board({ user }: { user: AuthUser }) {
   const logout = useLogout()
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
-  const [view, setView] = useState<'week' | 'month' | 'list'>('week')
+  const phone = useMediaQuery(PHONE_QUERY)
+  // 'activity' is the phone's own tab for what the sidebar shows beside the calendar on a wider screen.
+  const [chosenView, setView] = useState<'week' | 'month' | 'list' | 'activity'>('week')
+  const view = !phone && chosenView === 'activity' ? 'week' : chosenView
+  // The day a phone shows of the week, as an ISO weekday.
+  const [day, setDay] = useState(() => isoDay(new Date()))
   // A display preference of this browser, per person, so it survives a reload.
   const weekendKey = `reflowtask-show-days-off-${user.id}`
   const [showWeekend, setShowWeekend] = useState(() => {
@@ -106,7 +115,7 @@ function Board({ user }: { user: AuthUser }) {
     undo?: () => Promise<unknown>
   } | null>(null)
   const [flashBlockId, setFlashBlockId] = useState<number | null>(null)
-  const helpButtonRef = useRef<HTMLButtonElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
 
   const config = useConfig()
   const schedule = useSchedule(weekStart)
@@ -235,13 +244,13 @@ function Board({ user }: { user: AuthUser }) {
     } catch {
       /* Private browsing or a blocked store: treat as already seen rather than nag every load. */
     }
-    if (seen || !helpButtonRef.current) return
+    if (seen || !menuButtonRef.current) return
     try {
       localStorage.setItem(seenKey, 'true')
     } catch {
       /* Nothing to persist to; the popover still opens this once. */
     }
-    setOpen({ kind: 'help', anchor: helpButtonRef.current.getBoundingClientRect() })
+    setOpen({ kind: 'help', anchor: menuButtonRef.current.getBoundingClientRect() })
   }, [welcome, hoursOpen, config.data, open, user.id])
 
   /*
@@ -303,6 +312,7 @@ function Board({ user }: { user: AuthUser }) {
       }
       const first = new Date(parts[0].startAt)
       setWeekStart(startOfWeek(first))
+      setDay(isoDay(first))
       setFlashBlockId(parts[0].id)
       window.setTimeout(() => setFlashBlockId(null), 2400)
       setNotice({
@@ -373,6 +383,39 @@ function Board({ user }: { user: AuthUser }) {
     )
   }
 
+  /** Jumps to a date: its week, and on a phone that day of it. */
+  function showDate(date: Date) {
+    setWeekStart(startOfWeek(date))
+    setDay(isoDay(date))
+  }
+
+  function openFromMenu(target: MenuTarget) {
+    const anchor = open?.kind === 'menu' ? open.anchor : new DOMRect()
+    if (target === 'hours') {
+      setOpen(null)
+      setHoursChoice(true)
+      return
+    }
+    setOpen({ kind: target, anchor })
+  }
+
+  function openCreate(anchor: DOMRect) {
+    setOpen({ kind: 'create', anchor, slot: null, placement: 'below' })
+  }
+
+  const daysOffApplies = !phone && view === 'week' && (showWeekend || boardDays(config.data, blocks, weekStart).length < 7)
+
+  // A phone names what it shows: the open day, the month, or the tab.
+  const phoneTitle = hoursOpen
+    ? t(welcome ? 'hours.welcomeTitle' : 'hours.title')
+    : view === 'week'
+      ? addDays(weekStart, day - 1).toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'long' })
+      : view === 'month'
+        ? range
+        : view === 'list'
+          ? t('list.title')
+          : t('activity.title')
+
   /** Month view moves whole months; week view moves a week. */
   function step(direction: -1 | 1) {
     if (view === 'week') {
@@ -387,123 +430,93 @@ function Board({ user }: { user: AuthUser }) {
   const unreachable = config.isError || schedule.isError || tasks.isError
 
   return (
-    <div className="app">
+    <div className="app" data-phone={phone || undefined}>
       <header className="topbar">
         <h1 className="brand">
           <span className="brand-mark" aria-hidden="true" />
-          {t('app.name')}
+          <span className="brand-name">{t('app.name')}</span>
         </h1>
 
-        <nav className="week-nav" aria-label={t('week.navigation')}>
-          {view !== 'list' && (
-            <>
-          <button type="button" className="button button-secondary button-small" onClick={() => setWeekStart(startOfWeek(new Date()))}>
-            {t('week.today')}
-          </button>
-          <button type="button" className="icon-button" onClick={() => step(-1)}>
-            <ChevronIcon direction="left" />
-            <span className="sr-only">{view === 'month' ? t('month.previous') : t('week.previous')}</span>
-          </button>
-          <button type="button" className="icon-button" onClick={() => step(1)}>
-            <ChevronIcon direction="right" />
-            <span className="sr-only">{view === 'month' ? t('month.next') : t('week.next')}</span>
-          </button>
-          <p className="week-range" aria-live="polite">
-            {range}
+        {phone ? (
+          <p className="topbar-title" aria-live="polite">
+            {phoneTitle}
           </p>
-            </>
-          )}
-          <div className="segmented" role="radiogroup" aria-label={t('view.switch')}>
-            {(['week', 'month', 'list'] as const).map((value) => (
-              <label key={value} className="segment" data-selected={view === value || undefined}>
-                <input type="radio" name="view" checked={view === value} onChange={() => setView(value)} />
-                {t(`view.${value}`)}
-              </label>
-            ))}
-          </div>
-          {view === 'week' && (showWeekend || boardDays(config.data, blocks, weekStart).length < 7) && (
-            <button
-              type="button"
-              className="button button-ghost button-small"
-              aria-pressed={showWeekend}
-              title={t('view.daysOffHint')}
-              onClick={toggleWeekend}
-            >
-              {t('view.daysOff')}
+        ) : view === 'list' ? (
+          <p className="topbar-title">{t('list.title')}</p>
+        ) : (
+          <nav className="week-nav" aria-label={t('week.navigation')}>
+            <button type="button" className="button button-secondary button-small" onClick={() => showDate(new Date())}>
+              {t('week.today')}
             </button>
-          )}
-        </nav>
+            <button type="button" className="icon-button" onClick={() => step(-1)}>
+              <ChevronIcon direction="left" />
+              <span className="sr-only">{view === 'month' ? t('month.previous') : t('week.previous')}</span>
+            </button>
+            <button type="button" className="icon-button" onClick={() => step(1)}>
+              <ChevronIcon direction="right" />
+              <span className="sr-only">{view === 'month' ? t('month.next') : t('week.next')}</span>
+            </button>
+            <p className="week-range" aria-live="polite">
+              {range}
+            </p>
+          </nav>
+        )}
 
         <div className="topbar-actions">
-          <button
-            type="button"
-            className="button button-ghost"
-            onClick={() => replan.mutate(undefined, { onError: fail })}
-            disabled={busy}
-          >
-            <ReflowIcon />
-            <span className="label-wide">{t('action.replan')}</span>
-          </button>
-          <button
-            ref={helpButtonRef}
-            type="button"
-            className="icon-button"
-            onClick={(event) => setOpen({ kind: 'help', anchor: event.currentTarget.getBoundingClientRect() })}
-          >
-            <HelpIcon />
-            <span className="sr-only">{t('action.help')}</span>
-          </button>
-          <button
-            type="button"
-            className="button button-ghost"
-            aria-pressed={hoursOpen}
-            onClick={() => setHoursChoice(!hoursOpen)}
-          >
-            <ClockIcon />
-            <span className="label-wide">{t('hours.open')}</span>
-          </button>
-          <button
-            type="button"
-            className="icon-button"
-            onClick={(event) => setOpen({ kind: 'calendar', anchor: event.currentTarget.getBoundingClientRect() })}
-          >
-            <CalendarIcon />
-            <span className="sr-only">{t('calendar.title')}</span>
-          </button>
-          {user.role === 'ADMIN' && (
-            <button
-              type="button"
-              className="icon-button"
-              onClick={(event) => setOpen({ kind: 'users', anchor: event.currentTarget.getBoundingClientRect() })}
-            >
-              <UsersIcon />
-              <span className="sr-only">{t('auth.usersTitle')}</span>
-            </button>
+          {phone ? (
+            (view === 'week' || view === 'month') && (
+              <button type="button" className="button button-secondary button-small" onClick={() => showDate(new Date())}>
+                {t('week.today')}
+              </button>
+            )
+          ) : (
+            <>
+              <div className="segmented" role="radiogroup" aria-label={t('view.switch')}>
+                {(['week', 'month', 'list'] as const).map((value) => (
+                  <label key={value} className="segment" data-selected={view === value || undefined}>
+                    <input type="radio" name="view" checked={view === value} onChange={() => setView(value)} />
+                    {t(`view.${value}`)}
+                  </label>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="button button-primary"
+                aria-label={t('action.newTask')}
+                onClick={(event) => openCreate(event.currentTarget.getBoundingClientRect())}
+              >
+                <PlusIcon />
+                <span className="label-roomy" aria-hidden="true">
+                  {t('action.newTask')}
+                </span>
+              </button>
+            </>
           )}
           <button
+            ref={menuButtonRef}
             type="button"
-            className="button button-ghost"
-            onClick={(event) => setOpen({ kind: 'account', anchor: event.currentTarget.getBoundingClientRect() })}
+            className="avatar-button"
+            aria-expanded={open?.kind === 'menu'}
+            aria-haspopup="dialog"
+            onClick={(event) => setOpen({ kind: 'menu', anchor: event.currentTarget.getBoundingClientRect() })}
           >
-            <span className="label-wide">{user.username}</span>
-            <span className="sr-only">{t('auth.account')}</span>
-          </button>
-          <button type="button" className="icon-button" onClick={() => logout.mutate()}>
-            <LogoutIcon />
-            <span className="sr-only">{t('auth.logout')}</span>
-          </button>
-          <button
-            type="button"
-            className="button button-primary"
-            onClick={(event) =>
-              setOpen({ kind: 'create', anchor: event.currentTarget.getBoundingClientRect(), slot: null, placement: 'below' })
-            }
-          >
-            <PlusIcon />
-            {t('action.newTask')}
+            <span className="avatar" aria-hidden="true">
+              {initial(user.username)}
+            </span>
+            <span className="sr-only">{t('menu.open')}</span>
           </button>
         </div>
       </header>
+
+      {phone && view === 'week' && !hoursOpen && (
+        <DayStrip
+          weekStart={weekStart}
+          selected={day}
+          blocks={blocks}
+          onSelect={setDay}
+          onStep={(direction) => setWeekStart(addDays(weekStart, direction * 7))}
+        />
+      )}
 
       {(unreachable || notice) && (
         <div
@@ -521,6 +534,7 @@ function Board({ user }: { user: AuthUser }) {
       )}
 
       <div className="app-body">
+        {(!phone || hoursOpen || view === 'activity') && (
         <aside className="sidebar" data-wide={hoursOpen || undefined}>
           {hoursOpen && config.data ? (
             <HoursPanel
@@ -540,7 +554,9 @@ function Board({ user }: { user: AuthUser }) {
             </>
           )}
         </aside>
+        )}
 
+        {(!phone || (!hoursOpen && view !== 'activity')) && (
         <main className="calendar">
           {view === 'list' ? (
             <TaskList
@@ -550,7 +566,7 @@ function Board({ user }: { user: AuthUser }) {
               onToggleDone={(task) => toggleTaskDone(task.id, task.status)}
               onShow={(task) => {
                 if (!task.nextStartAt) return
-                setWeekStart(startOfWeek(new Date(task.nextStartAt)))
+                showDate(new Date(task.nextStartAt))
                 setView('week')
               }}
             />
@@ -558,8 +574,8 @@ function Board({ user }: { user: AuthUser }) {
             <MonthGrid
               monthStart={monthStart}
               blocks={monthSchedule.data ?? []}
-              onPickDay={(day) => {
-                setWeekStart(startOfWeek(day))
+              onPickDay={(picked) => {
+                showDate(picked)
                 setView('week')
               }}
             />
@@ -567,6 +583,7 @@ function Board({ user }: { user: AuthUser }) {
           <WeekGrid
             weekStart={weekStart}
             allDays={showWeekend}
+            onlyDay={phone ? day : undefined}
             config={config.data}
             blocks={blocks}
             appointments={busyTimes.data ?? []}
@@ -587,7 +604,45 @@ function Board({ user }: { user: AuthUser }) {
           />
           )}
         </main>
+        )}
       </div>
+
+      {phone && !hoursOpen && (
+        <>
+          <nav className="tabbar" aria-label={t('view.switch')}>
+            {(
+              [
+                ['week', <DayIcon key="icon" />, t('view.day')],
+                ['month', <MonthIcon key="icon" />, t('view.month')],
+                ['list', <ListIcon key="icon" />, t('view.list')],
+                ['activity', <ActivityIcon key="icon" />, t('activity.title')],
+              ] as const
+            ).map(([value, icon, label]) => (
+              <button
+                key={value}
+                type="button"
+                className="tab"
+                aria-current={view === value ? 'page' : undefined}
+                onClick={() => setView(value)}
+              >
+                {icon}
+                <span className="tab-label">{label}</span>
+                {value === 'activity' && attention.length > 0 && (
+                  <span className="count tab-count">{attention.length}</span>
+                )}
+              </button>
+            ))}
+          </nav>
+          <button
+            type="button"
+            className="fab"
+            onClick={(event) => openCreate(event.currentTarget.getBoundingClientRect())}
+          >
+            <PlusIcon size={22} />
+            <span className="sr-only">{t('action.newTask')}</span>
+          </button>
+        </>
+      )}
 
       {open?.kind === 'create' && (
         <Popover anchor={open.anchor} placement={open.placement} labelledBy={POPOVER_HEADING} onClose={close}>
@@ -646,6 +701,24 @@ function Board({ user }: { user: AuthUser }) {
             onEdit={() => setOpen({ kind: 'edit', anchor: open.anchor, taskId: openBlock.taskId })}
             onClose={close}
             busy={busy}
+          />
+        </Popover>
+      )}
+
+      {open?.kind === 'menu' && (
+        <Popover anchor={open.anchor} placement="below" labelledBy={POPOVER_HEADING} onClose={close}>
+          <MainMenu
+            user={user}
+            daysOff={daysOffApplies ? showWeekend : null}
+            busy={busy}
+            onOpen={openFromMenu}
+            onReplan={() => {
+              setOpen(null)
+              replan.mutate(undefined, { onError: fail })
+            }}
+            onToggleDaysOff={toggleWeekend}
+            onLogout={() => logout.mutate()}
+            headingId={POPOVER_HEADING}
           />
         </Popover>
       )}

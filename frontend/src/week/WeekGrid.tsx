@@ -28,6 +28,8 @@ interface WeekGridProps {
   weekStart: Date
   /** Show all seven days, not only working days and days with something on them. */
   allDays: boolean
+  /** Show only this ISO weekday: a phone has room for one day at a time. */
+  onlyDay?: number
   config: BoardConfig | undefined
   blocks: Block[]
   /** Appointments from subscribed calendars; the scheduler already plans around them. */
@@ -77,6 +79,7 @@ interface Drag {
 export function WeekGrid({
   weekStart,
   allDays,
+  onlyDay,
   config,
   blocks,
   appointments,
@@ -117,7 +120,10 @@ export function WeekGrid({
     return () => window.clearInterval(timer)
   }, [])
 
-  const days = useMemo(() => boardDays(config, blocks, weekStart, allDays), [config, blocks, weekStart, allDays])
+  const days = useMemo(
+    () => (onlyDay ? [onlyDay] : boardDays(config, blocks, weekStart, allDays)),
+    [config, blocks, weekStart, allDays, onlyDay],
+  )
   const placed = useMemo(() => {
     const weekEnd = addDays(weekStart, 7)
     const perTask = new Map<number, number>()

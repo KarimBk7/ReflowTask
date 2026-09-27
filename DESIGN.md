@@ -216,7 +216,7 @@ A cool, low-chroma neutral scale with three reserved signal hues and three soft 
 
 ## Layout
 
-A fixed application frame at `100dvh`: a 60px top bar (brand, prev/today/next and week range, then Replan, Hours and the indigo New task button at the right), a 292px left sidebar (widens to 372px when the hours panel is open) holding Needs attention then Activity, and the calendar board filling the rest.
+A fixed application frame at `100dvh`: a 60px top bar in one row (brand, Today and prev/next with the week range, then the Week/Month/List segmented control, the indigo New task button and the avatar menu at the right), a 292px left sidebar (widens to 372px when the hours panel is open) holding Needs attention then Activity, and the calendar board filling the rest.
 
 The board is a scrollable grid: a 56px sticky time gutter plus one column per day (minimum 120px), with a sticky header carrying each day's name, date and a 4px workload meter. Time maps linearly at **1.2px per minute** (72px per hour); hour rules use line, half-hour rules line-faint. Dragging and click-to-create snap to 15 minutes. On load the grid scrolls to 45 minutes before the first working hour.
 
@@ -224,7 +224,9 @@ Blocks are sized by visible minutes: **xs** under 30 (one line, 11px, start time
 
 Spacing follows a 4px base (4, 8, 12, 16, 24, 32). Sidebar sections sit 32px apart; popover content 16px.
 
-Responsive: at 1100px wide labels drop to icons. At 900px the frame unlocks: the top bar wraps, the calendar moves above the sidebar at 72dvh, day columns widen to 132px minimum, the gutter narrows to 46px, and xs/sm blocks drop their start time. At 640px popovers become bottom sheets.
+Responsive: the top bar never wraps. At 960px the wordmark drops (the mark stays), at 820px New task becomes an icon button, and the week range gives way last with an ellipsis. At 900px the calendar moves above the sidebar at 72dvh, day columns take 116px minimum, the gutter narrows to 46px, and xs/sm blocks drop their start time.
+
+At 640px the app becomes a phone layout rather than a squeezed desktop: a 52px top bar (mark, the open day or view as its title, Today, avatar), a day strip of the week under it, one day at a time in the grid, edge to edge, and a 58px bottom tab bar (Day, Month, List, Activity) with a 56px indigo New task button floating above its right end. The sidebar becomes the Activity tab; the hours panel takes the whole screen; popovers become bottom sheets. Month cells show each task as a 5px bar in its priority's edge colour instead of a title. Safe-area insets are respected.
 
 ## Elevation & Depth
 
@@ -273,7 +275,15 @@ Quiet and compact; one indigo button per view.
 - **Error / Disabled:** invalid fields take a red border with a 12.5px red message beneath; disabled choices fade to 60%.
 
 ### Navigation
-Top bar on the page tone with a bottom hairline: brand (two offset bars, indigo over amber, beside a 15px / 650 wordmark), prev/next icon buttons with a small secondary Today button, the week range at 17px / 600, and ghost actions ending in the primary New task button.
+Top bar on the page tone with a bottom hairline: brand (two offset bars, indigo over amber, beside a 15px / 650 wordmark), a small secondary Today button and prev/next icon buttons, the week range at 17px / 600, then at the right the view segmented control, the primary New task button and the avatar.
+
+**The top bar keeps only what planning needs every few minutes.** Everything set once a week (hours and planning, calendar sync, household accounts, replan now, show days off, account and language, help, log out) lives in the avatar menu.
+
+- **Avatar:** the person's initial in a 32px circle, white with a strong hairline; hover-grey on hover; an indigo border with a 3px Indigo Wash halo while its menu is open.
+- **Avatar menu:** a 276px popover (a bottom sheet on phones) headed by the avatar, name and role, then two hairline-separated groups of 36px rows (46px on touch) with a 16px ink-2 icon and 13.5px label; the days-off row ends in the standard switch.
+- **Day strip (phone):** seven equal cells with an 11px ink-3 day name, a 28px date circle and a 4px dot when the day has work. The open day fills its circle with ink; today's date is indigo, and filled indigo when open.
+- **Tab bar (phone):** four equal tabs of a 21px icon over an 11px label, ink-3, indigo for the current one; Activity carries the red needs-attention count.
+- **New task button (phone):** 56px, 18px radius, indigo, the Lift shadow, since it floats.
 
 ### Week Grid Block (signature)
 - **Body:** the priority tint set as fill, 1px edge and ink; 6px radius; 6px 8px padding; title plus start time or meta; icons at 13px (risk, pin, done, priority bars).

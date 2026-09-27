@@ -177,3 +177,53 @@ export function PriorityIcon({ level, ...props }: IconProps & { level: 1 | 2 | 3
     </Frame>
   )
 }
+
+/** The day view: a calendar page with one block on it. */
+export function DayIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <rect x="2.25" y="2.75" width="11.5" height="11" rx="1.75" />
+      <path d="M5.25 7.5h5.5" />
+      <path d="M5.25 10.5h3" />
+    </Frame>
+  )
+}
+
+/** The month view: a grid of days. */
+export function MonthIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <rect x="2.25" y="2.75" width="11.5" height="11" rx="1.75" />
+      <path d="M2.25 6.5h11.5M2.25 10.1h11.5M6.1 6.5v7.25M9.9 6.5v7.25" />
+    </Frame>
+  )
+}
+
+/** The task list. */
+export function ListIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <path d="M6 4.5h7.5M6 8h7.5M6 11.5h7.5" />
+      <path d="M2.75 4.5h.01M2.75 8h.01M2.75 11.5h.01" />
+    </Frame>
+  )
+}
+
+/** Activity: what the scheduler did, as a pulse over time. */
+export function ActivityIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <path d="M1.75 8.5h2.75l1.75-4.5 3 8 1.75-3.5h3.25" />
+    </Frame>
+  )
+}
+
+/** Your own account. */
+export function UserIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <circle cx="8" cy="5.75" r="2.75" />
+      <path d="M2.75 13.75c.4-2.6 2.6-4.25 5.25-4.25s4.85 1.65 5.25 4.25" />
+    </Frame>
+  )
+}

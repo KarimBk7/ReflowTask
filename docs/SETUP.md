@@ -117,7 +117,7 @@ own working hours.
 Everyone gets their own login and their own calendar, hours and history. Nobody sees anybody
 else's tasks, not even the admin's.
 
-1. Click the people icon in the top bar (**Household accounts**, visible to admins only).
+1. Open the menu behind your initial, top right, and choose **Household accounts** (admins only).
 2. Enter a username (2 to 50 letters, digits, dots, dashes or underscores; case does not matter), a
    temporary password of at least 8 characters, and a role.
 3. Click **Add member** and tell the person their username and temporary password.
@@ -135,7 +135,7 @@ From the same panel an admin can:
 - **Remove** an account. This deletes all of its tasks, hours and history, so it asks you to
   confirm. You cannot remove yourself or the last admin.
 
-Anyone can change their own password from the button with their name in the top bar.
+Anyone can change their own password in the same menu, under **Account and language**.
 
 ## Reaching it from your phone or away from home
 
@@ -161,7 +161,7 @@ screen". Chrome only offers a full "Install app" over HTTPS (see below); over pl
 screen shortcut still works.
 
 **Your plan in the phone's calendar app:** open ReflowTask by the address that works everywhere
-(usually the Tailscale one), click the calendar icon in the top bar and create a subscribe link.
+(usually the Tailscale one), open **Calendar sync** in the menu behind your initial and create a subscribe link.
 The phone refreshes it only while it can reach ReflowTask. The app-by-app steps, and how to make
 ReflowTask plan around your other calendars, are in the README under
 [Calendar sync](../README.md#calendar-sync).

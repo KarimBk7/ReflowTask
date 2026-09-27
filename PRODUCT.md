@@ -19,7 +19,7 @@ API-first is a hard architectural commitment: the web frontend is a client of th
 
 ## Users
 
-A single person planning their own working day — the owner of the self-hosted instance. They work at a desktop browser inside their home network, and the primary scene is a **sit-down planning session**: reviewing what the scheduler laid out, adjusting, and marking work done. The week calendar is the surface they open. Phone access works but is a courtesy layout, not a co-equal one.
+A single person planning their own working day — the owner of the self-hosted instance. They work at a desktop browser inside their home network, and the primary scene is a **sit-down planning session**: reviewing what the scheduler laid out, adjusting, and marking work done. The week calendar is the surface they open. On the phone the same person checks in during the day, so the phone gets a layout of its own (one day at a time, tabs at the bottom, New task in thumb reach) rather than a squeezed desktop.
 
 A second audience reads this product without using it: **portfolio reviewers and recruiters.** They are not a user to design around, but they set one requirement — the rescheduling mechanism must be legible from the interface alone, without a walkthrough. Real daily use leads; comprehensibility rides along.
 

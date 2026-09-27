@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
+import { PHONE_QUERY } from '../lib/media'
+
 interface PopoverProps {
   /** Viewport rectangle the popover opens beside: a block, a clicked slot, or a button. */
   anchor: DOMRect
@@ -12,7 +14,7 @@ interface PopoverProps {
 
 const GAP = 8
 const EDGE = 12
-const SHEET_QUERY = '(max-width: 640px)'
+const SHEET_QUERY = PHONE_QUERY
 
 /**
  * A non-modal dialog anchored to what opened it. Neither creating nor inspecting a block needs

@@ -76,7 +76,12 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
 - Drag a block to move it (it is pinned where you drop it), or drag its bottom edge to resize it
   (the task's estimate follows). Alt + arrow keys do the same from the keyboard. On a touch
   screen, press and hold a block to pick it up; a tap still opens it and a swipe still scrolls.
-- Add it to your phone's home screen and it opens like an app, full screen with its own icon.
+- **On a phone** it is laid out like a calendar app: one day at a time with the week as a strip above
+  it, the views as tabs at the bottom and New task as a round button in reach of your thumb. Add it
+  to the home screen and it opens full screen with its own icon.
+- The top bar keeps only what planning needs every few minutes (today, previous and next, the view,
+  New task); settings, calendar sync, the household, help and logging out sit in the menu behind
+  your initial.
 - Pin any block so replans leave it alone. The block you are inside right now is never moved.
 - Mark a single part of split work done, or a missed part "I did this": only what is really left
   is planned again.
@@ -104,8 +109,8 @@ one off, or click its next time to jump to that week.
 - Working hours per weekday, breaks such as lunch, a buffer between tasks, how far ahead to plan
   and the smallest piece a long task may be split into. Changing them replans immediately.
 - Light and dark themes that follow your operating system.
-- English and German. The browser's language decides, and anyone can switch under their name in
-  the top bar. A new language is one file: copy `frontend/src/i18n/de.ts`.
+- English and German. The browser's language decides, and anyone can switch it in the menu behind
+  their initial, top right. A new language is one file: copy `frontend/src/i18n/de.ts`.
 
 | New task | Block details | Hours and planning |
 | --- | --- | --- |
@@ -117,7 +122,7 @@ one off, or click its next time to jump to that week.
 - An admin adds and removes accounts and can reset a forgotten password.
 - Whoever owns the device can recover any account from its command line, even the admin's.
 - A short built-in guide explains how planning works, with your own hours filled in.
-- Anyone can download their own data under their name in the top bar: everything as JSON, or the
+- Anyone can download their own data from the menu (Account and language): everything as JSON, or the
   task list as CSV for a spreadsheet. The JSON includes the addresses of your other calendars,
   which are often secret links, so keep the file private.
 
@@ -225,7 +230,7 @@ working hours.
 
 ## Calendar sync
 
-Open the **calendar icon** in the top bar. Sync works in both directions, and both directions are
+Open **Calendar sync** in the menu behind your initial, top right. Sync works in both directions, and both directions are
 one-way subscriptions: nothing you change in another app is written back.
 
 ### Your plan in your calendar app
@@ -444,7 +449,6 @@ Known limitations:
   format follows the browser's language rather than the app's.
 - The outline of a moved block's old slot is a fixed 30-minute marker, because the replan record
   keeps only start times.
-- The week view is built for a laptop or tablet screen first; on a phone it works but is cramped.
 - Messages that come from the server (validation errors, a calendar that cannot be read) and the
   example task for new accounts are English in the German interface too.
 - Login lockout is kept in memory, so it resets when the server restarts.
