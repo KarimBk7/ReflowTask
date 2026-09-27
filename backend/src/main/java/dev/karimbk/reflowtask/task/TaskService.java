@@ -72,6 +72,7 @@ public class TaskService {
 				Task.toDeadline(request.deadlineDate(), request.deadlineTime()),
 				request.deadlineTime() != null, request.priority(), LocalDateTime.now(this.clock));
 		task.setRecurrence(request.recurrence());
+		task.setNotBefore(request.notBefore());
 		Task saved = this.tasks.save(task);
 		if (fixedStart != null) {
 			this.scheduler.fix(userId, saved, fixedStart);
@@ -90,6 +91,7 @@ public class TaskService {
 				request.deadlineTime() != null);
 		task.setPriority(request.priority());
 		task.setRecurrence(request.recurrence());
+		task.setNotBefore(request.notBefore());
 		this.scheduler.replan(userId, RescheduleTrigger.TASK_CHANGED);
 		return respond(task);
 	}

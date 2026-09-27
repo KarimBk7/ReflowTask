@@ -54,6 +54,8 @@ export interface TaskInput {
   fixedStart?: LocalDateTime | null
   /** Requires deadlineDate, and cannot be combined with fixedStart. */
   recurrence?: Recurrence | null
+  /** Nothing is planned before this. Must be before the deadline. An update without it clears it. */
+  notBefore?: LocalDateTime | null
 }
 
 export interface Block {

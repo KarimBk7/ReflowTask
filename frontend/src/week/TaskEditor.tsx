@@ -28,6 +28,8 @@ const REPEATS: (Recurrence | null)[] = [null, 'DAILY', 'WEEKLY', 'BIWEEKLY', 'MO
 
 type DeadlineChoice = 'none' | 'today' | 'tomorrow' | 'friday' | 'custom'
 
+type StartChoice = 'any' | 'tomorrow' | 'monday' | 'custom'
+
 /** Date-only 'YYYY-MM-DD' for a local date, without a timezone shift. */
 const dateOnly = (date: Date) => toLocalDateTime(date).slice(0, 10)
 
@@ -41,13 +43,19 @@ function deadlineDates() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const friday = nextFriday(today)
+  const monday = addDays(today, 8 - isoDay(today))
   return {
     today: dateOnly(today),
     tomorrow: dateOnly(addDays(today, 1)),
     friday: dateOnly(friday),
     fridayLabel: `${DAY_NAMES[4]} ${dayOfMonth(friday)}`,
+    monday: dateOnly(monday),
+    mondayLabel: `${DAY_NAMES[0]} ${dayOfMonth(monday)}`,
   }
 }
+
+/** An earliest start picked here is the start of that day. */
+const startOfDay = (date: string) => `${date}T00:00:00`
 
 /**
  * Title, duration, priority and deadline, chosen mostly with chips rather than native date and
@@ -89,6 +97,21 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
   })
 
   const [recurrence, setRecurrence] = useState<Recurrence | null>(task?.recurrence ?? null)
+  // Kept exactly as the server sent it until changed: a repeating task's next occurrence starts at
+  // the previous deadline, 23:59, and rounding that to a day would let it start a day early.
+  const [notBefore, setNotBefore] = useState<string | null>(task?.notBefore ?? null)
+  const [showNotBefore, setShowNotBefore] = useState(Boolean(task?.notBefore))
+  const [startCustom, setStartCustom] = useState(
+    () => notBefore !== null && ![startOfDay(dates.tomorrow), startOfDay(dates.monday)].includes(notBefore),
+  )
+  const startChoice: StartChoice =
+    notBefore === null && !startCustom
+      ? 'any'
+      : startCustom
+        ? 'custom'
+        : notBefore === startOfDay(dates.tomorrow)
+          ? 'tomorrow'
+          : 'monday'
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [failure, setFailure] = useState<string | null>(null)
@@ -117,6 +140,13 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
     if (choice !== 'custom') setDeadlineTime('')
   }
 
+  function chooseStart(choice: StartChoice) {
+    setStartCustom(choice === 'custom')
+    if (choice === 'any') setNotBefore(null)
+    if (choice === 'tomorrow') setNotBefore(startOfDay(dates.tomorrow))
+    if (choice === 'monday') setNotBefore(startOfDay(dates.monday))
+  }
+
   function chooseRecurrence(value: Recurrence | null) {
     setRecurrence(value)
     if (value && !deadlineDate) chooseDeadline('today')
@@ -139,6 +169,7 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
         priority,
         fixedStart: fixedAtSlot ? toLocalDateTime(slot) : null,
         recurrence: fixedAtSlot ? null : recurrence,
+        notBefore: fixedAtSlot ? null : notBefore,
       })
     } catch (error) {
       if (error instanceof ApiError) {
@@ -333,6 +364,49 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
           {errors.recurrenceAnchored && <p className="field-error">{errors.recurrenceAnchored}</p>}
         </fieldset>
       )}
+
+      {!fixedAtSlot &&
+        (showNotBefore ? (
+          <fieldset className="editor-row">
+            <legend className="editor-label">{t('task.notBefore')}</legend>
+            <div className="chips">
+              {(
+                [
+                  ['any', t('task.anyTime')],
+                  ['tomorrow', t('task.tomorrow')],
+                  ['monday', dates.mondayLabel],
+                  ['custom', t('task.pickDate')],
+                ] as [StartChoice, string][]
+              ).map(([choice, label]) => (
+                <label key={choice} className="chip" data-selected={startChoice === choice || undefined}>
+                  <input
+                    type="radio"
+                    name={`${id}-start`}
+                    checked={startChoice === choice}
+                    onChange={() => chooseStart(choice)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            {startCustom && (
+              <div className="editor-deadline">
+                <input
+                  type="date"
+                  value={notBefore?.slice(0, 10) ?? ''}
+                  aria-label={t('task.notBeforeDate')}
+                  onChange={(event) => setNotBefore(event.target.value ? startOfDay(event.target.value) : null)}
+                />
+              </div>
+            )}
+            <p className="editor-note">{t('task.notBeforeHint')}</p>
+            {errors.startBeforeDeadline && <p className="field-error">{errors.startBeforeDeadline}</p>}
+          </fieldset>
+        ) : (
+          <button type="button" className="link-button" onClick={() => setShowNotBefore(true)}>
+            {t('task.addNotBefore')}
+          </button>
+        ))}
 
       {showDescription ? (
         <textarea

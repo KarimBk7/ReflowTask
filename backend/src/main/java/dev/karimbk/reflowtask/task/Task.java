@@ -166,6 +166,10 @@ public class Task {
 		return this.notBefore;
 	}
 
+	public void setNotBefore(LocalDateTime notBefore) {
+		this.notBefore = notBefore;
+	}
+
 	/**
 	 * The occurrence after this one: same work, due one step later, and not planned before this
 	 * one was due. The rule moves to the new occurrence, which leaves this one as plain history.

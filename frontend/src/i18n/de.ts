@@ -71,6 +71,12 @@ export const de: Record<StringKey, string> = {
   'task.deadlineTime': 'Frist (Uhrzeit, optional)',
   'task.description': 'Notizen',
   'task.addDescription': 'Notizen hinzufügen',
+  'task.notBefore': 'Nicht vor',
+  'task.notBeforeDate': 'Frühester Starttag',
+  'task.notBeforeHint': 'Vor diesem Tag wird nichts davon eingeplant, für Arbeit, die noch nicht beginnen kann.',
+  'task.addNotBefore': 'Frühesten Start festlegen',
+  'task.anyTime': 'Jederzeit',
+  'details.notBefore': 'Nicht eingeplant vor',
   'task.repeat': 'Wiederholen',
   'task.repeatHint': 'Ist diese erledigt, erscheint die nächste: fällig einen Schritt nach dieser Frist und nicht davor eingeplant. Täglich heißt an jedem Arbeitstag.',
 

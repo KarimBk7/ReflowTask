@@ -41,11 +41,20 @@ public record TaskRequest(
 		LocalDateTime fixedStart,
 
 		// Optional. Each occurrence is due one step after the last, so a rule needs a deadline.
-		Recurrence recurrence) {
+		Recurrence recurrence,
+
+		// Optional: nothing of the task is planned before this.
+		LocalDateTime notBefore) {
 
 	@AssertTrue(message = "deadlineTime requires deadlineDate")
 	public boolean isDeadlineConsistent() {
 		return this.deadlineDate != null || this.deadlineTime == null;
+	}
+
+	@AssertTrue(message = "the earliest start must be before the deadline")
+	public boolean isStartBeforeDeadline() {
+		LocalDateTime deadline = Task.toDeadline(this.deadlineDate, this.deadlineTime);
+		return this.notBefore == null || deadline == null || this.notBefore.isBefore(deadline);
 	}
 
 	@AssertTrue(message = "a repeating task needs a deadline to count from")

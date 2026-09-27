@@ -130,6 +130,11 @@ export function BlockDetails({ block, task, origin, otherParts, onToggleDone, on
             {t('details.due')} {formatDeadline(task.deadline, task.deadlineHasTime)}
           </li>
         )}
+        {task?.notBefore && new Date(task.notBefore) > new Date() && (
+          <li className="fact">
+            {t('details.notBefore')} {formatDeadline(task.notBefore, !task.notBefore.endsWith('T00:00:00'))}
+          </li>
+        )}
         {task?.recurrence && (
           <li className="fact">
             <ReflowIcon size={14} />

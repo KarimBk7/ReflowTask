@@ -60,6 +60,8 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
   task was unfinished and places the task again.
 - Work that cannot finish before its deadline is still scheduled and flagged **at risk**, never
   silently dropped or given a moved deadline.
+- **Earliest start**: work that cannot begin yet (waiting for a delivery, a reply, next month)
+  is not planned before the day you pick.
 - **Repeating tasks**: daily (every working day), weekly, every two weeks or monthly. Finish one
   and the next appears, due one step later.
 - **Nothing moves silently.** Every replan is recorded with the reason and what moved where.
@@ -331,7 +333,7 @@ API, so a mobile client could use the same endpoints.
 | `DELETE` | `/users/{id}` | Admin: remove an account and everything it owns |
 | `GET` | `/tasks` | List your tasks, each with its scheduled minutes, at-risk state and next planned start |
 | `GET` | `/tasks/{id}` | Get one task |
-| `POST` | `/tasks` | Create a task and replan; an optional `fixedStart` pins it at that time, an optional `recurrence` (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`) makes it repeat |
+| `POST` | `/tasks` | Create a task and replan; an optional `fixedStart` pins it at that time, an optional `recurrence` (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`) makes it repeat, an optional `notBefore` holds it back until then |
 | `PUT` | `/tasks/{id}` | Update everything except status, and replan |
 | `PATCH` | `/tasks/{id}/status` | Change status, for example to mark it done, and replan |
 | `DELETE` | `/tasks/{id}` | Delete a task and replan |

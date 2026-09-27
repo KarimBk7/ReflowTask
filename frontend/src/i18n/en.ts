@@ -77,6 +77,12 @@ export const en = {
   'task.deadlineTime': 'Deadline time (optional)',
   'task.description': 'Notes',
   'task.addDescription': 'Add notes',
+  'task.notBefore': 'Not before',
+  'task.notBeforeDate': 'Earliest start date',
+  'task.notBeforeHint': 'Nothing of this task is planned before that day, for work that cannot start yet.',
+  'task.addNotBefore': 'Set an earliest start',
+  'task.anyTime': 'Any time',
+  'details.notBefore': 'Not planned before',
   'task.repeat': 'Repeats',
   'task.repeatHint': 'When this one is done, the next appears, due one step after this deadline and not planned before it. Daily means every working day.',
 

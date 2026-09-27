@@ -82,6 +82,9 @@ function TaskRow({ task, busy, onOpen, onToggleDone, onShow }: { task: Task } & 
       ),
     )
   }
+  if (!done && task.notBefore && new Date(task.notBefore) > new Date()) {
+    facts.push(`${t('details.notBefore')} ${formatDeadline(task.notBefore, !task.notBefore.endsWith('T00:00:00'))}`)
+  }
   if (unscheduled > 0) facts.push(`${formatDuration(unscheduled)} ${t('attention.unscheduled')}`)
   if (task.recurrence) facts.push(`${t('details.repeats')} ${t(`repeat.${task.recurrence}`).toLowerCase()}`)
 
