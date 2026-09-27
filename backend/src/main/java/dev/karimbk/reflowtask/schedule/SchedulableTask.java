@@ -14,9 +14,15 @@ import dev.karimbk.reflowtask.task.TimeProfile;
  * scheduled.
  * @param notBefore nothing of the task is placed before this; null for any time
  * @param profile which hours it may be placed in
+ * @param after a task being planned in the same run that this one waits for, or null
  */
 public record SchedulableTask(long id, int minutesToPlace, LocalDateTime deadline, Priority priority,
-		LocalDateTime notBefore, TimeProfile profile) {
+		LocalDateTime notBefore, TimeProfile profile, Long after) {
+
+	public SchedulableTask(long id, int minutesToPlace, LocalDateTime deadline, Priority priority,
+			LocalDateTime notBefore, TimeProfile profile) {
+		this(id, minutesToPlace, deadline, priority, notBefore, profile, null);
+	}
 
 	public SchedulableTask(long id, int minutesToPlace, LocalDateTime deadline, Priority priority) {
 		this(id, minutesToPlace, deadline, priority, null);

@@ -20,6 +20,8 @@ interface TaskEditorProps {
   hoursSummary: string | null
   /** Personal time in a phrase; null when none is set, and then the work/personal choice is hidden. */
   personalSummary: string | null
+  /** Every task, for choosing one this task waits for. */
+  tasks: Task[]
   /** Id for the form heading, which labels the popover. */
   headingId: string
 }
@@ -64,7 +66,7 @@ const startOfDay = (date: string) => `${date}T00:00:00`
  * time pickers. A task started from a clicked slot can be fixed at that time (an appointment) or
  * handed to the scheduler with the slot ignored.
  */
-export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDelete, busy, hoursSummary, personalSummary, headingId }: TaskEditorProps) {
+export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDelete, busy, hoursSummary, personalSummary, tasks, headingId }: TaskEditorProps) {
   const id = useId()
   const dates = deadlineDates()
   const initialMinutes = task?.estimatedMinutes ?? 60
@@ -100,6 +102,12 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
 
   const [recurrence, setRecurrence] = useState<Recurrence | null>(task?.recurrence ?? null)
   const [profile, setProfile] = useState<TimeProfile>(task?.profile ?? 'WORK')
+  const [afterTaskId, setAfterTaskId] = useState<number | null>(task?.afterTaskId ?? null)
+  const [showAfter, setShowAfter] = useState(task?.afterTaskId != null)
+  // Open tasks other than this one, plus the current choice even if it is done by now.
+  const candidates = tasks.filter(
+    (other) => other.id !== task?.id && (other.status !== 'DONE' || other.id === task?.afterTaskId),
+  )
   // Kept exactly as the server sent it until changed: a repeating task's next occurrence starts at
   // the previous deadline, 23:59, and rounding that to a day would let it start a day early.
   const [notBefore, setNotBefore] = useState<string | null>(task?.notBefore ?? null)
@@ -174,6 +182,7 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
         recurrence: fixedAtSlot ? null : recurrence,
         notBefore: fixedAtSlot ? null : notBefore,
         profile,
+        afterTaskId: fixedAtSlot ? null : afterTaskId,
       })
     } catch (error) {
       if (error instanceof ApiError) {
@@ -383,6 +392,35 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
           {errors.recurrenceAnchored && <p className="field-error">{errors.recurrenceAnchored}</p>}
         </fieldset>
       )}
+
+      {!fixedAtSlot &&
+        candidates.length > 0 &&
+        (showAfter ? (
+          <div className="editor-row">
+            <label className="editor-label" htmlFor={`${id}-after`}>
+              {t('task.after')}
+            </label>
+            <select
+              id={`${id}-after`}
+              className="editor-description"
+              value={afterTaskId ?? ''}
+              onChange={(event) => setAfterTaskId(event.target.value ? Number(event.target.value) : null)}
+            >
+              <option value="">{t('task.afterNone')}</option>
+              {candidates.map((other) => (
+                <option key={other.id} value={other.id}>
+                  {other.title}
+                </option>
+              ))}
+            </select>
+            <p className="editor-note">{t('task.afterHint')}</p>
+            {errors.afterTaskId && <p className="field-error">{errors.afterTaskId}</p>}
+          </div>
+        ) : (
+          <button type="button" className="link-button" onClick={() => setShowAfter(true)}>
+            {t('task.addAfter')}
+          </button>
+        ))}
 
       {!fixedAtSlot &&
         (showNotBefore ? (

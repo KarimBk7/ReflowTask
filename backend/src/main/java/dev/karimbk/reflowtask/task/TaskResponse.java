@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
  * @param atRisk some of the task's work is placed after its deadline
  * @param recurrence how often it comes back, or null for a one-off
  * @param notBefore work is not planned before this, or null
+ * @param afterTaskId the task this one waits for, or null
  * @param profile whether it is planned in working hours or personal time
  * @param nextStartAt when the next planned part starts (or the one running now), or null when
  * nothing is planned ahead
@@ -30,6 +31,7 @@ public record TaskResponse(
 		Recurrence recurrence,
 		LocalDateTime notBefore,
 		TimeProfile profile,
+		Long afterTaskId,
 		LocalDateTime nextStartAt) {
 
 	static TaskResponse of(Task task, int scheduledMinutes, int doneMinutes, boolean atRisk,
@@ -37,7 +39,8 @@ public record TaskResponse(
 		return new TaskResponse(task.getId(), task.getTitle(), task.getDescription(),
 				task.getEstimatedMinutes(), task.getDeadline(), task.isDeadlineHasTime(),
 				task.getPriority(), task.getStatus(), task.getCreatedAt(), scheduledMinutes, doneMinutes, atRisk,
-				task.getRecurrence(), task.getNotBefore(), task.getProfile(), nextStartAt);
+				task.getRecurrence(), task.getNotBefore(), task.getProfile(),
+				task.getAfterTaskId(), nextStartAt);
 	}
 
 }

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import dev.karimbk.reflowtask.common.BadRequestException;
 import dev.karimbk.reflowtask.common.NotFoundException;
 import dev.karimbk.reflowtask.schedule.BlockState;
 import dev.karimbk.reflowtask.schedule.RescheduleTrigger;
@@ -74,6 +75,7 @@ public class TaskService {
 		task.setRecurrence(request.recurrence());
 		task.setNotBefore(request.notBefore());
 		task.setProfile(request.profile());
+		task.setAfterTaskId(checkedPredecessor(userId, null, request.afterTaskId()));
 		Task saved = this.tasks.save(task);
 		if (fixedStart != null) {
 			this.scheduler.fix(userId, saved, fixedStart);
@@ -94,6 +96,7 @@ public class TaskService {
 		task.setRecurrence(request.recurrence());
 		task.setNotBefore(request.notBefore());
 		task.setProfile(request.profile());
+		task.setAfterTaskId(checkedPredecessor(userId, id, request.afterTaskId()));
 		this.scheduler.replan(userId, RescheduleTrigger.TASK_CHANGED);
 		return respond(task);
 	}
@@ -148,6 +151,25 @@ public class TaskService {
 			}
 		}
 		return TaskResponse.of(task, (int) minutes, (int) done, atRisk, next);
+	}
+
+	/**
+	 * The task to wait for, if it is the user's own and waiting for it does not come back round to
+	 * this task: A after B after A would leave both waiting forever.
+	 */
+	private Long checkedPredecessor(long userId, Long taskId, Long afterTaskId) {
+		if (afterTaskId == null) {
+			return null;
+		}
+		Task predecessor = this.tasks.findByIdAndUserId(afterTaskId, userId)
+			.orElseThrow(() -> new BadRequestException("The task to wait for does not exist."));
+		for (Task step = predecessor; step != null; step = (step.getAfterTaskId() == null) ? null
+				: this.tasks.findByIdAndUserId(step.getAfterTaskId(), userId).orElse(null)) {
+			if (step.getId().equals(taskId)) {
+				throw new BadRequestException("These tasks would wait for each other.");
+			}
+		}
+		return afterTaskId;
 	}
 
 	private Task require(long userId, long id) {

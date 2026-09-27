@@ -262,9 +262,14 @@ public class SchedulerService {
 		counted.addAll(disposition.doneHistory());
 		Map<Long, Long> covered = minutesPerTask(counted);
 
+		// Where each open task's kept blocks end, for a task that waits for one needing no new time.
+		Map<Long, LocalDateTime> keptEnds = disposition.obstacles()
+			.stream()
+			.collect(Collectors.toMap((block) -> block.getTask().getId(), TimeBlock::getEndAt,
+					(a, b) -> a.isAfter(b) ? a : b));
 		List<SchedulableTask> toPlan = byId.values()
 			.stream()
-			.map((task) -> toSchedulable(task, covered))
+			.map((task) -> toSchedulable(task, covered, byId, keptEnds))
 			.filter((candidate) -> candidate.minutesToPlace() > 0)
 			.toList();
 
@@ -417,13 +422,25 @@ public class SchedulerService {
 		return new Disposition(obstacles, doneHistory, toRemove, stillPlanned, missedStarts, completed, titles);
 	}
 
-	private static SchedulableTask toSchedulable(Task task, Map<Long, Long> covered) {
+	/**
+	 * A task waiting for an open one never starts before that one's kept blocks end; if the other
+	 * still needs new time, the planner places it first and holds this one back behind it. A task
+	 * waiting for a finished (or deleted) one waits for nothing.
+	 */
+	private static SchedulableTask toSchedulable(Task task, Map<Long, Long> covered, Map<Long, Task> open,
+			Map<Long, LocalDateTime> keptEnds) {
 		long alreadyCovered = covered.getOrDefault(task.getId(), 0L);
 		// Covered means kept obstacles plus parts marked done. A missed part is not covered: the work
 		// did not happen unless the person marks it done, which they can still do afterwards.
 		int remaining = (int) Math.max(0, task.getEstimatedMinutes() - alreadyCovered);
-		return new SchedulableTask(task.getId(), remaining, task.getDeadline(), task.getPriority(),
-				task.getNotBefore(), task.getProfile());
+		Long after = open.containsKey(task.getAfterTaskId()) ? task.getAfterTaskId() : null;
+		LocalDateTime notBefore = task.getNotBefore();
+		LocalDateTime keptEnd = (after == null) ? null : keptEnds.get(after);
+		if (keptEnd != null && (notBefore == null || keptEnd.isAfter(notBefore))) {
+			notBefore = keptEnd;
+		}
+		return new SchedulableTask(task.getId(), remaining, task.getDeadline(), task.getPriority(), notBefore,
+				task.getProfile(), after);
 	}
 
 	private static Map<Long, Long> minutesPerTask(List<TimeBlock> blocks) {

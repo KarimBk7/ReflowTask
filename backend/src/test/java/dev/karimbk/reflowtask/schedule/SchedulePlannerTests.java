@@ -133,6 +133,34 @@ class SchedulePlannerTests {
 		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 10, 0)));
 	}
 
+	// --- waiting for another task -----------------------------------------------------
+
+	@Test
+	void anUrgentTaskPullsForwardTheTaskItWaitsFor() {
+		SchedulableTask groundwork = task(1, 60, null, Priority.LOW);
+		SchedulableTask urgent = new SchedulableTask(2, 60, at(MONDAY, 12, 0), Priority.HIGH, null, TimeProfile.WORK, 1L);
+		SchedulableTask other = task(3, 60, at(MONDAY, 17, 0), Priority.MEDIUM);
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(other, urgent, groundwork), List.of(), defaultConfig(),
+				at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactlyInAnyOrder(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 10, 0)),
+				new PlannedBlock(2, at(MONDAY, 10, 0), at(MONDAY, 11, 0)),
+				new PlannedBlock(3, at(MONDAY, 11, 0), at(MONDAY, 12, 0)));
+	}
+
+	@Test
+	void aTaskWaitsWhenWhatItWaitsForFindsNoTime() {
+		// Two days of horizon hold 16 hours; the groundwork needs 20, so nothing can follow it.
+		SchedulableTask groundwork = task(1, 20 * 60, null, Priority.MEDIUM);
+		SchedulableTask follow = new SchedulableTask(2, 60, null, Priority.MEDIUM, null, TimeProfile.WORK, 1L);
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(follow, groundwork), List.of(), configWithHorizon(2),
+				at(MONDAY, 9, 0));
+
+		assertThat(plan).allSatisfy((block) -> assertThat(block.taskId()).isEqualTo(1));
+	}
+
 	@Test
 	void placesNothingWhenThereIsNothingToPlace() {
 		assertThat(SchedulePlanner.plan(List.of(), List.of(), defaultConfig(), at(MONDAY, 9, 0))).isEmpty();

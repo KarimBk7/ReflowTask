@@ -47,7 +47,10 @@ public record TaskRequest(
 		LocalDateTime notBefore,
 
 		// Optional: which hours it is planned in. Absent means work.
-		TimeProfile profile) {
+		TimeProfile profile,
+
+		// Optional: another of the user's tasks this one waits for.
+		Long afterTaskId) {
 
 	@AssertTrue(message = "deadlineTime requires deadlineDate")
 	public boolean isDeadlineConsistent() {

@@ -6,8 +6,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import dev.karimbk.reflowtask.task.Priority;
 import dev.karimbk.reflowtask.task.TimeProfile;
@@ -45,21 +49,52 @@ public final class SchedulePlanner {
 		for (TimeProfile profile : TimeProfile.values()) {
 			free.put(profile, freeCapacity(obstacles, config, now, profile));
 		}
+		Map<Long, SchedulableTask> byId = tasks.stream()
+			.collect(Collectors.toMap(SchedulableTask::id, Function.identity()));
+		Set<Long> handled = new HashSet<>();
 		List<PlannedBlock> planned = new ArrayList<>();
 		for (SchedulableTask task : inPlanningOrder(tasks)) {
-			List<PlannedBlock> placed = new ArrayList<>();
-			place(task, free.get(task.profile()), config.minChunkMinutes(), config.bufferMinutes(), placed);
-			for (TimeProfile other : TimeProfile.values()) {
-				if (other != task.profile()) {
-					for (PlannedBlock block : placed) {
-						free.put(other, subtract(free.get(other),
-								new TimeSlot(block.start(), block.end().plusMinutes(config.bufferMinutes()))));
-					}
-				}
-			}
-			planned.addAll(placed);
+			placeAfterItsPredecessor(task, byId, handled, free, config, planned);
 		}
 		return planned;
+	}
+
+	/**
+	 * Places a task once whatever it waits for is placed. A task that waits for a less urgent one
+	 * pulls that one forward rather than being pushed back behind it; if the one it waits for finds
+	 * no time, neither does it, since it could not start anyway.
+	 */
+	private static void placeAfterItsPredecessor(SchedulableTask task, Map<Long, SchedulableTask> byId,
+			Set<Long> handled, Map<TimeProfile, List<TimeSlot>> free, SchedulingConfig config,
+			List<PlannedBlock> planned) {
+		// Marked before recursing, so a cycle ends instead of looping; the API refuses cycles anyway.
+		if (!handled.add(task.id())) {
+			return;
+		}
+		LocalDateTime notBefore = task.notBefore();
+		SchedulableTask first = (task.after() == null) ? null : byId.get(task.after());
+		if (first != null) {
+			placeAfterItsPredecessor(first, byId, handled, free, config, planned);
+			List<PlannedBlock> itsBlocks = planned.stream().filter((block) -> block.taskId() == first.id()).toList();
+			long placedMinutes = itsBlocks.stream().mapToLong(PlannedBlock::minutes).sum();
+			LocalDateTime itsEnd = (placedMinutes < first.minutesToPlace()) ? LocalDateTime.MAX
+					: itsBlocks.stream().map(PlannedBlock::end).max(Comparator.naturalOrder()).orElseThrow();
+			notBefore = (notBefore == null || itsEnd.isAfter(notBefore)) ? itsEnd : notBefore;
+		}
+		SchedulableTask waiting = new SchedulableTask(task.id(), task.minutesToPlace(), task.deadline(),
+				task.priority(), notBefore, task.profile(), task.after());
+
+		List<PlannedBlock> placed = new ArrayList<>();
+		place(waiting, free.get(task.profile()), config.minChunkMinutes(), config.bufferMinutes(), placed);
+		for (TimeProfile other : TimeProfile.values()) {
+			if (other != task.profile()) {
+				for (PlannedBlock block : placed) {
+					free.put(other, subtract(free.get(other),
+							new TimeSlot(block.start(), block.end().plusMinutes(config.bufferMinutes()))));
+				}
+			}
+		}
+		planned.addAll(placed);
 	}
 
 	/**

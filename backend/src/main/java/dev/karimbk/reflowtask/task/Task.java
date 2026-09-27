@@ -65,6 +65,9 @@ public class Task {
 	@Column(nullable = false)
 	private TimeProfile profile = TimeProfile.WORK;
 
+	/** The task this one waits for, or null. A plain id: the scheduler only ever needs the number. */
+	private Long afterTaskId;
+
 	protected Task() {
 		// for JPA
 	}
@@ -172,6 +175,14 @@ public class Task {
 
 	public void setNotBefore(LocalDateTime notBefore) {
 		this.notBefore = notBefore;
+	}
+
+	public Long getAfterTaskId() {
+		return this.afterTaskId;
+	}
+
+	public void setAfterTaskId(Long afterTaskId) {
+		this.afterTaskId = afterTaskId;
 	}
 
 	public TimeProfile getProfile() {

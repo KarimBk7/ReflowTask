@@ -53,7 +53,15 @@ export function TaskList({ tasks, busy, onOpen, onToggleDone, onShow }: TaskList
       ) : (
         <ul className="task-list-rows">
           {shown.map((task) => (
-            <TaskRow key={task.id} task={task} busy={busy} onOpen={onOpen} onToggleDone={onToggleDone} onShow={onShow} />
+            <TaskRow
+              key={task.id}
+              task={task}
+              waitsFor={tasks.find((other) => other.id === task.afterTaskId && other.status !== 'DONE')}
+              busy={busy}
+              onOpen={onOpen}
+              onToggleDone={onToggleDone}
+              onShow={onShow}
+            />
           ))}
         </ul>
       )}
@@ -61,7 +69,14 @@ export function TaskList({ tasks, busy, onOpen, onToggleDone, onShow }: TaskList
   )
 }
 
-function TaskRow({ task, busy, onOpen, onToggleDone, onShow }: { task: Task } & Omit<TaskListProps, 'tasks'>) {
+function TaskRow({
+  task,
+  waitsFor,
+  busy,
+  onOpen,
+  onToggleDone,
+  onShow,
+}: { task: Task; waitsFor: Task | undefined } & Omit<TaskListProps, 'tasks'>) {
   const done = task.status === 'DONE'
   const unscheduled = done ? 0 : task.estimatedMinutes - task.scheduledMinutes
   const facts: React.ReactNode[] = [
@@ -71,6 +86,7 @@ function TaskRow({ task, busy, onOpen, onToggleDone, onShow }: { task: Task } & 
     t(`priority.${task.priority}`),
   ]
   if (task.profile === 'PERSONAL') facts.push(t('profile.PERSONAL'))
+  if (!done && waitsFor) facts.push(`${t('details.after')} ${waitsFor.title}`)
   if (task.deadline) {
     facts.push(
       !done && task.atRisk ? (

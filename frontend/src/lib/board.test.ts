@@ -58,6 +58,7 @@ const task = (id: number, extra: Partial<Task> = {}): Task => ({
   notBefore: null,
   nextStartAt: null,
   profile: 'WORK',
+  afterTaskId: null,
   ...extra,
 })
 

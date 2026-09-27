@@ -528,6 +528,7 @@ function Board({ user }: { user: AuthUser }) {
             slot={open.slot}
             hoursSummary={hoursSummary}
             personalSummary={personalSummary}
+            tasks={tasks.data ?? []}
             onSubmit={create}
             onCancel={close}
             onDraftChange={(minutes, fixed) =>
@@ -545,6 +546,7 @@ function Board({ user }: { user: AuthUser }) {
             block={openBlock}
             task={tasks.data?.find((task) => task.id === openBlock.taskId)}
             origin={originFor(openBlock, ghosts)}
+            tasks={tasks.data ?? []}
             otherParts={blocks.filter((block) => block.taskId === openBlock.taskId && block.id !== openBlock.id)}
             onToggleDone={() => {
               setStatus.mutate(
@@ -598,6 +600,7 @@ function Board({ user }: { user: AuthUser }) {
             slot={null}
             hoursSummary={hoursSummary}
             personalSummary={personalSummary}
+            tasks={tasks.data ?? []}
             onSubmit={(input) => save(openTask.id, input)}
             onCancel={close}
             onDelete={() => remove(openTask.id)}

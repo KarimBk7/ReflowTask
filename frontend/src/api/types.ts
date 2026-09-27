@@ -43,6 +43,8 @@ export interface Task {
   /** When the next planned part starts, or the one running now; null when nothing is planned ahead. */
   nextStartAt: LocalDateTime | null
   profile: TimeProfile
+  /** The task this one waits for; null when it waits for nothing. */
+  afterTaskId: number | null
 }
 
 export interface TaskInput {
@@ -62,6 +64,8 @@ export interface TaskInput {
   notBefore?: LocalDateTime | null
   /** Absent means work. */
   profile?: TimeProfile
+  /** Another of your tasks this one waits for. An update without it lifts the wait. */
+  afterTaskId?: number | null
 }
 
 export interface Block {

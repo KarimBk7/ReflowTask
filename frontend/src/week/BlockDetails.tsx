@@ -9,6 +9,8 @@ import { DAY_NAMES, dayOfMonth, formatDayTime, formatDeadline, formatDuration, f
 interface BlockDetailsProps {
   block: Block
   task: Task | undefined
+  /** Every task, to name the one this task waits for. */
+  tasks: Task[]
   origin: Ghost | null
   /** The task's other blocks in the week on screen. */
   otherParts: Block[]
@@ -30,7 +32,7 @@ const LEVEL = { LOW: 1, MEDIUM: 2, HIGH: 3 } as const
  * here rather than on the block itself, so a block on the calendar only ever carries its title
  * and time and never runs out of room for its controls.
  */
-export function BlockDetails({ block, task, origin, otherParts, onToggleDone, onTogglePartDone, onTogglePin, onEdit, onClose, busy, headingId }: BlockDetailsProps) {
+export function BlockDetails({ block, task, tasks, origin, otherParts, onToggleDone, onTogglePartDone, onTogglePin, onEdit, onClose, busy, headingId }: BlockDetailsProps) {
   const start = new Date(block.startAt)
   const end = new Date(block.endAt)
   const minutes = (end.getTime() - start.getTime()) / 60_000
@@ -135,6 +137,14 @@ export function BlockDetails({ block, task, origin, otherParts, onToggleDone, on
             {t('details.notBefore')} {formatDeadline(task.notBefore, !task.notBefore.endsWith('T00:00:00'))}
           </li>
         )}
+        {(() => {
+          const waitsFor = tasks.find((other) => other.id === task?.afterTaskId && other.status !== 'DONE')
+          return waitsFor && (
+            <li className="fact">
+              {t('details.after')} {waitsFor.title}
+            </li>
+          )
+        })()}
         {task?.profile === 'PERSONAL' && <li className="fact">{t('profile.PERSONAL')}</li>}
         {task?.recurrence && (
           <li className="fact">

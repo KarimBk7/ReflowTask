@@ -62,6 +62,8 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
   silently dropped or given a moved deadline.
 - **Work and personal time**: set personal hours (evenings, weekends) beside working hours and
   mark a task Personal; it is planned only there. Nothing is ever planned twice at once.
+- **One task after another**: a task can wait for another and is planned only once that one is
+  over; if it is the more urgent of the two, the one it waits for moves up.
 - **Earliest start**: work that cannot begin yet (waiting for a delivery, a reply, next month)
   is not planned before the day you pick.
 - **Repeating tasks**: daily (every working day), weekly, every two weeks or monthly. Finish one
@@ -161,6 +163,12 @@ working hours, such as 18:00-21:00 and Saturday mornings. A task marked Personal
 that time, a work task only in working hours. Breaks and calendar appointments block both, and
 whatever one takes, the other cannot, because you do one thing at a time. Without personal time
 set, personal tasks go into working hours rather than nowhere.
+
+**Tasks can wait for each other.** A task set to come after another is not planned before that
+one's last block ends. If the waiting task is the more urgent one, the task it waits for is pulled
+forward instead of the urgent one being pushed back; if that task finds no time, neither does the
+one waiting for it. Tasks cannot wait for each other in a circle, and deleting the task waited for
+lifts the wait.
 
 **What is about to start can stay put.** With "Keep upcoming work in place" set (say 60 minutes),
 a replan leaves every block that starts within that window where it is, so a new urgent task goes
@@ -347,7 +355,7 @@ API, so a mobile client could use the same endpoints.
 | `DELETE` | `/users/{id}` | Admin: remove an account and everything it owns |
 | `GET` | `/tasks` | List your tasks, each with its scheduled minutes, at-risk state and next planned start |
 | `GET` | `/tasks/{id}` | Get one task |
-| `POST` | `/tasks` | Create a task and replan; an optional `fixedStart` pins it at that time, an optional `recurrence` (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`) makes it repeat, an optional `notBefore` holds it back until then, `profile` (`WORK`, `PERSONAL`) picks its hours |
+| `POST` | `/tasks` | Create a task and replan; an optional `fixedStart` pins it at that time, an optional `recurrence` (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`) makes it repeat, an optional `notBefore` holds it back until then, `profile` (`WORK`, `PERSONAL`) picks its hours, `afterTaskId` makes it wait for another task |
 | `PUT` | `/tasks/{id}` | Update everything except status, and replan |
 | `PATCH` | `/tasks/{id}/status` | Change status, for example to mark it done, and replan |
 | `DELETE` | `/tasks/{id}` | Delete a task and replan |
@@ -435,7 +443,7 @@ Known limitations:
 - Calendar sync is by `.ics` subscription, not CalDAV: other apps see the plan but cannot edit it,
   and changes reach them at the speed their app refreshes.
 
-Ideas for later: task dependencies, and a mobile client.
+Ideas for later: a mobile client.
 Pull requests are welcome.
 
 ## Contributing and forking
