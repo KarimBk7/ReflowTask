@@ -48,6 +48,8 @@ import org.springframework.transaction.annotation.Transactional;
  * was done after all.</li>
  * <li>A part marked done counts against the estimate, so only the rest is planned.</li>
  * <li>Future pinned blocks are obstacles. That is what pinning means.</li>
+ * <li>Planned blocks starting within the freeze window stay too, so a new urgent task does not
+ * reshuffle what is about to start - unless their task no longer needs that much time.</li>
  * <li>Every other future block is rebuilt from scratch. That is what replanning means.</li>
  * </ul>
  */
@@ -249,7 +251,8 @@ public class SchedulerService {
 		LocalDateTime now = LocalDateTime.now(this.clock);
 		SchedulingConfig settings = this.config.current(userId);
 		continueSeries(userId, settings, now);
-		Disposition disposition = disposeOf(this.blocks.findAllWithTaskByUserId(userId), now);
+		Disposition disposition = disposeOf(this.blocks.findAllWithTaskByUserId(userId), now,
+				now.plusMinutes(settings.freezeMinutes()));
 
 		Map<Long, Task> byId = this.tasks.findByUserIdAndStatusNot(userId, TaskStatus.DONE)
 			.stream()
@@ -333,8 +336,12 @@ public class SchedulerService {
 			Map<Long, LocalDateTime> missedStarts, Set<Long> completedTaskIds, Map<Long, String> titles) {
 	}
 
-	private static Disposition disposeOf(List<TimeBlock> existing, LocalDateTime now) {
+	/**
+	 * @param freezeUntil planned blocks starting before this keep their place; {@code now} for none
+	 */
+	private static Disposition disposeOf(List<TimeBlock> existing, LocalDateTime now, LocalDateTime freezeUntil) {
 		List<TimeBlock> obstacles = new ArrayList<>();
+		List<TimeBlock> frozen = new ArrayList<>();
 		List<TimeBlock> doneHistory = new ArrayList<>();
 		List<TimeBlock> toRemove = new ArrayList<>();
 		List<TimeBlock> stillPlanned = new ArrayList<>();
@@ -385,10 +392,24 @@ public class SchedulerService {
 				// In flight, or pinned. Either way it keeps its time.
 				obstacles.add(block);
 			}
+			else if (block.getStartAt().isBefore(freezeUntil)) {
+				frozen.add(block);
+			}
 			else {
 				toRemove.add(block);
 			}
 		}
+
+		// A frozen block keeps its place only while its task still needs all of that time. Shorten
+		// the task you are about to start and it is planned afresh, not left overlong.
+		List<TimeBlock> counted = new ArrayList<>(obstacles);
+		counted.addAll(doneHistory);
+		Map<Long, Long> used = minutesPerTask(counted);
+		frozen.stream().collect(Collectors.groupingBy((block) -> block.getTask().getId())).values().forEach((group) -> {
+			long needed = used.getOrDefault(group.get(0).getTask().getId(), 0L)
+					+ group.stream().mapToLong((block) -> block.toSlot().minutes()).sum();
+			(needed <= group.get(0).getTask().getEstimatedMinutes() ? obstacles : toRemove).addAll(group);
+		});
 
 		return new Disposition(obstacles, doneHistory, toRemove, stillPlanned, missedStarts, completed, titles);
 	}

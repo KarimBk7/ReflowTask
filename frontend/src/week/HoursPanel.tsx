@@ -83,6 +83,7 @@ export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPane
   )
   const [breaks, setBreaks] = useState<BreakRow[]>(() => groupBreaks(config))
   const [buffer, setBuffer] = useState(String(config.bufferMinutes))
+  const [freeze, setFreeze] = useState(String(config.freezeMinutes))
   const [horizon, setHorizon] = useState(String(config.horizonDays))
   const [minChunk, setMinChunk] = useState(String(config.minChunkMinutes))
   const [failure, setFailure] = useState<string | null>(null)
@@ -144,6 +145,7 @@ export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPane
           row.days.map((day) => ({ day, startTime: row.start, endTime: row.end, label: row.label.trim() || null })),
         ),
         bufferMinutes: Number(buffer),
+        freezeMinutes: Number(freeze),
         horizonDays: Number(horizon),
         minChunkMinutes: Number(minChunk),
       })
@@ -312,6 +314,7 @@ export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPane
       <fieldset className="hours-section">
         <legend className="section-label">{t('hours.planning')}</legend>
         <NumberField id="hours-buffer" label={t('hours.buffer')} hint={t('hours.bufferHint')} unit={t('unit.min')} min={0} max={120} value={buffer} onChange={setBuffer} />
+        <NumberField id="hours-freeze" label={t('hours.freeze')} hint={t('hours.freezeHint')} unit={t('unit.min')} min={0} max={480} value={freeze} onChange={setFreeze} />
         <NumberField id="hours-horizon" label={t('hours.horizon')} unit={t('hours.horizonUnit')} min={1} max={366} value={horizon} onChange={setHorizon} />
         <NumberField id="hours-chunk" label={t('hours.minChunk')} hint={t('hours.minChunkHint')} unit={t('unit.min')} min={1} max={1440} value={minChunk} onChange={setMinChunk} />
       </fieldset>

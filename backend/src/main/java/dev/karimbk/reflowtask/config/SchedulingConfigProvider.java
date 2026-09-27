@@ -44,7 +44,7 @@ public class SchedulingConfigProvider {
 			.map((period) -> new DailyWindow(period.getDay(), period.getStartTime(), period.getEndTime()))
 			.toList();
 		return new SchedulingConfig(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes(),
-				current.getBufferMinutes());
+				current.getBufferMinutes(), current.getFreezeMinutes());
 	}
 
 }

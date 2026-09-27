@@ -15,9 +15,11 @@ import java.util.List;
  * not shatter into useless fragments
  * @param bufferMinutes minutes kept free between scheduled tasks and on both sides of fixed
  * blocks, so a day is not planned wall to wall. 0 places work back to back.
+ * @param freezeMinutes planned blocks starting this soon are kept where they are by a replan. Not
+ * used by the planner itself: it decides which existing blocks become obstacles. 0 is off.
  */
 public record SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow> blockedPeriods, int horizonDays,
-		int minChunkMinutes, int bufferMinutes) {
+		int minChunkMinutes, int bufferMinutes, int freezeMinutes) {
 
 	public SchedulingConfig {
 		if (horizonDays < 1) {
@@ -29,8 +31,16 @@ public record SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow>
 		if (bufferMinutes < 0) {
 			throw new IllegalArgumentException("bufferMinutes cannot be negative, was " + bufferMinutes);
 		}
+		if (freezeMinutes < 0) {
+			throw new IllegalArgumentException("freezeMinutes cannot be negative, was " + freezeMinutes);
+		}
 		workingHours = List.copyOf(workingHours);
 		blockedPeriods = List.copyOf(blockedPeriods);
+	}
+
+	public SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow> blockedPeriods, int horizonDays,
+			int minChunkMinutes, int bufferMinutes) {
+		this(workingHours, blockedPeriods, horizonDays, minChunkMinutes, bufferMinutes, 0);
 	}
 
 	/** Without a buffer: work is placed back to back, exactly as before buffers existed. */

@@ -46,6 +46,8 @@ final class ConfigPayloads {
 	record Config(@NotNull @Valid List<Window> workingHours, @NotNull @Valid List<Window> blockedPeriods,
 			@NotNull @Min(1) @Max(366) Integer horizonDays, @NotNull @Min(1) @Max(1440) Integer minChunkMinutes,
 			@NotNull @Min(0) @Max(120) Integer bufferMinutes,
+			// Optional, so a client that does not know it yet keeps working; absent means off.
+			@Min(0) @Max(480) Integer freezeMinutes,
 			// Output only. Ignored when sent: saving the configuration is what onboards the owner.
 			Boolean onboarded) {
 

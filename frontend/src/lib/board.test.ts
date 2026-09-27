@@ -22,6 +22,7 @@ const config = (days: string[], blocked: never[] = []): BoardConfig => ({
   horizonDays: 14,
   minChunkMinutes: 30,
   bufferMinutes: 0,
+  freezeMinutes: 0,
   onboarded: true,
 })
 

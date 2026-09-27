@@ -132,6 +132,8 @@ export interface BoardConfig {
   minChunkMinutes: number
   /** Minutes kept free between scheduled tasks and around fixed blocks. 0–120. */
   bufferMinutes: number
+  /** Planned blocks starting within this many minutes are left in place by a replan. 0 is off. */
+  freezeMinutes: number
   /** Read-only: true once the configuration has been saved. The server ignores what is sent. */
   onboarded?: boolean
 }

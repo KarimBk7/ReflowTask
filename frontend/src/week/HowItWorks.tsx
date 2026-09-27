@@ -40,6 +40,11 @@ export function HowItWorks({ config, user, onClose, headingId }: HowItWorksProps
         <li>{t('help.missed')}</li>
         <li>{t('help.parts')}</li>
         <li>{t('help.repeat')}</li>
+        {config && config.freezeMinutes > 0 && (
+          <li>
+            {t('help.freeze')} {config.freezeMinutes} {t('unit.min')}.
+          </li>
+        )}
         {config && config.bufferMinutes > 0 && (
           <li>
             {t('help.buffer')} {config.bufferMinutes} {t('unit.min')}.

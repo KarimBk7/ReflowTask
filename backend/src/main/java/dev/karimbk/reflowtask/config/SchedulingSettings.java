@@ -29,6 +29,10 @@ public class SchedulingSettings {
 	@Column(nullable = false)
 	private int bufferMinutes;
 
+	/** Planned blocks starting within this many minutes are left in place by a replan. 0 is off. */
+	@Column(nullable = false)
+	private int freezeMinutes;
+
 	/** False until the owner first saves their hours; drives the first-run setup. */
 	@Column(nullable = false)
 	private boolean onboarded;
@@ -69,6 +73,14 @@ public class SchedulingSettings {
 
 	public void setBufferMinutes(int bufferMinutes) {
 		this.bufferMinutes = bufferMinutes;
+	}
+
+	public int getFreezeMinutes() {
+		return this.freezeMinutes;
+	}
+
+	public void setFreezeMinutes(int freezeMinutes) {
+		this.freezeMinutes = freezeMinutes;
 	}
 
 	public boolean isOnboarded() {

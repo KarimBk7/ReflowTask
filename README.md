@@ -154,6 +154,11 @@ Work that no gap can hold, such as a six-hour task on a day with lunch, is split
 shorter than a configurable minimum except a task's final remainder. Each part says which task it
 belongs to and how long the whole task is.
 
+**What is about to start can stay put.** With "Keep upcoming work in place" set (say 60 minutes),
+a replan leaves every block that starts within that window where it is, so a new urgent task goes
+after it instead of pushing it away just as you are about to begin. Shorten one of those tasks and
+it is planned afresh anyway. Off by default.
+
 **Buffers are optional.** A configurable buffer keeps time free after each task and on both
 sides of fixed blocks. It defaults to zero.
 
@@ -170,6 +175,7 @@ every part is done, so is the task.
 - blocks you have **pinned**, **created at a fixed time** or **dragged into place** — other work
   flows around them;
 - a block you are **inside right now** — the scheduler won't move the thing you're working on;
+- blocks starting within the **freeze window**, if you set one;
 - the past blocks of **completed** tasks, as the record of when the work happened.
 
 Everything else in the future is rebuilt. Finishing a task early hands its remaining time back.
@@ -345,7 +351,7 @@ API, so a mobile client could use the same endpoints.
 | `POST` | `/schedule/blocks/{id}/done` | Mark one part done (it must have started); only the rest is planned |
 | `POST` | `/schedule/blocks/{id}/undone` | Undo that |
 | `GET` | `/reschedule-events` | Your recent replans and what they moved |
-| `GET` `PUT` | `/config` | Your working hours, breaks, buffer and planning settings; `PUT` replaces them and replans |
+| `GET` `PUT` | `/config` | Your working hours, breaks, buffer, freeze window (`freezeMinutes`) and planning settings; `PUT` replaces them and replans |
 | `GET` `POST` `DELETE` | `/calendar/feed` | Your subscribe link's path (`null` when off); `POST` creates or replaces it, `DELETE` turns it off |
 | `GET` | `/calendar/feed/{token}.ics` | The subscribe feed itself. No login; the token is the secret |
 | `GET` `POST` | `/calendar/sources` | Your other calendars; add one (`name`, `url`), which reads it and replans |

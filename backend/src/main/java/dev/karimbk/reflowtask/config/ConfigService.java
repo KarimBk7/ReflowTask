@@ -55,7 +55,7 @@ public class ConfigService {
 				.toList();
 		}
 		return new Config(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes(),
-				current.getBufferMinutes(), current.isOnboarded());
+				current.getBufferMinutes(), current.getFreezeMinutes(), current.isOnboarded());
 	}
 
 	/**
@@ -92,6 +92,7 @@ public class ConfigService {
 		current.setHorizonDays(config.horizonDays());
 		current.setMinChunkMinutes(config.minChunkMinutes());
 		current.setBufferMinutes(config.bufferMinutes());
+		current.setFreezeMinutes(config.freezeMinutes() == null ? 0 : config.freezeMinutes());
 		// Whatever the request says: saving the configuration is itself what onboarding means.
 		current.markOnboarded();
 		this.settings.save(current);
