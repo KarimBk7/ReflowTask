@@ -155,6 +155,11 @@ calendar.
 A session cookie belongs to one hostname, so opening the same server by its home address and by its
 Tailscale name means logging in once for each.
 
+**As an app on the home screen:** on an iPhone, open ReflowTask in Safari, tap Share and then "Add to
+Home Screen"; it then opens full screen with its own icon. On Android, Chrome's menu has "Add to Home
+screen". Chrome only offers a full "Install app" over HTTPS (see below); over plain HTTP the home
+screen shortcut still works.
+
 **Your plan in the phone's calendar app:** open ReflowTask by the address that works everywhere
 (usually the Tailscale one), click the calendar icon in the top bar and create a subscribe link.
 The phone refreshes it only while it can reach ReflowTask. The app-by-app steps, and how to make

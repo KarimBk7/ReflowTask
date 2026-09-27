@@ -74,7 +74,9 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
 
 - Click free time to add a task there, fixed at that time or handed to the scheduler.
 - Drag a block to move it (it is pinned where you drop it), or drag its bottom edge to resize it
-  (the task's estimate follows). Alt + arrow keys do the same from the keyboard.
+  (the task's estimate follows). Alt + arrow keys do the same from the keyboard. On a touch
+  screen, press and hold a block to pick it up; a tap still opens it and a swipe still scrolls.
+- Add it to your phone's home screen and it opens like an app, full screen with its own icon.
 - Pin any block so replans leave it alone. The block you are inside right now is never moved.
 - Mark a single part of split work done, or a missed part "I did this": only what is really left
   is planned again.
@@ -437,7 +439,7 @@ Known limitations:
   format follows the browser's language rather than the app's.
 - The outline of a moved block's old slot is a fixed 30-minute marker, because the replan record
   keeps only start times.
-- Dragging blocks works with a mouse or pen; on a touch screen a block is tapped to open it.
+- The week view is built for a laptop or tablet screen first; on a phone it works but is cramped.
 - Messages that come from the server (validation errors, a calendar that cannot be read) and the
   example task for new accounts are English in the German interface too.
 - Login lockout is kept in memory, so it resets when the server restarts.

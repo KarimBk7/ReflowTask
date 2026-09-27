@@ -181,7 +181,7 @@ export const de: Record<StringKey, string> = {
   'calendar.reading': 'Wird gelesen…',
   'help.household': 'Als Admin fügst du unter Haushaltskonten Mitglieder hinzu oder entfernst sie. Ein neues Mitglied wählt beim ersten Anmelden sein eigenes Passwort.',
 
-  'grid.keysHint': 'Alt und Pfeiltasten verschieben diesen Block. Alt, Umschalt und hoch oder runter ändern seine Länge.',
+  'grid.keysHint': 'Alt und Pfeiltasten verschieben diesen Block. Alt, Umschalt und hoch oder runter ändern seine Länge. Auf einem Touchscreen einen Block gedrückt halten, um ihn zu ziehen.',
   'grid.break': 'Pause',
   'grid.appointment': 'Belegt',
   'grid.wasHere': 'War hier',

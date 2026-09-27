@@ -2061,3 +2061,10 @@ input::-webkit-calendar-picker-indicator {
 .notice-undo:hover {
   text-decoration: underline;
 }
+
+/* A long press picks a block up on touch screens, so it must not select text or open the
+   system's callout menu instead. */
+.block {
+  -webkit-touch-callout: none;
+  user-select: none;
+}

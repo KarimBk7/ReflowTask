@@ -187,7 +187,7 @@ export const en = {
   'calendar.reading': 'Reading…',
   'help.household': 'As admin, use Household accounts to add members or remove them. A new member sets their own password at first login.',
 
-  'grid.keysHint': 'Alt and arrow keys move this block. Alt, Shift and up or down change its length.',
+  'grid.keysHint': 'Alt and arrow keys move this block. Alt, Shift and up or down change its length. On a touch screen, press and hold a block to drag it.',
   'grid.break': 'Break',
   'grid.appointment': 'Busy',
   'grid.wasHere': 'Was here',

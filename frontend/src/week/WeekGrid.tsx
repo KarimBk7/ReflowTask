@@ -49,6 +49,8 @@ const PX_PER_MIN = 1.2
 const SNAP = 15
 const DAY_MINUTES = 24 * 60
 const DRAG_THRESHOLD = 4
+/** How long a finger rests on a block before it picks the block up instead of scrolling the page. */
+const LONG_PRESS_MS = 450
 /**
  * The replan record keeps where a task started, not how long its old block was, so the outline
  * marks the old start at a fixed height instead of guessing a length from the task's current pieces.
@@ -91,6 +93,8 @@ export function WeekGrid({
   const scrollRef = useRef<HTMLDivElement>(null)
   const columnsRef = useRef<HTMLDivElement>(null)
   const suppressClick = useRef(false)
+  // True while a finger drags a block, so the grid's touchmove handler stops the page scrolling.
+  const touchDragging = useRef(false)
   const dropped = useRef<number | null>(null)
   const [preview, setPreview] = useState<{ blockId: number; dayIndex: number; start: number; end: number } | null>(
     null,
@@ -139,6 +143,18 @@ export function WeekGrid({
   }, [blocks, days, preview, weekStart])
 
   // Open on the working day rather than at midnight, once per week shown.
+  // Registered once, non-passive: a handler added only when the drag starts would come too late
+  // for the browser, which decides at touchstart whether a touch may scroll.
+  useEffect(() => {
+    const grid = scrollRef.current
+    if (!grid) return
+    const hold = (event: TouchEvent) => {
+      if (touchDragging.current) event.preventDefault()
+    }
+    grid.addEventListener('touchmove', hold, { passive: false })
+    return () => grid.removeEventListener('touchmove', hold)
+  }, [])
+
   const scrolledFor = useRef<string | null>(null)
   useLayoutEffect(() => {
     const key = toLocalDateTime(weekStart)
@@ -201,10 +217,40 @@ export function WeekGrid({
     return onMove(item.block, atMinutes(date, start), atMinutes(date, end))
   }
 
+  /**
+   * A mouse or pen drags straight away. A finger first has to rest on the block: a tap still opens
+   * it and a swipe still scrolls the week, and only a long press picks the block up.
+   */
   function startDrag(item: Placed, mode: 'move' | 'resize', event: React.PointerEvent) {
-    // Touch keeps its scroll: on a phone a block is tapped to open, not dragged.
-    if (event.button !== 0 || event.pointerType === 'touch' || !editable(item.block)) return
-    const drag: Drag = { item, mode, x: event.clientX, y: event.clientY, moved: false, next: null }
+    if (event.button !== 0 || !editable(item.block)) return
+    if (event.pointerType !== 'touch') {
+      beginDrag(item, mode, event.clientX, event.clientY)
+      return
+    }
+    const x = event.clientX
+    const y = event.clientY
+    const timer = window.setTimeout(() => {
+      stopWaiting()
+      touchDragging.current = true
+      navigator.vibrate?.(10)
+      beginDrag(item, mode, x, y, () => (touchDragging.current = false))
+    }, LONG_PRESS_MS)
+    function onWaitingMove(move: PointerEvent) {
+      if (Math.hypot(move.clientX - x, move.clientY - y) >= DRAG_THRESHOLD) stopWaiting()
+    }
+    function stopWaiting() {
+      window.clearTimeout(timer)
+      window.removeEventListener('pointermove', onWaitingMove)
+      window.removeEventListener('pointerup', stopWaiting)
+      window.removeEventListener('pointercancel', stopWaiting)
+    }
+    window.addEventListener('pointermove', onWaitingMove)
+    window.addEventListener('pointerup', stopWaiting)
+    window.addEventListener('pointercancel', stopWaiting)
+  }
+
+  function beginDrag(item: Placed, mode: 'move' | 'resize', x: number, y: number, onEnd?: () => void) {
+    const drag: Drag = { item, mode, x, y, moved: false, next: null }
 
     function onMovePointer(move: PointerEvent) {
       const dy = move.clientY - drag.y
@@ -226,6 +272,7 @@ export function WeekGrid({
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onCancel)
       window.removeEventListener('keydown', onKey)
+      onEnd?.()
       if (!drag.moved) return
       // The press that ends a drag also produces a click; it must not open anything.
       suppressClick.current = true
