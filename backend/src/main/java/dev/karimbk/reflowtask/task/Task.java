@@ -61,6 +61,10 @@ public class Task {
 	/** Work is not planned before this; null means any time from now. */
 	private LocalDateTime notBefore;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private TimeProfile profile = TimeProfile.WORK;
+
 	protected Task() {
 		// for JPA
 	}
@@ -170,6 +174,14 @@ public class Task {
 		this.notBefore = notBefore;
 	}
 
+	public TimeProfile getProfile() {
+		return this.profile;
+	}
+
+	public void setProfile(TimeProfile profile) {
+		this.profile = (profile != null) ? profile : TimeProfile.WORK;
+	}
+
 	/**
 	 * The occurrence after this one: same work, due one step later, and not planned before this
 	 * one was due. The rule moves to the new occurrence, which leaves this one as plain history.
@@ -181,6 +193,7 @@ public class Task {
 		Task next = new Task(this.userId, this.title, this.description, this.estimatedMinutes, deadline,
 				this.deadlineHasTime, this.priority, now);
 		next.recurrence = this.recurrence;
+		next.profile = this.profile;
 		next.notBefore = previousDeadline(deadline);
 		this.recurrence = null;
 		return next;

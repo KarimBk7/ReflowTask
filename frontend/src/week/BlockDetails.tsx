@@ -135,6 +135,7 @@ export function BlockDetails({ block, task, origin, otherParts, onToggleDone, on
             {t('details.notBefore')} {formatDeadline(task.notBefore, !task.notBefore.endsWith('T00:00:00'))}
           </li>
         )}
+        {task?.profile === 'PERSONAL' && <li className="fact">{t('profile.PERSONAL')}</li>}
         {task?.recurrence && (
           <li className="fact">
             <ReflowIcon size={14} />

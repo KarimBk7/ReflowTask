@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { ApiError } from '../api/client'
-import type { BoardConfig, DayOfWeek } from '../api/types'
+import type { BoardConfig, ConfigWindow, DayOfWeek } from '../api/types'
 import { CloseIcon, PlusIcon, TrashIcon } from '../design/Icon'
 import { t } from '../i18n/en'
 import { DAY_NAMES, parseClock } from '../lib/time'
@@ -68,19 +68,93 @@ function groupBreaks(config: BoardConfig): BreakRow[] {
   return [...groups.values()]
 }
 
+function toRows(windows: ConfigWindow[], start: string, end: string): DayRow[] {
+  return WEEK.map((day) => {
+    const window = windows.find((candidate) => candidate.day === day)
+    return window
+      ? { day, working: true, start: toInput(window.startTime), end: toInput(window.endTime) }
+      : { day, working: false, start, end }
+  })
+}
+
+const toWindows = (rows: DayRow[]): ConfigWindow[] =>
+  rows.filter((row) => row.working).map((row) => ({ day: row.day, startTime: row.start, endTime: row.end, label: null }))
+
+/**
+ * A day switched on takes the hours of the first day that is on, so turning on Saturday for
+ * someone who works 07:00-15:00 does not quietly give it 09:00-17:00.
+ */
+function setWorking(rows: DayRow[], working: (day: DayOfWeek) => boolean): DayRow[] {
+  const model = rows.find((row) => row.working)
+  return rows.map((row) => {
+    const on = working(row.day)
+    if (on && !row.working && model) return { ...row, working: true, start: model.start, end: model.end }
+    return { ...row, working: on }
+  })
+}
+
+/** One switch and time range per weekday, for working hours and for personal time alike. */
+function DayRows({ rows: days, onChange: setDays }: { rows: DayRow[]; onChange: (update: (rows: DayRow[]) => DayRow[]) => void }) {
+  function updateDay(day: DayOfWeek, change: Partial<DayRow>) {
+    setDays((rows) => rows.map((row) => (row.day === day ? { ...row, ...change } : row)))
+  }
+
+  return (
+    <>
+      {days.map((row) => {
+        const name = DAY_NAMES[WEEK.indexOf(row.day)]
+        const invalid = row.working && !endsAfterStart(row.start, row.end)
+        return (
+          <div key={row.day} className="hours-day" data-off={!row.working || undefined}>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={row.working}
+                onChange={(event) =>
+                  setDays((rows) =>
+                    setWorking(rows, (day) => (day === row.day ? event.target.checked : rows.some((r) => r.day === day && r.working))),
+                  )
+                }
+              />
+              <span className="switch-track" aria-hidden="true" />
+              <span className="hours-day-name">{name}</span>
+            </label>
+            {row.working ? (
+              <span className="time-range">
+                <input
+                  type="time"
+                  value={row.start}
+                  aria-label={`${name} ${t('hours.from')}`}
+                  aria-invalid={invalid || undefined}
+                  onChange={(event) => updateDay(row.day, { start: event.target.value })}
+                />
+                <span aria-hidden="true">–</span>
+                <input
+                  type="time"
+                  value={row.end}
+                  aria-label={`${name} ${t('hours.until')}`}
+                  aria-invalid={invalid || undefined}
+                  onChange={(event) => updateDay(row.day, { end: event.target.value })}
+                />
+              </span>
+            ) : (
+              <span className="hours-off">{t('hours.offDay')}</span>
+            )}
+            {invalid && <p className="field-error hours-row-error">{t('hours.endsBeforeStart')}</p>}
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
 /**
  * Working hours, breaks and planning settings. Shown in the sidebar rather than a modal: the
  * week stays visible beside it, and saving replans it immediately.
  */
 export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPanelProps) {
-  const [days, setDays] = useState<DayRow[]>(() =>
-    WEEK.map((day) => {
-      const window = config.workingHours.find((candidate) => candidate.day === day)
-      return window
-        ? { day, working: true, start: toInput(window.startTime), end: toInput(window.endTime) }
-        : { day, working: false, start: '09:00', end: '17:00' }
-    }),
-  )
+  const [days, setDays] = useState<DayRow[]>(() => toRows(config.workingHours, '09:00', '17:00'))
+  const [personal, setPersonal] = useState<DayRow[]>(() => toRows(config.personalHours ?? [], '18:00', '21:00'))
   const [breaks, setBreaks] = useState<BreakRow[]>(() => groupBreaks(config))
   const [buffer, setBuffer] = useState(String(config.bufferMinutes))
   const [freeze, setFreeze] = useState(String(config.freezeMinutes))
@@ -96,25 +170,8 @@ export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPane
   }, [])
 
   const valid =
-    days.every((row) => !row.working || endsAfterStart(row.start, row.end)) &&
+    [...days, ...personal].every((row) => !row.working || endsAfterStart(row.start, row.end)) &&
     breaks.every((row) => endsAfterStart(row.start, row.end) && row.days.length > 0)
-
-  function updateDay(day: DayOfWeek, change: Partial<DayRow>) {
-    setDays((rows) => rows.map((row) => (row.day === day ? { ...row, ...change } : row)))
-  }
-
-  /**
-   * A day switched on takes the hours of the first working day, so turning on Saturday for
-   * someone who works 07:00-15:00 does not quietly give it 09:00-17:00.
-   */
-  function setWorking(rows: DayRow[], working: (day: DayOfWeek) => boolean): DayRow[] {
-    const model = rows.find((row) => row.working)
-    return rows.map((row) => {
-      const on = working(row.day)
-      if (on && !row.working && model) return { ...row, working: true, start: model.start, end: model.end }
-      return { ...row, working: on }
-    })
-  }
 
   const workingDays = days.filter((row) => row.working).map((row) => row.day)
 
@@ -138,9 +195,8 @@ export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPane
     }
     try {
       await onSave({
-        workingHours: days
-          .filter((row) => row.working)
-          .map((row) => ({ day: row.day, startTime: row.start, endTime: row.end, label: null })),
+        workingHours: toWindows(days),
+        personalHours: toWindows(personal),
         blockedPeriods: breaks.flatMap((row) =>
           row.days.map((day) => ({ day, startTime: row.start, endTime: row.end, label: row.label.trim() || null })),
         ),
@@ -189,49 +245,13 @@ export function HoursPanel({ config, welcome, onSave, onClose, busy }: HoursPane
             )
           })}
         </div>
-        {days.map((row) => {
-          const name = DAY_NAMES[WEEK.indexOf(row.day)]
-          const invalid = row.working && !endsAfterStart(row.start, row.end)
-          return (
-            <div key={row.day} className="hours-day" data-off={!row.working || undefined}>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={row.working}
-                  onChange={(event) =>
-                    setDays((rows) =>
-                      setWorking(rows, (day) => (day === row.day ? event.target.checked : rows.some((r) => r.day === day && r.working))),
-                    )
-                  }
-                />
-                <span className="switch-track" aria-hidden="true" />
-                <span className="hours-day-name">{name}</span>
-              </label>
-              {row.working ? (
-                <span className="time-range">
-                  <input
-                    type="time"
-                    value={row.start}
-                    aria-label={`${name} ${t('hours.from')}`}
-                    aria-invalid={invalid || undefined}
-                    onChange={(event) => updateDay(row.day, { start: event.target.value })}
-                  />
-                  <span aria-hidden="true">–</span>
-                  <input
-                    type="time"
-                    value={row.end}
-                    aria-label={`${name} ${t('hours.until')}`}
-                    aria-invalid={invalid || undefined}
-                    onChange={(event) => updateDay(row.day, { end: event.target.value })}
-                  />
-                </span>
-              ) : (
-                <span className="hours-off">{t('hours.offDay')}</span>
-              )}
-              {invalid && <p className="field-error hours-row-error">{t('hours.endsBeforeStart')}</p>}
-            </div>
-          )
-        })}
+        <DayRows rows={days} onChange={setDays} />
+      </fieldset>
+
+      <fieldset className="hours-section">
+        <legend className="section-label">{t('hours.personal')}</legend>
+        <p className="section-hint">{t('hours.personalHint')}</p>
+        <DayRows rows={personal} onChange={setPersonal} />
       </fieldset>
 
       <fieldset className="hours-section">

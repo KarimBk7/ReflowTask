@@ -60,6 +60,8 @@ is in **[docs/SETUP.md](docs/SETUP.md)**.
   task was unfinished and places the task again.
 - Work that cannot finish before its deadline is still scheduled and flagged **at risk**, never
   silently dropped or given a moved deadline.
+- **Work and personal time**: set personal hours (evenings, weekends) beside working hours and
+  mark a task Personal; it is planned only there. Nothing is ever planned twice at once.
 - **Earliest start**: work that cannot begin yet (waiting for a delivery, a reply, next month)
   is not planned before the day you pick.
 - **Repeating tasks**: daily (every working day), weekly, every two weeks or monthly. Finish one
@@ -153,6 +155,12 @@ it, as long as that does not start it later than splitting would or make it miss
 Work that no gap can hold, such as a six-hour task on a day with lunch, is split into parts, never
 shorter than a configurable minimum except a task's final remainder. Each part says which task it
 belongs to and how long the whole task is.
+
+**Work and personal time are separate.** Under Hours you can set personal time beside your
+working hours, such as 18:00-21:00 and Saturday mornings. A task marked Personal is planned only in
+that time, a work task only in working hours. Breaks and calendar appointments block both, and
+whatever one takes, the other cannot, because you do one thing at a time. Without personal time
+set, personal tasks go into working hours rather than nowhere.
 
 **What is about to start can stay put.** With "Keep upcoming work in place" set (say 60 minutes),
 a replan leaves every block that starts within that window where it is, so a new urgent task goes
@@ -339,7 +347,7 @@ API, so a mobile client could use the same endpoints.
 | `DELETE` | `/users/{id}` | Admin: remove an account and everything it owns |
 | `GET` | `/tasks` | List your tasks, each with its scheduled minutes, at-risk state and next planned start |
 | `GET` | `/tasks/{id}` | Get one task |
-| `POST` | `/tasks` | Create a task and replan; an optional `fixedStart` pins it at that time, an optional `recurrence` (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`) makes it repeat, an optional `notBefore` holds it back until then |
+| `POST` | `/tasks` | Create a task and replan; an optional `fixedStart` pins it at that time, an optional `recurrence` (`DAILY`, `WEEKLY`, `BIWEEKLY`, `MONTHLY`) makes it repeat, an optional `notBefore` holds it back until then, `profile` (`WORK`, `PERSONAL`) picks its hours |
 | `PUT` | `/tasks/{id}` | Update everything except status, and replan |
 | `PATCH` | `/tasks/{id}/status` | Change status, for example to mark it done, and replan |
 | `DELETE` | `/tasks/{id}` | Delete a task and replan |
@@ -351,7 +359,7 @@ API, so a mobile client could use the same endpoints.
 | `POST` | `/schedule/blocks/{id}/done` | Mark one part done (it must have started); only the rest is planned |
 | `POST` | `/schedule/blocks/{id}/undone` | Undo that |
 | `GET` | `/reschedule-events` | Your recent replans and what they moved |
-| `GET` `PUT` | `/config` | Your working hours, breaks, buffer, freeze window (`freezeMinutes`) and planning settings; `PUT` replaces them and replans |
+| `GET` `PUT` | `/config` | Your working hours, personal time (`personalHours`), breaks, buffer, freeze window (`freezeMinutes`) and planning settings; `PUT` replaces them and replans |
 | `GET` `POST` `DELETE` | `/calendar/feed` | Your subscribe link's path (`null` when off); `POST` creates or replaces it, `DELETE` turns it off |
 | `GET` | `/calendar/feed/{token}.ics` | The subscribe feed itself. No login; the token is the secret |
 | `GET` `POST` | `/calendar/sources` | Your other calendars; add one (`name`, `url`), which reads it and replans |

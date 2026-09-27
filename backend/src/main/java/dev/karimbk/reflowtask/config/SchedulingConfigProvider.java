@@ -18,13 +18,16 @@ public class SchedulingConfigProvider {
 
 	private final WorkingHoursRepository workingHours;
 
+	private final PersonalHoursRepository personalHours;
+
 	private final BlockedPeriodRepository blockedPeriods;
 
 	private final SchedulingSettingsRepository settings;
 
-	SchedulingConfigProvider(WorkingHoursRepository workingHours, BlockedPeriodRepository blockedPeriods,
-			SchedulingSettingsRepository settings) {
+	SchedulingConfigProvider(WorkingHoursRepository workingHours, PersonalHoursRepository personalHours,
+			BlockedPeriodRepository blockedPeriods, SchedulingSettingsRepository settings) {
 		this.workingHours = workingHours;
+		this.personalHours = personalHours;
 		this.blockedPeriods = blockedPeriods;
 		this.settings = settings;
 	}
@@ -43,8 +46,12 @@ public class SchedulingConfigProvider {
 			.stream()
 			.map((period) -> new DailyWindow(period.getDay(), period.getStartTime(), period.getEndTime()))
 			.toList();
+		List<DailyWindow> personal = this.personalHours.findByUserId(userId)
+			.stream()
+			.map((hours) -> new DailyWindow(hours.getDay(), hours.getStartTime(), hours.getEndTime()))
+			.toList();
 		return new SchedulingConfig(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes(),
-				current.getBufferMinutes(), current.getFreezeMinutes());
+				current.getBufferMinutes(), current.getFreezeMinutes(), personal);
 	}
 
 }

@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 
 import { ApiError } from '../api/client'
-import type { Priority, Recurrence, Task, TaskInput } from '../api/types'
+import type { Priority, Recurrence, Task, TaskInput, TimeProfile } from '../api/types'
 import { t } from '../i18n/en'
 import { DAY_NAMES, addDays, dayOfMonth, formatDayTime, formatDuration, isoDay, toLocalDateTime } from '../lib/time'
 
@@ -18,6 +18,8 @@ interface TaskEditorProps {
   busy: boolean
   /** The owner's working hours in a phrase, so "place it" says where it will look. */
   hoursSummary: string | null
+  /** Personal time in a phrase; null when none is set, and then the work/personal choice is hidden. */
+  personalSummary: string | null
   /** Id for the form heading, which labels the popover. */
   headingId: string
 }
@@ -62,7 +64,7 @@ const startOfDay = (date: string) => `${date}T00:00:00`
  * time pickers. A task started from a clicked slot can be fixed at that time (an appointment) or
  * handed to the scheduler with the slot ignored.
  */
-export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDelete, busy, hoursSummary, headingId }: TaskEditorProps) {
+export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDelete, busy, hoursSummary, personalSummary, headingId }: TaskEditorProps) {
   const id = useId()
   const dates = deadlineDates()
   const initialMinutes = task?.estimatedMinutes ?? 60
@@ -97,6 +99,7 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
   })
 
   const [recurrence, setRecurrence] = useState<Recurrence | null>(task?.recurrence ?? null)
+  const [profile, setProfile] = useState<TimeProfile>(task?.profile ?? 'WORK')
   // Kept exactly as the server sent it until changed: a repeating task's next occurrence starts at
   // the previous deadline, 23:59, and rounding that to a day would let it start a day early.
   const [notBefore, setNotBefore] = useState<string | null>(task?.notBefore ?? null)
@@ -170,6 +173,7 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
         fixedStart: fixedAtSlot ? toLocalDateTime(slot) : null,
         recurrence: fixedAtSlot ? null : recurrence,
         notBefore: fixedAtSlot ? null : notBefore,
+        profile,
       })
     } catch (error) {
       if (error instanceof ApiError) {
@@ -181,8 +185,9 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
     }
   }
 
-  const placement = hoursSummary
-    ? `${t('task.letPlaceIn')}, ${hoursSummary}. ${t('task.letPlaceOrder')}`
+  const summary = profile === 'PERSONAL' && personalSummary ? personalSummary : hoursSummary
+  const placement = summary
+    ? `${t(profile === 'PERSONAL' && personalSummary ? 'task.letPlaceInPersonal' : 'task.letPlaceIn')}, ${summary}. ${t('task.letPlaceOrder')}`
     : t('task.letPlaceHint')
   const invalidMinutes = !Number.isInteger(minutes) || minutes < 1 || minutes > 43_200
 
@@ -233,6 +238,20 @@ export function TaskEditor({ task, slot, onSubmit, onCancel, onDraftChange, onDe
                 <span className="choice-hint">{placement}</span>
               </span>
             </label>
+          </div>
+        </fieldset>
+      )}
+
+      {(personalSummary || task?.profile === 'PERSONAL') && !fixedAtSlot && (
+        <fieldset className="editor-row">
+          <legend className="editor-label">{t('task.profile')}</legend>
+          <div className="segmented">
+            {(['WORK', 'PERSONAL'] as const).map((value) => (
+              <label key={value} className="segment" data-selected={profile === value || undefined}>
+                <input type="radio" name={`${id}-profile`} checked={profile === value} onChange={() => setProfile(value)} />
+                {t(`profile.${value}`)}
+              </label>
+            ))}
           </div>
         </fieldset>
       )}

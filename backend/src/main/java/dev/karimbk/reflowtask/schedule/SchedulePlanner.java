@@ -5,9 +5,12 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 import dev.karimbk.reflowtask.task.Priority;
+import dev.karimbk.reflowtask.task.TimeProfile;
 
 /**
  * The scheduling core, deliberately a pure function: given tasks, obstacles, configuration
@@ -36,10 +39,25 @@ public final class SchedulePlanner {
 	 */
 	public static List<PlannedBlock> plan(List<SchedulableTask> tasks, List<TimeSlot> obstacles,
 			SchedulingConfig config, LocalDateTime now) {
-		List<TimeSlot> free = freeCapacity(obstacles, config, now);
+		// One free list per profile, because each has its own hours. A person still does one thing at
+		// a time, so whatever one profile takes is cut from the others as well.
+		Map<TimeProfile, List<TimeSlot>> free = new EnumMap<>(TimeProfile.class);
+		for (TimeProfile profile : TimeProfile.values()) {
+			free.put(profile, freeCapacity(obstacles, config, now, profile));
+		}
 		List<PlannedBlock> planned = new ArrayList<>();
 		for (SchedulableTask task : inPlanningOrder(tasks)) {
-			place(task, free, config.minChunkMinutes(), config.bufferMinutes(), planned);
+			List<PlannedBlock> placed = new ArrayList<>();
+			place(task, free.get(task.profile()), config.minChunkMinutes(), config.bufferMinutes(), placed);
+			for (TimeProfile other : TimeProfile.values()) {
+				if (other != task.profile()) {
+					for (PlannedBlock block : placed) {
+						free.put(other, subtract(free.get(other),
+								new TimeSlot(block.start(), block.end().plusMinutes(config.bufferMinutes()))));
+					}
+				}
+			}
+			planned.addAll(placed);
 		}
 		return planned;
 	}
@@ -64,13 +82,18 @@ public final class SchedulePlanner {
 	 * everything already in the past.
 	 */
 	static List<TimeSlot> freeCapacity(List<TimeSlot> obstacles, SchedulingConfig config, LocalDateTime now) {
+		return freeCapacity(obstacles, config, now, TimeProfile.WORK);
+	}
+
+	static List<TimeSlot> freeCapacity(List<TimeSlot> obstacles, SchedulingConfig config, LocalDateTime now,
+			TimeProfile profile) {
 		LocalDateTime earliest = ceilingTo(now, SLOT_GRANULARITY_MINUTES);
 		LocalDate firstDay = earliest.toLocalDate();
 		List<TimeSlot> free = new ArrayList<>();
 
 		for (int dayOffset = 0; dayOffset < config.horizonDays(); dayOffset++) {
 			LocalDate date = firstDay.plusDays(dayOffset);
-			for (DailyWindow window : config.workingHoursOn(date.getDayOfWeek())) {
+			for (DailyWindow window : config.hoursOn(profile, date.getDayOfWeek())) {
 				TimeSlot remaining = window.on(date).notBefore(earliest);
 				if (remaining == null) {
 					continue;

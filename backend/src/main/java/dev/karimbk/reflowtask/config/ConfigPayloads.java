@@ -43,7 +43,9 @@ final class ConfigPayloads {
 	 * how many days every replan walks, so an unbounded one would let a single request make
 	 * scheduling arbitrarily slow.
 	 */
-	record Config(@NotNull @Valid List<Window> workingHours, @NotNull @Valid List<Window> blockedPeriods,
+	record Config(@NotNull @Valid List<Window> workingHours,
+			// Optional: when personal tasks are planned. Absent or empty means in working hours.
+			@Valid List<Window> personalHours, @NotNull @Valid List<Window> blockedPeriods,
 			@NotNull @Min(1) @Max(366) Integer horizonDays, @NotNull @Min(1) @Max(1440) Integer minChunkMinutes,
 			@NotNull @Min(0) @Max(120) Integer bufferMinutes,
 			// Optional, so a client that does not know it yet keeps working; absent means off.
@@ -63,6 +65,16 @@ final class ConfigPayloads {
 			}
 			Set<DayOfWeek> seen = new HashSet<>();
 			return this.workingHours.stream().allMatch((window) -> window == null || seen.add(window.day()));
+		}
+
+		@JsonIgnore
+		@AssertTrue(message = "each weekday may have only one personal window")
+		public boolean isOnePersonalWindowPerDay() {
+			if (this.personalHours == null) {
+				return true;
+			}
+			Set<DayOfWeek> seen = new HashSet<>();
+			return this.personalHours.stream().allMatch((window) -> window == null || seen.add(window.day()));
 		}
 
 	}

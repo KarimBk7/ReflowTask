@@ -19,15 +19,18 @@ public class ConfigService {
 
 	private final WorkingHoursRepository workingHours;
 
+	private final PersonalHoursRepository personalHours;
+
 	private final BlockedPeriodRepository blockedPeriods;
 
 	private final SchedulingSettingsRepository settings;
 
 	private final SchedulerService scheduler;
 
-	ConfigService(WorkingHoursRepository workingHours, BlockedPeriodRepository blockedPeriods,
-			SchedulingSettingsRepository settings, SchedulerService scheduler) {
+	ConfigService(WorkingHoursRepository workingHours, PersonalHoursRepository personalHours,
+			BlockedPeriodRepository blockedPeriods, SchedulingSettingsRepository settings, SchedulerService scheduler) {
 		this.workingHours = workingHours;
+		this.personalHours = personalHours;
 		this.blockedPeriods = blockedPeriods;
 		this.settings = settings;
 		this.scheduler = scheduler;
@@ -37,6 +40,11 @@ public class ConfigService {
 	public Config current(long userId) {
 		SchedulingSettings current = this.settings.findOrDefault(userId);
 		List<Window> working = this.workingHours.findByUserId(userId)
+			.stream()
+			.map((hours) -> new Window(hours.getDay(), hours.getStartTime(), hours.getEndTime(), null))
+			.sorted(BY_DAY_THEN_START)
+			.toList();
+		List<Window> personal = this.personalHours.findByUserId(userId)
 			.stream()
 			.map((hours) -> new Window(hours.getDay(), hours.getStartTime(), hours.getEndTime(), null))
 			.sorted(BY_DAY_THEN_START)
@@ -54,7 +62,7 @@ public class ConfigService {
 				.map((window) -> new Window(window.day(), window.start(), window.end(), null))
 				.toList();
 		}
-		return new Config(working, blocked, current.getHorizonDays(), current.getMinChunkMinutes(),
+		return new Config(working, personal, blocked, current.getHorizonDays(), current.getMinChunkMinutes(),
 				current.getBufferMinutes(), current.getFreezeMinutes(), current.isOnboarded());
 	}
 
@@ -68,6 +76,7 @@ public class ConfigService {
 	@Transactional
 	public Config replace(long userId, Config config) {
 		this.workingHours.deleteByUserId(userId);
+		this.personalHours.deleteByUserId(userId);
 		this.blockedPeriods.deleteByUserId(userId);
 		// Hibernate executes inserts before deletes when it flushes, and working hours are keyed
 		// by (user, weekday), so a replaced Monday could be inserted while the old row still
@@ -76,11 +85,18 @@ public class ConfigService {
 		// The explicit flush makes the ordering a guarantee instead of a side effect that a
 		// switch to persist() would silently remove.
 		this.workingHours.flush();
+		this.personalHours.flush();
 
 		this.workingHours.saveAll(config.workingHours()
 			.stream()
 			.map((window) -> new WorkingHours(userId, window.day(), window.startTime(), window.endTime()))
 			.toList());
+		if (config.personalHours() != null) {
+			this.personalHours.saveAll(config.personalHours()
+				.stream()
+				.map((window) -> new PersonalHours(userId, window.day(), window.startTime(), window.endTime()))
+				.toList());
+		}
 		this.blockedPeriods.saveAll(config.blockedPeriods()
 			.stream()
 			.map((window) -> new BlockedPeriod(userId, window.day(), window.startTime(), window.endTime(),

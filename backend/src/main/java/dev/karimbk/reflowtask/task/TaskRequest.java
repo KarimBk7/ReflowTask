@@ -44,7 +44,10 @@ public record TaskRequest(
 		Recurrence recurrence,
 
 		// Optional: nothing of the task is planned before this.
-		LocalDateTime notBefore) {
+		LocalDateTime notBefore,
+
+		// Optional: which hours it is planned in. Absent means work.
+		TimeProfile profile) {
 
 	@AssertTrue(message = "deadlineTime requires deadlineDate")
 	public boolean isDeadlineConsistent() {

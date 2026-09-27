@@ -2036,3 +2036,13 @@ input::-webkit-calendar-picker-indicator {
   flex: none;
   font-variant-numeric: tabular-nums;
 }
+
+/* Personal time on the grid: lifted out of the off-hours shading, with a quiet edge, so an evening
+   personal block does not look like it sits in forbidden time. */
+.personal-hours {
+  position: absolute;
+  inset-inline: 0;
+  background: var(--surface);
+  border-inline-start: 2px solid color-mix(in oklab, var(--accent) 25%, transparent);
+  pointer-events: none;
+}

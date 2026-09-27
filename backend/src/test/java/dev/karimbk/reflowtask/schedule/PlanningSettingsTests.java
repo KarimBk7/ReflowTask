@@ -29,18 +29,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * The freeze window: what is about to start stays put when something urgent comes in, instead of
- * the next hours being reshuffled under the person who is about to begin them.
+ * Planning settings that change which time a task may take. The freeze window: what is about to
+ * start stays put when something urgent comes in, instead of the next hours being reshuffled under
+ * the person who is about to begin them. Personal time: personal tasks go into their own hours.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class FreezeWindowTests {
+class PlanningSettingsTests {
 
 	private static final LocalDate MONDAY = LocalDate.of(2026, 9, 1).with(TemporalAdjusters.next(DayOfWeek.MONDAY));
 
@@ -135,6 +137,28 @@ class FreezeWindowTests {
 
 		assertThat(blocksOf(report)).singleElement()
 			.satisfies((block) -> assertThat(block.getEndAt()).isEqualTo(MONDAY.atTime(10, 0)));
+	}
+
+	@Test
+	void personalTasksArePlannedInPersonalTimeSetThroughTheConfiguration() throws Exception {
+		Cookie cookie = new AuthTestSupport(this.mvc).login();
+		this.mvc
+			.perform(put("/api/v1/config").cookie(cookie)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("""
+							{"workingHours":[{"day":"MONDAY","startTime":"09:00","endTime":"18:00"}],
+							"personalHours":[{"day":"MONDAY","startTime":"19:00","endTime":"21:00"}],"blockedPeriods":[],
+							"horizonDays":14,"minChunkMinutes":30,"bufferMinutes":0}"""))
+			.andExpect(jsonPath("$.personalHours[0].startTime").value("19:00:00"));
+
+		this.mvc
+			.perform(post("/api/v1/tasks").cookie(cookie)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("""
+							{"title":"Call grandma","estimatedMinutes":30,"priority":"MEDIUM","profile":"PERSONAL"}"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.profile").value("PERSONAL"))
+			.andExpect(jsonPath("$.nextStartAt").value(MONDAY.atTime(19, 0) + ":00"));
 	}
 
 	@Test

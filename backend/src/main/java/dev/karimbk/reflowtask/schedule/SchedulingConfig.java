@@ -3,6 +3,8 @@ package dev.karimbk.reflowtask.schedule;
 import java.time.DayOfWeek;
 import java.util.List;
 
+import dev.karimbk.reflowtask.task.TimeProfile;
+
 /**
  * Everything the planner needs to know about when work may happen. A plain value type with
  * no persistence attached, so the algorithm can be tested without a database.
@@ -17,9 +19,11 @@ import java.util.List;
  * blocks, so a day is not planned wall to wall. 0 places work back to back.
  * @param freezeMinutes planned blocks starting this soon are kept where they are by a replan. Not
  * used by the planner itself: it decides which existing blocks become obstacles. 0 is off.
+ * @param personalHours when personal tasks may be placed. Empty means they use working hours, so a
+ * personal task is never left unplaced just because nobody set personal time up.
  */
 public record SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow> blockedPeriods, int horizonDays,
-		int minChunkMinutes, int bufferMinutes, int freezeMinutes) {
+		int minChunkMinutes, int bufferMinutes, int freezeMinutes, List<DailyWindow> personalHours) {
 
 	public SchedulingConfig {
 		if (horizonDays < 1) {
@@ -36,6 +40,12 @@ public record SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow>
 		}
 		workingHours = List.copyOf(workingHours);
 		blockedPeriods = List.copyOf(blockedPeriods);
+		personalHours = List.copyOf(personalHours);
+	}
+
+	public SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow> blockedPeriods, int horizonDays,
+			int minChunkMinutes, int bufferMinutes, int freezeMinutes) {
+		this(workingHours, blockedPeriods, horizonDays, minChunkMinutes, bufferMinutes, freezeMinutes, List.of());
 	}
 
 	public SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow> blockedPeriods, int horizonDays,
@@ -51,6 +61,16 @@ public record SchedulingConfig(List<DailyWindow> workingHours, List<DailyWindow>
 
 	List<DailyWindow> workingHoursOn(DayOfWeek day) {
 		return this.workingHours.stream().filter((window) -> window.day() == day).toList();
+	}
+
+	/** The windows a task of this profile may be placed in. */
+	public List<DailyWindow> hoursFor(TimeProfile profile) {
+		return (profile == TimeProfile.PERSONAL && !this.personalHours.isEmpty()) ? this.personalHours
+				: this.workingHours;
+	}
+
+	List<DailyWindow> hoursOn(TimeProfile profile, DayOfWeek day) {
+		return hoursFor(profile).stream().filter((window) -> window.day() == day).toList();
 	}
 
 	List<DailyWindow> blockedPeriodsOn(DayOfWeek day) {

@@ -8,6 +8,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import dev.karimbk.reflowtask.task.Priority;
+import dev.karimbk.reflowtask.task.TimeProfile;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -84,6 +85,52 @@ class SchedulePlannerTests {
 
 		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY.plusDays(2), 14, 30), at(MONDAY.plusDays(2), 15, 30)),
 				new PlannedBlock(2, at(MONDAY, 9, 0), at(MONDAY, 10, 0)));
+	}
+
+	// --- work and personal time ------------------------------------------------------
+
+	private static SchedulingConfig withPersonal(DailyWindow... personal) {
+		SchedulingConfig base = defaultConfig();
+		return new SchedulingConfig(base.workingHours(), base.blockedPeriods(), base.horizonDays(),
+				base.minChunkMinutes(), 0, 0, List.of(personal));
+	}
+
+	private static SchedulableTask personal(long id, int minutes) {
+		return new SchedulableTask(id, minutes, null, Priority.MEDIUM, null, TimeProfile.PERSONAL);
+	}
+
+	@Test
+	void aPersonalTaskGoesIntoPersonalTimeNotTheFreeWorkingDay() {
+		SchedulingConfig config = withPersonal(
+				new DailyWindow(DayOfWeek.MONDAY, LocalTime.of(19, 0), LocalTime.of(21, 0)));
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(personal(1, 60), task(2, 60, null, Priority.LOW)),
+				List.of(), config, at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactlyInAnyOrder(new PlannedBlock(1, at(MONDAY, 19, 0), at(MONDAY, 20, 0)),
+				new PlannedBlock(2, at(MONDAY, 9, 0), at(MONDAY, 10, 0)));
+	}
+
+	@Test
+	void overlappingHoursAreNeverUsedTwice() {
+		// Personal time that includes the working day: work placed first still takes its hour away.
+		SchedulingConfig config = withPersonal(
+				new DailyWindow(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(11, 0)));
+		SchedulableTask work = task(1, 60, at(MONDAY, 10, 0), Priority.HIGH);
+
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(personal(2, 60), work), List.of(), config,
+				at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactlyInAnyOrder(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 10, 0)),
+				new PlannedBlock(2, at(MONDAY, 10, 0), at(MONDAY, 11, 0)));
+	}
+
+	@Test
+	void withoutPersonalTimeAPersonalTaskUsesWorkingHours() {
+		List<PlannedBlock> plan = SchedulePlanner.plan(List.of(personal(1, 60)), List.of(), defaultConfig(),
+				at(MONDAY, 9, 0));
+
+		assertThat(plan).containsExactly(new PlannedBlock(1, at(MONDAY, 9, 0), at(MONDAY, 10, 0)));
 	}
 
 	@Test

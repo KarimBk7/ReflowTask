@@ -46,7 +46,16 @@ export function boardDays(config: BoardConfig | undefined, blocks: Block[], week
  * Null when there are no working hours at all.
  */
 export function describeWorkingHours(config: BoardConfig | undefined): string | null {
-  const hours = [...(config?.workingHours ?? [])].sort((a, b) => dayNumber(a.day) - dayNumber(b.day))
+  return describeHours(config?.workingHours ?? [])
+}
+
+/** The same phrase for personal time; null when none is set, so personal tasks use working hours. */
+export function describePersonalHours(config: BoardConfig | undefined): string | null {
+  return describeHours(config?.personalHours ?? [])
+}
+
+function describeHours(windows: ConfigWindow[]): string | null {
+  const hours = [...windows].sort((a, b) => dayNumber(a.day) - dayNumber(b.day))
   if (hours.length === 0) return null
   const numbers = hours.map((w) => dayNumber(w.day))
   const consecutive = numbers.every((n, i) => i === 0 || n === numbers[i - 1] + 1)
@@ -244,6 +253,10 @@ export function blockedOn(config: BoardConfig | undefined, day: number): ConfigW
 
 export function workingOn(config: BoardConfig | undefined, day: number): ConfigWindow | undefined {
   return (config?.workingHours ?? []).find((window) => dayNumber(window.day) === day)
+}
+
+export function personalOn(config: BoardConfig | undefined, day: number): ConfigWindow | undefined {
+  return (config?.personalHours ?? []).find((window) => dayNumber(window.day) === day)
 }
 
 /** One appointment from another calendar, as minutes of one day: an overnight one is cut at midnight. */

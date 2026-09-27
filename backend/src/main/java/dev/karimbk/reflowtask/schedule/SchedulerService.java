@@ -24,6 +24,7 @@ import dev.karimbk.reflowtask.task.Recurrence;
 import dev.karimbk.reflowtask.task.Task;
 import dev.karimbk.reflowtask.task.TaskRepository;
 import dev.karimbk.reflowtask.task.TaskStatus;
+import dev.karimbk.reflowtask.task.TimeProfile;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -304,16 +305,18 @@ public class SchedulerService {
 		for (Task finished : this.tasks.findByUserIdAndStatusAndRecurrenceNotNull(userId, TaskStatus.DONE)) {
 			Recurrence rule = finished.getRecurrence();
 			LocalDateTime deadline = rule.next(finished.getDeadline());
-			while (!deadline.isAfter(now) || (rule == Recurrence.DAILY && isDayOff(settings, deadline))) {
+			while (!deadline.isAfter(now)
+					|| (rule == Recurrence.DAILY && isDayOff(settings, finished.getProfile(), deadline))) {
 				deadline = rule.next(deadline);
 			}
 			this.tasks.save(finished.nextOccurrence(deadline, now));
 		}
 	}
 
-	/** A day with no working hours, unless no day has any, when nothing would ever be due. */
-	private static boolean isDayOff(SchedulingConfig settings, LocalDateTime date) {
-		return settings.workingHoursOn(date.getDayOfWeek()).isEmpty() && !settings.workingHours().isEmpty();
+	/** A day without hours for this profile, unless no day has any, when nothing would ever be due. */
+	private static boolean isDayOff(SchedulingConfig settings, TimeProfile profile, LocalDateTime date) {
+		List<DailyWindow> hours = settings.hoursFor(profile);
+		return !hours.isEmpty() && hours.stream().noneMatch((window) -> window.day() == date.getDayOfWeek());
 	}
 
 	// --- deciding what survives ------------------------------------------------------
@@ -420,7 +423,7 @@ public class SchedulerService {
 		// did not happen unless the person marks it done, which they can still do afterwards.
 		int remaining = (int) Math.max(0, task.getEstimatedMinutes() - alreadyCovered);
 		return new SchedulableTask(task.getId(), remaining, task.getDeadline(), task.getPriority(),
-				task.getNotBefore());
+				task.getNotBefore(), task.getProfile());
 	}
 
 	private static Map<Long, Long> minutesPerTask(List<TimeBlock> blocks) {

@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Block, BusyPeriod } from '../api/types'
 import { t } from '../i18n/en'
 import type { Appointment, BoardConfig, Ghost } from '../lib/board'
-import { appointmentsOn, blockedOn, boardDays, firstWorkingMinute, isToday, originFor, workingOn, workload } from '../lib/board'
+import { appointmentsOn, blockedOn, boardDays, personalOn, firstWorkingMinute, isToday, originFor, workingOn, workload } from '../lib/board'
 import {
   DAY_NAMES,
   addDays,
@@ -420,6 +420,7 @@ interface DayColumnProps {
 function DayColumn({ day, date, config, appointments, now, items, ghosts, draft, renderBlock, onCreateAt }: DayColumnProps) {
   const hoverRef = useRef<HTMLDivElement>(null)
   const working = workingOn(config, day)
+  const personal = personalOn(config, day)
   const today = sameDate(date, now)
 
   function minuteAt(event: React.PointerEvent | React.MouseEvent) {
@@ -471,6 +472,17 @@ function DayColumn({ day, date, config, appointments, now, items, ghosts, draft,
             style={{ top: `calc(${parseClock(working.endTime)} * var(--px-per-min))`, bottom: 0 }}
           />
         </>
+      )}
+
+      {personal && (
+        <div
+          className="personal-hours"
+          aria-hidden="true"
+          style={{
+            top: `calc(${parseClock(personal.startTime)} * var(--px-per-min))`,
+            height: `calc(${parseClock(personal.endTime) - parseClock(personal.startTime)} * var(--px-per-min))`,
+          }}
+        />
       )}
 
       {blockedOn(config, day).map((period) => (

@@ -18,6 +18,7 @@ const window = (day: string, startTime = '09:00:00', endTime = '18:00:00') => ({
 
 const config = (days: string[], blocked: never[] = []): BoardConfig => ({
   workingHours: days.map((d) => window(d)),
+  personalHours: [],
   blockedPeriods: blocked,
   horizonDays: 14,
   minChunkMinutes: 30,
@@ -56,6 +57,7 @@ const task = (id: number, extra: Partial<Task> = {}): Task => ({
   recurrence: null,
   notBefore: null,
   nextStartAt: null,
+  profile: 'WORK',
   ...extra,
 })
 

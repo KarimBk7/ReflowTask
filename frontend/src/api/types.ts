@@ -5,6 +5,9 @@ export type Priority = 'LOW' | 'MEDIUM' | 'HIGH'
 
 export type TaskStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE'
 
+/** Which hours a task is planned in. */
+export type TimeProfile = 'WORK' | 'PERSONAL'
+
 /** How often a task comes back; DAILY means every working day. */
 export type Recurrence = 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'
 
@@ -39,6 +42,7 @@ export interface Task {
   notBefore: LocalDateTime | null
   /** When the next planned part starts, or the one running now; null when nothing is planned ahead. */
   nextStartAt: LocalDateTime | null
+  profile: TimeProfile
 }
 
 export interface TaskInput {
@@ -56,6 +60,8 @@ export interface TaskInput {
   recurrence?: Recurrence | null
   /** Nothing is planned before this. Must be before the deadline. An update without it clears it. */
   notBefore?: LocalDateTime | null
+  /** Absent means work. */
+  profile?: TimeProfile
 }
 
 export interface Block {
@@ -127,6 +133,8 @@ export interface ConfigWindow {
 /** The scheduling configuration. Read and written in the same shape. */
 export interface BoardConfig {
   workingHours: ConfigWindow[]
+  /** When personal tasks are planned. Empty means they use working hours. */
+  personalHours: ConfigWindow[]
   blockedPeriods: ConfigWindow[]
   horizonDays: number
   minChunkMinutes: number

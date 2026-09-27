@@ -70,6 +70,7 @@ function TaskRow({ task, busy, onOpen, onToggleDone, onShow }: { task: Task } & 
       : formatDuration(task.estimatedMinutes),
     t(`priority.${task.priority}`),
   ]
+  if (task.profile === 'PERSONAL') facts.push(t('profile.PERSONAL'))
   if (task.deadline) {
     facts.push(
       !done && task.atRisk ? (

@@ -12,6 +12,7 @@ import { CalendarIcon, ChevronIcon, ClockIcon, HelpIcon, LogoutIcon, PlusIcon, R
 import { LOCALE, t } from './i18n/en'
 import {
   boardDays,
+  describePersonalHours,
   describeWorkingHours,
   ghostsFrom,
   originFor,
@@ -140,6 +141,7 @@ function Board({ user }: { user: AuthUser }) {
     [tasks.data],
   )
   const hoursSummary = describeWorkingHours(config.data)
+  const personalSummary = describePersonalHours(config.data)
   const attention = useMemo(() => needsAttention(tasks.data ?? []), [tasks.data])
   const ghosts = useMemo(() => ghostsFrom(events.data, tasks.data), [events.data, tasks.data])
 
@@ -525,6 +527,7 @@ function Board({ user }: { user: AuthUser }) {
             task={null}
             slot={open.slot}
             hoursSummary={hoursSummary}
+            personalSummary={personalSummary}
             onSubmit={create}
             onCancel={close}
             onDraftChange={(minutes, fixed) =>
@@ -594,6 +597,7 @@ function Board({ user }: { user: AuthUser }) {
             task={openTask}
             slot={null}
             hoursSummary={hoursSummary}
+            personalSummary={personalSummary}
             onSubmit={(input) => save(openTask.id, input)}
             onCancel={close}
             onDelete={() => remove(openTask.id)}
