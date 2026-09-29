@@ -9,7 +9,7 @@ import { AccountPanel } from './auth/AccountPanel'
 import { CalendarPanel } from './auth/CalendarPanel'
 import { UserManagement } from './auth/UserManagement'
 import { MainMenu, type MenuTarget } from './auth/MainMenu'
-import { ActivityIcon, ChevronIcon, DayIcon, ListIcon, MonthIcon, PlusIcon } from './design/Icon'
+import { ActivityIcon, ChevronIcon, DayIcon, ListIcon, MenuIcon, MonthIcon, PlusIcon } from './design/Icon'
 import { LOCALE, t } from './i18n/en'
 import {
   boardDays,
@@ -36,6 +36,7 @@ import {
 import { useBusy } from './lib/calendar'
 import { initial, useLogout, useMe } from './lib/auth'
 import { PHONE_QUERY, useMediaQuery } from './lib/media'
+import { DEVICE } from './lib/mode'
 import { addDays, formatDayTime, isoDay, startOfMonth, startOfWeek, toLocalDateTime } from './lib/time'
 import { TaskList } from './list/TaskList'
 import { MonthGrid } from './month/MonthGrid'
@@ -501,7 +502,7 @@ function Board({ user }: { user: AuthUser }) {
             onClick={(event) => setOpen({ kind: 'menu', anchor: event.currentTarget.getBoundingClientRect() })}
           >
             <span className="avatar" aria-hidden="true">
-              {initial(user.username)}
+              {DEVICE ? <MenuIcon size={16} /> : initial(user.username)}
             </span>
             <span className="sr-only">{t('menu.open')}</span>
           </button>

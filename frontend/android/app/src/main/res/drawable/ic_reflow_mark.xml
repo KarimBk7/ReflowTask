@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The ReflowTask mark: a block, and the one that reflowed past it, inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#4253D4" android:pathData="M36.15,32.30 H55.40 A6.65,6.65 0 0 1 62.05,38.95 V44.55 A6.65,6.65 0 0 1 55.40,51.20 H36.15 A6.65,6.65 0 0 1 29.50,44.55 V38.95 A6.65,6.65 0 0 1 36.15,32.30 Z" />
+    <path android:fillColor="#E3A019" android:pathData="M52.60,56.80 H71.85 A6.65,6.65 0 0 1 78.50,63.45 V69.05 A6.65,6.65 0 0 1 71.85,75.70 H52.60 A6.65,6.65 0 0 1 45.95,69.05 V63.45 A6.65,6.65 0 0 1 52.60,56.80 Z" />
+</vector>

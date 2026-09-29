@@ -5,6 +5,15 @@ All notable changes to ReflowTask are listed here. The format follows
 [Semantic Versioning](https://semver.org/): a new major version would mean an upgrade needs more
 than `git pull` and `docker compose up -d --build`.
 
+## [Unreleased]
+
+### Added
+
+- An Android app that works without a server: tasks and the plan are stored on the phone and planned
+  there, with the same planner and interface as the server. Reminders 10 minutes before each block,
+  backup and restore through the share sheet (compatible with the server's JSON export). CI builds a
+  debug APK on every push.
+
 ## [1.0.0] - 2026-09-28
 
 The first release: a self-hosted planner that places tasks into your week as time blocks and
@@ -69,4 +78,5 @@ replans on its own when work is missed.
 - `scripts/backup.sh` writes verified, rotating database backups.
 - Documentation: a setup guide with screenshots, security notes and a contributing guide.
 
+[Unreleased]: https://github.com/KarimBk7/ReflowTask/compare/v1.0.0...main
 [1.0.0]: https://github.com/KarimBk7/ReflowTask/releases/tag/v1.0.0

@@ -37,3 +37,30 @@ jobs:
       - run: npx oxlint
       - run: npm test
       - run: npm run build
+
+  # The phone app (local-only). The debug APK is attached to every run, ready to sideload.
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - run: npm run build:device
+      - run: npx cap sync android
+      - run: cd android && ./gradlew --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reflowtask-android-debug
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk

@@ -227,3 +227,12 @@ export function UserIcon(props: IconProps) {
     </Frame>
   )
 }
+
+/** The menu, where a device without accounts has no initial to show. */
+export function MenuIcon(props: IconProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2.75 4.5h10.5M2.75 8h10.5M2.75 11.5h10.5" />
+    </Frame>
+  )
+}

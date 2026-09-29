@@ -34,10 +34,19 @@ const queryClient: QueryClient = new QueryClient({
 
 document.documentElement.lang = LANGUAGE
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </StrictMode>,
-)
+/** In the phone app, the device's files, share sheet and reminders are wired in before the first read. */
+async function start() {
+  if (import.meta.env.VITE_DEVICE === 'true') {
+    const { setUpDevice } = await import('./local/native')
+    await setUpDevice(queryClient)
+  }
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+}
+
+void start()

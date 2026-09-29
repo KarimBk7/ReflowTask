@@ -33,6 +33,7 @@ bin/
 node_modules/
 dist/
 dist-ssr/
+dist-device/
 .vite/
 coverage/
 *.tsbuildinfo
@@ -47,6 +48,8 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+# Not a secret: switches the build to the phone app (npm run build:device).
+!frontend/.env.device
 *.local
 application-local.properties
 application-local.yml

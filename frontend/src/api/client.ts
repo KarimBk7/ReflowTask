@@ -14,23 +14,12 @@ import type {
   TaskStatus,
 } from './types'
 
+import { deviceApi } from '../local/api'
+import { ApiError } from './errors'
+
+export { ApiError }
+
 const BASE = '/api/v1'
-
-/**
- * An API failure carrying the server's problem detail, so a form can show per-field
- * messages instead of a generic "something went wrong".
- */
-export class ApiError extends Error {
-  readonly status: number
-  readonly fieldErrors: Record<string, string>
-
-  constructor(status: number, message: string, fieldErrors: Record<string, string> = {}) {
-    super(message)
-    this.name = 'ApiError'
-    this.status = status
-    this.fieldErrors = fieldErrors
-  }
-}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE}${path}`, {
@@ -71,7 +60,7 @@ async function fieldErrorsFor(response: Response): Promise<Record<string, string
   return body?.errors ?? {}
 }
 
-export const api = {
+const httpApi = {
   listTasks: () => request<Task[]>('/tasks'),
 
   createTask: (input: TaskInput) =>
@@ -156,3 +145,12 @@ export const api = {
   busy: (from: LocalDateTime, to: LocalDateTime) =>
     request<BusyPeriod[]>(`/calendar/busy?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
 }
+
+export type Api = typeof httpApi
+
+/**
+ * The self-hosted build talks to its server; the app build (VITE_DEVICE) answers the same calls on
+ * the phone itself. Everything above the api object is the same in both.
+ */
+// Spelled out rather than DEVICE, so the bundler drops the device code from the server build.
+export const api: Api = import.meta.env.VITE_DEVICE === 'true' ? deviceApi : httpApi

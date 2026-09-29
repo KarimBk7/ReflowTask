@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ReflowTask</string>
+    <string name="title_activity_main">ReflowTask</string>
+    <string name="package_name">dev.karimbk.reflowtask</string>
+    <string name="custom_url_scheme">dev.karimbk.reflowtask</string>
+</resources>

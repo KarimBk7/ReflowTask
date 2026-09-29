@@ -28,6 +28,7 @@ finish before its deadline would be listed under **Needs attention**.</sub>
 - [How the scheduling works](#how-the-scheduling-works)
 - [Calendar sync](#calendar-sync)
 - [Households: accounts and privacy](#households-accounts-and-privacy)
+- [Android app without a server](#android-app-without-a-server)
 - [Security](#security)
 - [Documentation](#documentation)
 - [API](#api)
@@ -327,6 +328,36 @@ without logging in:
 The person must choose their own password at next login, and all their sessions end. Details, and
 how to do it without Docker, are in [docs/SETUP.md](docs/SETUP.md#forgot-a-password).
 
+## Android app without a server
+
+ReflowTask also comes as an Android app that needs no server at all: your tasks and plan are stored
+on the phone, the planning runs on the phone, and nothing is sent anywhere. It is the same interface
+and the same planner (ported line for line, with the same tests), so everything under
+[How the scheduling works](#how-the-scheduling-works) applies.
+
+- **Reminders:** a notification 10 minutes before each planned block.
+- **Replanning:** whenever you open the app or come back to it, if the plan is older than 15 minutes.
+  There is no hourly job; a phone asleep in your pocket does not need one.
+- **Backup:** Menu → Language and backup saves a JSON or CSV file through the share sheet (to your
+  cloud drive, mail, Files). Restore takes that file, or an export from a ReflowTask server, so a
+  plan can move from the server into the app.
+- **Not in the app:** accounts and households, and calendar sync, which both need a server.
+
+**Install:** every CI run on `main` builds a debug APK. Open the latest
+[CI run](https://github.com/KarimBk7/ReflowTask/actions/workflows/ci.yml), download `reflowtask-android-debug`, unzip it, and open
+`app-debug.apk` on the phone (Android 7 or newer; allow installing from that source when asked).
+Not in the Play Store yet, and no iPhone version yet.
+
+**Build it yourself** (needs Android Studio or the Android SDK and JDK 21):
+
+```bash
+cd frontend
+npm run build:device && npx cap sync android
+cd android && ./gradlew assembleDebug   # app/build/outputs/apk/debug/app-debug.apk
+```
+
+`npm run dev:device` runs the app's on-device mode in a desktop browser, stored in local storage.
+
 ## Security
 
 **Read this before exposing it.** The intended setup is a private network: run it at home and reach
@@ -412,6 +443,7 @@ client of this API, so a mobile client could use the same endpoints.
 | Backend | Java 25, Spring Boot 4.1, Spring Data JPA, Bean Validation, spring-security-crypto (bcrypt only), ical4j (reading calendars) |
 | Database | PostgreSQL in production, H2 in development; schema managed by Flyway |
 | Frontend | React 19, TypeScript, Vite 8, TanStack Query |
+| Android app | Capacitor 8 around the same frontend, built with `--mode device` |
 | API | REST, versioned under `/api/v1` |
 | Deployment | Docker Compose: PostgreSQL, backend, nginx |
 
@@ -419,7 +451,7 @@ client of this API, so a mobile client could use the same endpoints.
 
 ```bash
 cd backend && ./mvnw test        # 220+ tests
-cd frontend && npm test          # unit tests for dates, board logic and the task list
+cd frontend && npm test          # dates, board logic, task list, and the on-device planner and API
 cd frontend && npm run build     # typecheck and production build
 ```
 
@@ -452,8 +484,10 @@ frontend/
   src/month/     the month overview
   src/list/      the task list
   src/lib/       data hooks and pure helpers (board, time, calendar)
+  src/local/     the Android app's planner, storage and API (no server)
   src/i18n/      English and German strings
   src/design/    design tokens, icons and styles
+  android/       the Android project (Capacitor)
 scripts/         reset-password.sh, backup.sh
 docs/            setup guide and screenshots
 docker-compose.yml, backend/Dockerfile, frontend/Dockerfile   deployment

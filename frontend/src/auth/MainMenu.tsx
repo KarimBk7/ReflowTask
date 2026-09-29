@@ -2,6 +2,7 @@ import type { AuthUser } from '../api/types'
 import { CalendarIcon, ClockIcon, HelpIcon, LogoutIcon, ReflowIcon, UserIcon, UsersIcon } from '../design/Icon'
 import { t } from '../i18n/en'
 import { initial } from '../lib/auth'
+import { DEVICE } from '../lib/mode'
 
 export type MenuTarget = 'hours' | 'calendar' | 'users' | 'account' | 'help'
 
@@ -25,12 +26,16 @@ export function MainMenu({ user, daysOff, busy, onOpen, onReplan, onToggleDaysOf
   return (
     <div className="menu">
       <div className="menu-head">
-        <span className="avatar" aria-hidden="true">
-          {initial(user.username)}
-        </span>
+        {DEVICE ? (
+          <span className="brand-mark" aria-hidden="true" />
+        ) : (
+          <span className="avatar" aria-hidden="true">
+            {initial(user.username)}
+          </span>
+        )}
         <span className="menu-who">
-          <strong id={headingId}>{user.username}</strong>
-          <span>{user.role === 'ADMIN' ? t('auth.admin') : t('auth.member')}</span>
+          <strong id={headingId}>{DEVICE ? t('app.name') : user.username}</strong>
+          <span>{DEVICE ? t('device.onThisPhone') : user.role === 'ADMIN' ? t('auth.admin') : t('auth.member')}</span>
         </span>
       </div>
 
@@ -41,13 +46,15 @@ export function MainMenu({ user, daysOff, busy, onOpen, onReplan, onToggleDaysOf
             {t('hours.title')}
           </button>
         </li>
+        {!DEVICE && (
         <li>
           <button type="button" className="menu-item" onClick={() => onOpen('calendar')}>
             <CalendarIcon />
             {t('calendar.title')}
           </button>
         </li>
-        {user.role === 'ADMIN' && (
+        )}
+        {!DEVICE && user.role === 'ADMIN' && (
           <li>
             <button type="button" className="menu-item" onClick={() => onOpen('users')}>
               <UsersIcon />
@@ -78,7 +85,7 @@ export function MainMenu({ user, daysOff, busy, onOpen, onReplan, onToggleDaysOf
         <li>
           <button type="button" className="menu-item" onClick={() => onOpen('account')}>
             <UserIcon />
-            {t('menu.account')}
+            {DEVICE ? t('device.data') : t('menu.account')}
           </button>
         </li>
         <li>
@@ -87,12 +94,14 @@ export function MainMenu({ user, daysOff, busy, onOpen, onReplan, onToggleDaysOf
             {t('action.help')}
           </button>
         </li>
-        <li>
-          <button type="button" className="menu-item" onClick={onLogout}>
-            <LogoutIcon />
-            {t('auth.logout')}
-          </button>
-        </li>
+        {!DEVICE && (
+          <li>
+            <button type="button" className="menu-item" onClick={onLogout}>
+              <LogoutIcon />
+              {t('auth.logout')}
+            </button>
+          </li>
+        )}
       </ul>
     </div>
   )

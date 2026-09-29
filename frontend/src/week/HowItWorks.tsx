@@ -2,6 +2,7 @@ import type { AuthUser, BoardConfig } from '../api/types'
 import { CloseIcon } from '../design/Icon'
 import { t } from '../i18n/en'
 import { describeWorkingHours } from '../lib/board'
+import { DEVICE } from '../lib/mode'
 
 interface HowItWorksProps {
   config: BoardConfig | undefined
@@ -56,9 +57,15 @@ export function HowItWorks({ config, user, onClose, headingId }: HowItWorksProps
         <li>{t('help.activity')}</li>
         <li>{t('help.month')}</li>
         <li>{t('help.list')}</li>
-        <li>{t('help.calendar')}</li>
-        <li>{t('help.private')}</li>
-        {user.role === 'ADMIN' && <li>{t('help.household')}</li>}
+        {DEVICE ? (
+          <li>{t('device.help')}</li>
+        ) : (
+          <>
+            <li>{t('help.calendar')}</li>
+            <li>{t('help.private')}</li>
+            {user.role === 'ADMIN' && <li>{t('help.household')}</li>}
+          </>
+        )}
       </ul>
     </div>
   )
