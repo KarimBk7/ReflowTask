@@ -15,7 +15,7 @@
 
 # ...but the Maven/Gradle wrappers must be committed so a clone can build
 !.mvn/wrapper/maven-wrapper.jar
-!gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar
 
 # JVM crash logs
 hs_err_pid*
